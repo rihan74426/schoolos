@@ -1,0 +1,14 @@
+{
+  "name": "@schoolos/db",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.js",
+  "scripts": {
+    "test": "echo 'db tests placeholder'",
+    "lint": "echo 'db lint placeholder'"
+  },
+  "dependencies": {
+    "mongoose": "^8.5.0"
+  }
+}

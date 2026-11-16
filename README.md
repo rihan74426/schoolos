@@ -19,15 +19,13 @@ A pnpm/Turborepo monorepo for school operations management.
 
 ## Local development
 
-```bash
-corepack enable
-corepack prepare pnpm@9.12.0 --activate
-pnpm install
-cp .env.example .env
-pnpm dev:web
+```powershell
+corepack pnpm install
+if (!(Test-Path apps/web/.env.local)) { Copy-Item .env.example apps/web/.env.local }
+corepack pnpm dev:web
 ```
 
-Configure `MONGODB_URI` in `.env`. Use a MongoDB replica set (Atlas or local `mongod --replSet rs0`) for multi-document transactions. The admin portal is at `http://localhost:3000/admin/dashboard`.
+Configure `MONGODB_URI` and valid Clerk keys in `apps/web/.env.local`. Next.js loads environment files from the app directory (`apps/web`), not the repository root. Use a MongoDB replica set (Atlas or local `mongod --replSet rs0`) for multi-document transactions. The admin portal is at `http://localhost:3000/admin/dashboard`.
 
 Useful checks:
 

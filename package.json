@@ -6,9 +6,9 @@
     "node": ">=18.18.0"
   },
   "scripts": {
-    "dev": "turbo run dev",
-    "dev:web": "pnpm --filter @schoolos/web dev",
-    "dev:mobile": "pnpm --filter @schoolos/mobile start",
+    "dev": "corepack pnpm --parallel --filter=@schoolos/web --filter=@schoolos/mobile run dev",
+    "dev:web": "corepack pnpm --filter=@schoolos/web run dev",
+    "dev:mobile": "corepack pnpm --filter=@schoolos/mobile run dev",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "test": "turbo run test",

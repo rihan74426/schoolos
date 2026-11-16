@@ -1,6 +1,6 @@
 # Rule specs
 
-This directory stores plain-language specifications for each school domain.
+This directory stores plain-language specifications for each school domain. Institutional policies should be configurable; these documents are starter examples, not universal rules.
 
 ## Included modules
 
@@ -8,5 +8,5 @@ This directory stores plain-language specifications for each school domain.
 - scheduling
 - attendance
 - fees
-- hostel
-- ranking
+- hostel (future scope)
+- ranking (future scope)

@@ -16,7 +16,7 @@ AI drafting, OCR, automated scheduling, biometrics, predictive analytics, and hi
 
 ## Architecture and data boundaries
 
-The application uses a modular monolith with MongoDB/Mongoose as its operational store. Mongoose models are under `packages/db/src/models`; business workflows belong in server services, not page components. Tenant-owned collections carry `institutionId`; the Mongoose plugin rejects unscoped queries for these models. Services derive institution scope from the authenticated Clerk membership and verify that referenced students, sections, and related records belong to the same institution before writes.
+The application uses a modular monolith with MongoDB/Mongoose as its operational store. Mongoose models are under `packages/db/src/models`; business workflows belong in server services, not page components. Tenant-owned collections carry `institutionId`; the Mongoose plugin rejects unscoped queries for these models. Services derive institution scope from the authenticated membership and verify that referenced students, sections, and related records belong to the same institution before writes.
 
 MongoDB does not provide relational foreign keys. Add explicit service-layer ownership checks, compound unique indexes, idempotency where external side effects are retried, and tests across two institutions. Multi-document transactions (for example, admission conversion and payments) require a replica set. Keep demo data synthetic.
 

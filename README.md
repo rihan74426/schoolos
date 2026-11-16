@@ -1,46 +1,37 @@
 # SchoolOS
 
-A pnpm/Turborepo monorepo for school operations management.
+A pnpm/Turborepo monorepo for a mobile-friendly school operations platform serving Islamic institutions, madrasas, and modern schools.
 
 ## Workspace
 
-- `apps/web` — Next.js App Router, admin portal, and API route handlers
-- `apps/mobile` — Expo React Native app
-- `packages/core` — pure JavaScript domain rules, Zod schemas, and Vitest tests
-- `packages/db` — Mongoose models and tenant-aware utilities (server only)
+- `apps/web` — Next.js App Router admin portal and API route handlers
+- `apps/mobile` — Expo app scaffold
+- `packages/core` — pure domain rules, Zod schemas, and Vitest tests
+- `packages/db` — PostgreSQL/Prisma operational data model (server-only)
 - `packages/i18n` — English, Bangla, and Arabic strings
-- `docs/specs` — plain-language rule specifications by domain
+- `docs/specs` — plain-language domain rules
+- `docs/architecture/mvp-foundation.md` — release scope, trust boundaries, and local database setup
 
-## Requirements
+## Build the basics first
+
+The first release focuses on institution setup, admissions, student/guardian records, attendance, timetable, notices, fees, exams/results, and basic syllabus/book lists. AI remains a supervised, draft-first follow-on after the data, permission, and approval foundations are reliable. See the MVP foundation document for the scope and release gates.
+
+## Requirements and local development
 
 - Node.js 18.18 or newer
-- pnpm 9.12.0 (Corepack is recommended)
-
-## Local development
+- pnpm 9.12.0
+- PostgreSQL for database-backed development
 
 ```bash
 corepack enable
 corepack prepare pnpm@9.12.0 --activate
 pnpm install
-pnpm dev
-```
-
-The root `pnpm dev` starts workspace packages with a `dev` script. To run one app:
-
-```bash
+cp packages/db/.env.example .env
+pnpm --filter @schoolos/db db:generate
+pnpm --filter @schoolos/db db:migrate
 pnpm dev:web
-pnpm dev:mobile
 ```
 
-The admin portal is available at `http://localhost:3000/admin/dashboard`. Its routes are under `apps/web/app/admin`; shared shell components are in `apps/web/components/admin`. Pages are UI scaffolds only—the authentication, authorization, tenant context, persistence, and real data integrations still need to be implemented before production use.
+Open `http://localhost:3000/admin/dashboard`. `pnpm dev` runs all workspace development tasks. Run `pnpm test`, `pnpm lint`, `pnpm typecheck`, and `pnpm build` before submitting changes.
 
-Useful checks:
-
-```bash
-pnpm lint
-pnpm typecheck
-pnpm test
-pnpm build
-```
-
-The workspace manifest and package scripts are configured for local installation. Run `pnpm install` to resolve dependencies and generate `pnpm-lock.yaml` for your environment.
+The repository currently contains UI and domain foundations, not a production-ready school system. Do not use real student/guardian data until authentication, verified tenant membership, server-side access control, and privacy/security workflows are implemented and reviewed.

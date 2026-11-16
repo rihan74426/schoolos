@@ -5,10 +5,16 @@
   "type": "module",
   "main": "./src/index.js",
   "scripts": {
-    "test": "echo 'db tests placeholder'",
-    "lint": "echo 'db lint placeholder'"
+    "db:generate": "prisma generate",
+    "db:validate": "prisma validate",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:studio": "prisma studio"
   },
   "dependencies": {
-    "mongoose": "^8.5.0"
+    "@prisma/client": "^5.22.0"
+  },
+  "devDependencies": {
+    "prisma": "^5.22.0"
   }
 }

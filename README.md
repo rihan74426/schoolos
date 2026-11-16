@@ -7,31 +7,31 @@ A pnpm/Turborepo monorepo for a mobile-friendly school operations platform servi
 - `apps/web` — Next.js App Router admin portal and API route handlers
 - `apps/mobile` — Expo app scaffold
 - `packages/core` — pure domain rules, Zod schemas, and Vitest tests
-- `packages/db` — PostgreSQL/Prisma operational data model (server-only)
+- `packages/db` — MongoDB/Mongoose models and tenant-aware utilities (server-only)
 - `packages/i18n` — English, Bangla, and Arabic strings
 - `docs/specs` — plain-language domain rules
-- `docs/architecture/mvp-foundation.md` — release scope, trust boundaries, and local database setup
+- `docs/architecture/mvp-foundation.md` — release scope, trust boundaries, and local setup
 
 ## Build the basics first
 
-The first release focuses on institution setup, admissions, student/guardian records, attendance, timetable, notices, fees, exams/results, and basic syllabus/book lists. AI remains a supervised, draft-first follow-on after the data, permission, and approval foundations are reliable. See the MVP foundation document for the scope and release gates.
+The first release focuses on institution setup, admissions, student/guardian records, attendance, timetable, notices, fees, exams/results, and syllabus/book lists. AI remains a supervised, draft-first follow-on. Institutions configure their own curriculum, language, dates, and policies; qualified people approve official learning content and decisions.
 
 ## Requirements and local development
 
 - Node.js 18.18 or newer
 - pnpm 9.12.0
-- PostgreSQL for database-backed development
+- MongoDB 8 or MongoDB Atlas; transactions require a replica set (Atlas or local `mongod --replSet rs0`)
 
 ```bash
 corepack enable
 corepack prepare pnpm@9.12.0 --activate
 pnpm install
-cp packages/db/.env.example .env
-pnpm --filter @schoolos/db db:generate
-pnpm --filter @schoolos/db db:migrate
+cp .env.example .env
 pnpm dev:web
 ```
 
-Open `http://localhost:3000/admin/dashboard`. `pnpm dev` runs all workspace development tasks. Run `pnpm test`, `pnpm lint`, `pnpm typecheck`, and `pnpm build` before submitting changes.
+Set `MONGODB_URI` in `.env`. Open `http://localhost:3000/admin/dashboard`. Run `pnpm test`, `pnpm lint`, `pnpm typecheck`, and `pnpm build` before submitting changes.
 
-The repository currently contains UI and domain foundations, not a production-ready school system. Do not use real student/guardian data until authentication, verified tenant membership, server-side access control, and privacy/security workflows are implemented and reviewed.
+Tenant isolation is enforced in the Mongoose service layer and tenant plugin. Every query for tenant-owned data must include the verified `institutionId` from an authenticated membership. Never trust a tenant ID supplied by the browser. The Clerk integration gates admin routes and supports a signed user-deletion webhook; creating institution memberships remains an explicit, administrator-controlled invitation process.
+
+The repository is a development foundation, not a production-ready school system. Do not use real student or guardian data until authentication setup, tenant authorization, audit, privacy, retention/export/deletion, and security workflows have been reviewed and tested.

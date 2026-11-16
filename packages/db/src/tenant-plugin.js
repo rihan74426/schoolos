@@ -1,11 +1,21 @@
-import mongoose from 'mongoose';
+import { Schema } from 'mongoose';
 
-export const tenantPlugin = (schema) => {
+const OPS = ['find', 'findOne', 'findOneAndUpdate', 'updateOne', 'updateMany', 'deleteOne', 'deleteMany', 'countDocuments'];
+
+export function tenantPlugin(schema) {
   schema.add({
-    tenantId: { type: String, required: true, index: true },
+    institutionId: { type: Schema.Types.ObjectId, ref: 'Institution', required: true, index: true },
   });
 
-  schema.index({ tenantId: 1, createdAt: -1 });
-};
+  for (const op of OPS) {
+    schema.pre(op, function requireTenantScope() {
+      if (!this.getFilter().institutionId) throw new Error(`Tenant scope required: ${op}`);
+    });
+  }
 
-export const connectDb = async (uri) => mongoose.connect(uri);
+  schema.pre('aggregate', function requireAggregateTenantScope() {
+    if (!this.pipeline()[0]?.$match?.institutionId) {
+      throw new Error('Tenant scope required: aggregate');
+    }
+  });
+}

@@ -1,15 +1,13 @@
 import mongoose from 'mongoose';
 import { tenantPlugin } from '../tenant-plugin.js';
 
-const academicTermSchema = new mongoose.Schema(
-  {
-    name: { type: String, required: true },
-    startDate: { type: Date, required: true },
-    endDate: { type: Date, required: true },
-  },
-  { timestamps: true }
-);
+const schema = new mongoose.Schema({
+  name: { type: String, required: true },
+  startsOn: { type: Date, required: true },
+  endsOn: { type: Date, required: true },
+}, { timestamps: true });
 
-academicTermSchema.plugin(tenantPlugin);
+schema.plugin(tenantPlugin);
+schema.index({ institutionId: 1, name: 1 }, { unique: true });
 
-export const AcademicTerm = mongoose.model('AcademicTerm', academicTermSchema);
+export const AcademicTerm = mongoose.models.AcademicTerm || mongoose.model('AcademicTerm', schema);

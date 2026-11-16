@@ -1,9 +1,5 @@
-import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
-export async function GET(_request: NextRequest) {
-  return Response.json({
-    ok: true,
-    service: 'schoolos-web',
-    message: 'SchoolOS API is running.',
-  });
+export async function GET() {
+  return NextResponse.json({ ok: true, service: 'schoolos-web', database: 'mongodb' });
 }

@@ -1,0 +1,46 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+.admin-layout { display: flex; min-height: 100vh; }
+.sidebar { width: 248px; flex: 0 0 248px; display: flex; flex-direction: column; padding: 22px 14px 16px; background: #17243b; color: #e7edf7; }
+.brand { display: flex; align-items: center; gap: 11px; padding: 3px 10px 24px; font-size: 17px; font-weight: 700; }
+.brand-mark { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; background: #5478f0; color: white; }
+.brand small, .sidebar-footer small { display: block; margin-top: 4px; color: #9cabc3; font-size: 9px; letter-spacing: .12em; }
+.sidebar-nav { display: flex; flex-direction: column; gap: 4px; }
+.nav-caption { padding: 10px 12px 6px; color: #8292ad; font-size: 10px; font-weight: 700; letter-spacing: .12em; }
+.nav-link { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; color: #c3cee0; font-size: 13px; }
+.nav-link:hover, .nav-link:focus-visible { background: #263754; color: white; outline: none; }
+.nav-link span { width: 17px; text-align: center; color: #9eafd0; }
+.sidebar-footer { display: flex; align-items: center; gap: 10px; margin-top: auto; padding: 14px 9px 2px; border-top: 1px solid #34425a; font-size: 11px; }
+.avatar { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: #354a6d; }
+.admin-main { min-width: 0; flex: 1; }
+.topbar { height: 62px; display: flex; align-items: center; justify-content: flex-end; gap: 22px; padding: 0 34px; background: white; border-bottom: 1px solid #e7eaf0; color: #69758b; font-size: 12px; }
+.topbar-user { color: #26334a; font-weight: 600; }
+.mobile-brand { display: none; }
+.page-content { max-width: 1440px; margin: 0 auto; padding: 34px; }
+.page-heading { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 26px; }
+.page-heading h1 { margin: 0 0 7px; color: #1b2940; font-size: 27px; letter-spacing: -.03em; }
+.page-heading .muted { margin: 0; font-size: 13px; }
+.metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.metric-card, .panel, .shortcut-card { border: 1px solid #e7eaf0; border-radius: 12px; background: white; box-shadow: 0 3px 12px #1f2c4510; }
+.metric-card { padding: 18px; }
+.metric-card p { margin: 0; }
+.metric-value { padding: 10px 0 5px; font-size: 28px; font-weight: 700; }
+.content-section { margin-top: 30px; }
+.content-section h2, .panel h2 { margin: 0 0 16px; font-size: 16px; }
+.shortcut-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.shortcut-card { display: flex; flex-direction: column; gap: 8px; padding: 19px; transition: border-color .15s, transform .15s; }
+.shortcut-card:hover { transform: translateY(-2px); border-color: #9bacf1; }
+.shortcut-card strong { font-size: 13px; }
+.shortcut-card span { color: #69758b; font-size: 12px; line-height: 1.5; }
+.panel { padding: 22px; }
+.panel > p { font-size: 13px; line-height: 1.6; }
+.panel-heading { display: flex; align-items: center; justify-content: space-between; }
+.badge { padding: 5px 8px; border-radius: 20px; background: #eef2ff; color: #405dcc; font-size: 10px; font-weight: 650; }
+.table-scroll { overflow-x: auto; margin-top: 22px; }
+table { width: 100%; border-collapse: collapse; text-align: left; font-size: 12px; }
+th { padding: 11px 12px; background: #f7f8fb; color: #69758b; font-weight: 600; }
+td { padding: 14px 12px; border-bottom: 1px solid #eef0f4; }
+.empty-state { text-align: center; color: #69758b; }
+.text-link { display: inline-block; margin-top: 14px; color: #3156d3; font-size: 13px; font-weight: 600; }
+@media (max-width: 1000px) { .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 700px) { .sidebar { width: 64px; flex-basis: 64px; padding: 16px 8px; } .brand { justify-content: center; padding: 0 0 22px; } .brand > span:last-child, .nav-caption, .nav-link { font-size: 0; } .nav-link { justify-content: center; padding: 12px 4px; } .nav-link span { font-size: 16px; } .sidebar-footer { justify-content: center; padding: 12px 0 0; } .sidebar-footer > span:last-child { display: none; } .topbar { justify-content: space-between; padding: 0 18px; } .mobile-brand { display: inline; color: #1b2940; font-weight: 700; } .topbar-school { display: none; } .page-content { padding: 24px 18px; } .shortcut-grid { grid-template-columns: 1fr; } }
+@media (max-width: 420px) { .metric-grid { grid-template-columns: 1fr; } .page-heading h1 { font-size: 24px; } }

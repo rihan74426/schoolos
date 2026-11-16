@@ -1,0 +1,13 @@
+{
+  "expo": {
+    "name": "SchoolOS",
+    "slug": "schoolos",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "backgroundColor": "#f3f4f6"
+    },
+    "assetBundlePatterns": ["**/*"]
+  }
+}

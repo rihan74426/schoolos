@@ -1,4 +1,4 @@
-import { afterEach, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import mongoose from "mongoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import { Student } from "../models/Student.js";
@@ -18,7 +18,13 @@ beforeAll(async () => {
 });
 
 afterEach(async () => {
-  await Student.deleteMany({ institutionId: { $in: [schoolA, schoolB] } });
+  await Student.deleteMany({ institutionId: schoolA });
+  await Student.deleteMany({ institutionId: schoolB });
+});
+
+afterAll(async () => {
+  await mongoose.disconnect();
+  await mongo.stop();
 });
 
 describe("tenant-scoped student model", () => {
@@ -86,5 +92,17 @@ describe("tenant-scoped student model", () => {
       Enrollment.find({ studentId: new mongoose.Types.ObjectId() }),
     ).rejects.toThrow("Tenant scope required: find");
     expect(AuditEvent.schema.path("institutionId")).toBeDefined();
+  });
+
+  it("rejects operator objects as the tenant scope", async () => {
+    await expect(
+      Student.find({ institutionId: { $ne: schoolA } }),
+    ).rejects.toThrow("Invalid tenant scope: find");
+    await expect(
+      Student.deleteMany({ institutionId: { $in: [schoolA, schoolB] } }),
+    ).rejects.toThrow("Invalid tenant scope: deleteMany");
+    await expect(
+      Student.find({ institutionId: String(schoolA) }),
+    ).resolves.toEqual([]);
   });
 });

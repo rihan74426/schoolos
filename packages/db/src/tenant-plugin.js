@@ -17,6 +17,8 @@ export function tenantPlugin(schema, { allowClerkUserLookup = false } = {}) {
       if (!filter.institutionId && !trustedMembershipLookup) {
         throw new Error(`Tenant scope required: ${op}`);
       }
+      // Scope must be a single tenant (ObjectId or string). Operator objects such as
+      // $ne, $in or $exists could span tenants, so they are rejected.
       const id = filter.institutionId;
       if (id && typeof id === 'object' && id.constructor === Object) {
         throw new Error(`Invalid tenant scope: ${op}`);

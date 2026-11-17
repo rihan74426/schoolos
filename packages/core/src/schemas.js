@@ -19,8 +19,8 @@ export const attendanceRuleSchema = z.object({
 });
 
 export const feePolicySchema = z.object({
-  monthlyFee: z.number().min(0),
-  lateFee: z.number().min(0),
+  monthlyFee: z.number().int().min(0),
+  lateFee: z.number().int().min(0),
   scholarshipPercent: z.number().min(0).max(100),
 });
 

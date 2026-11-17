@@ -1,6 +1,6 @@
 import { Schema } from 'mongoose';
 
-const OPS = ['find', 'findOne', 'findOneAndUpdate', 'updateOne', 'updateMany', 'deleteOne', 'deleteMany', 'countDocuments'];
+const OPS = ['find', 'findOne', 'findOneAndUpdate', 'updateOne', 'updateMany', 'deleteOne', 'deleteMany', 'countDocuments', 'findOneAndDelete', 'findOneAndReplace', 'replaceOne', 'distinct'];
 
 export function tenantPlugin(schema, { allowClerkUserLookup = false } = {}) {
   schema.add({
@@ -16,6 +16,10 @@ export function tenantPlugin(schema, { allowClerkUserLookup = false } = {}) {
         && filter.active === true;
       if (!filter.institutionId && !trustedMembershipLookup) {
         throw new Error(`Tenant scope required: ${op}`);
+      }
+      const id = filter.institutionId;
+      if (id && typeof id === 'object' && id.constructor === Object) {
+        throw new Error(`Invalid tenant scope: ${op}`);
       }
     });
   }

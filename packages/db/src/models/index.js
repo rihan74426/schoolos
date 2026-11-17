@@ -9,3 +9,5 @@ export { Guardian } from './Guardian.js';
 export { Enrollment } from './Enrollment.js';
 export { AttendanceSession } from './AttendanceSession.js';
 export { AuditEvent } from './AuditEvent.js';
+export { GradingScheme } from './GradingScheme.js';
+export { InstitutionPolicy } from './InstitutionPolicy.js';

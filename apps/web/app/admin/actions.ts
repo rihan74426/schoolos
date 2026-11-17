@@ -3,6 +3,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { isObjectIdOrHexString } from "mongoose";
 import { revalidatePath } from "next/cache";
 import { connectDb, Institution, Membership } from "@schoolos/db";
 
@@ -11,6 +12,7 @@ export async function setActiveSchoolAction(formData: FormData) {
   if (!userId) throw new Response("Unauthorized", { status: 401 });
 
   const institutionId = String(formData.get("institutionId") ?? "");
+  if (!isObjectIdOrHexString(institutionId)) throw new Response("Forbidden", { status: 403 });
   await connectDb();
   const membership = await Membership.findOne({
     clerkUserId: userId,

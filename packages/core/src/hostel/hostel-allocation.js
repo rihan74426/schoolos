@@ -4,10 +4,11 @@ export const hostelRules = {
   genderPolicy: 'separate',
 };
 
-const capacities = { single: 1, double: 2, triple: 3 };
+const defaultCapacities = { single: 1, double: 2, triple: 3 };
 
 export function canAssignRoom(roomType, occupancy, options = {}) {
-  const capacity = capacities[roomType];
+  const capacities = options.roomCapacities ?? defaultCapacities;
+  const capacity = Object.hasOwn(capacities, roomType) ? capacities[roomType] : undefined;
   if (!capacity || !Number.isSafeInteger(occupancy) || occupancy < 0 || occupancy >= capacity) return false;
 
   const { residentGender, roomGender, genderPolicy = hostelRules.genderPolicy, approvedMixedRequest = false } = options;

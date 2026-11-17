@@ -11,3 +11,4 @@ coverage
 .expo
 *.log
 .DS_Store
+*.tsbuildinfo

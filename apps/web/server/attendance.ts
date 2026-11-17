@@ -1,4 +1,4 @@
-import { isValidObjectId } from "mongoose";
+import { isObjectIdOrHexString as isValidObjectId } from "mongoose";
 import { attendanceSubmissionSchema } from "@schoolos/core";
 import { AttendanceSession, AuditEvent, Section, Student } from "@schoolos/db";
 
@@ -126,11 +126,13 @@ export async function submitAttendance(
         update,
         { new: true, runValidators: true },
       )
-    : await AttendanceSession.findOneAndUpdate(filter, update, {
-        new: true,
-        upsert: true,
-        runValidators: true,
-        setDefaultsOnInsert: true,
+    : await AttendanceSession.findOneAndUpdate(
+        { ...filter, status: { $ne: "ACTIVE" } },
+        update,
+        { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true },
+      ).catch((error: { code?: number }) => {
+        if (error.code === 11000) return null;
+        throw error;
       });
 
   if (!session) {

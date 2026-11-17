@@ -4,7 +4,14 @@ import mongoose from "mongoose";
 import { auth } from "@clerk/nextjs/server";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { connectDb, Institution, Membership } from "@schoolos/db";
+import { buildInitialPolicy, gradingPresets, policyPresets } from "@schoolos/core";
+import {
+  connectDb,
+  GradingScheme,
+  Institution,
+  InstitutionPolicy,
+  Membership,
+} from "@schoolos/db";
 
 const INITIAL_BOOTSTRAP_KEY = "initial-owner";
 const supportedLocales = new Set(["en", "bn", "ar"]);
@@ -17,6 +24,10 @@ export async function createFirstInstitutionAction(
   const { userId } = await auth();
   if (!userId) throw new Response("Unauthorized", { status: 401 });
 
+  const presetInput = String(formData.get("preset") ?? "bd-school");
+  const preset = Object.hasOwn(policyPresets, presetInput)
+    ? presetInput
+    : "bd-school";
   const name = String(formData.get("name") ?? "").trim();
   const localeInput = String(formData.get("locale") ?? "en");
   const defaultLocale = supportedLocales.has(localeInput) ? localeInput : "en";
@@ -50,6 +61,22 @@ export async function createFirstInstitutionAction(
     defaultLocale,
     bootstrapKey: INITIAL_BOOTSTRAP_KEY,
   };
+  const policy = buildInitialPolicy(preset);
+  const scheme = gradingPresets[policy.gradingSchemeKey as keyof typeof gradingPresets];
+  const seedDocs = (institutionId: mongoose.Types.ObjectId, membershipId?: unknown) => ({
+    policy: {
+      institutionId,
+      policy,
+      sourcePreset: preset,
+      updatedByMembershipId: membershipId,
+    },
+    scheme: {
+      ...scheme,
+      institutionId,
+      sourcePreset: scheme.key,
+      isDefault: true,
+    },
+  });
   let institutionId: mongoose.Types.ObjectId;
   const hello = await mongoose.connection.db?.admin().command({ hello: 1 });
   const supportsTransactions = Boolean(
@@ -75,7 +102,9 @@ export async function createFirstInstitutionAction(
           { session },
         );
         institutionId = institution._id;
-        void membership;
+        const seed = seedDocs(institution._id, membership._id);
+        await InstitutionPolicy.create([seed.policy], { session });
+        await GradingScheme.create([seed.scheme], { session });
       });
     } catch (error) {
       if ((error as { code?: number }).code === 11000) {
@@ -89,13 +118,21 @@ export async function createFirstInstitutionAction(
     const [institution] = await Institution.create([institutionData]);
     institutionId = institution._id;
     try {
-      await Membership.create({
+      const membership = await Membership.create({
         institutionId,
         clerkUserId: userId,
         role: "OWNER",
         active: true,
       });
+      const seed = seedDocs(institutionId, membership._id);
+      await InstitutionPolicy.create(seed.policy);
+      await GradingScheme.create(seed.scheme);
     } catch (error) {
+      await Promise.all([
+        InstitutionPolicy.deleteMany({ institutionId }),
+        GradingScheme.deleteMany({ institutionId }),
+        Membership.deleteMany({ institutionId, clerkUserId: userId, active: true }),
+      ]);
       await Institution.deleteOne({
         _id: institutionId,
         bootstrapKey: INITIAL_BOOTSTRAP_KEY,

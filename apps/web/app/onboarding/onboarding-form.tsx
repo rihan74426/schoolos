@@ -22,6 +22,15 @@ export function OnboardingForm() {
         <option value="bn">বাংলা</option>
         <option value="ar">العربية</option>
       </select>
+      <label htmlFor="institution-preset">Starting rules</label>
+      <select id="institution-preset" name="preset" defaultValue="bd-school">
+        <option value="bd-school">School (GPA 5.0, no hostel)</option>
+        <option value="bd-madrasa">Madrasa (divisions, hostel on)</option>
+      </select>
+      <p className="form-hint">
+        These are starting templates. You can change grading, attendance, fee
+        and hostel rules in Settings.
+      </p>
       {state?.error ? (
         <p role="alert" className="form-error">
           {state.error}

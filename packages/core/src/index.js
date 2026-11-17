@@ -6,3 +6,5 @@ export { schedulingRules, buildAcademicCalendar } from './scheduling/term-calend
 export { hostelRules, canAssignRoom } from './hostel/hostel-allocation.js';
 export { rankingRules, scoreRankEntry } from './ranking/ranking-policy.js';
 export * from './schemas.js';
+export { gradingPresets, gradingSchemeSchema, gradeBandSchema, validateGradingScheme, percentOf, gradeFor, gradeMarks } from './grading/grading-schemes.js';
+export { institutionPolicySchema, policyPresets, buildInitialPolicy, lateFeeFromPolicy, attendanceStanding } from './policy/institution-policy.js';

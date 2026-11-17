@@ -7,7 +7,12 @@ export async function connectDb(uri = process.env.MONGODB_URI) {
   if (!uri) throw new Error('MONGODB_URI missing');
   const cached = globalForMongoose._schoolosMongoose;
   if (cached.conn) return cached.conn;
-  cached.promise ??= mongoose.connect(uri, { bufferCommands: false, maxPoolSize: 10 });
+  cached.promise ??= mongoose
+    .connect(uri, { bufferCommands: false, maxPoolSize: 10 })
+    .catch((error) => {
+      cached.promise = null;
+      throw error;
+    });
   cached.conn = await cached.promise;
   return cached.conn;
 }

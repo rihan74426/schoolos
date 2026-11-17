@@ -12,10 +12,14 @@ export async function POST(req: NextRequest) {
 
   if (event.type === "user.deleted" && event.data.id) {
     await connectDb();
-    await Membership.updateMany(
-      { clerkUserId: event.data.id },
+    const memberships = await Membership.find({
+      clerkUserId: event.data.id,
+      active: true,
+    }).select('institutionId').lean();
+    await Promise.all(memberships.map((membership) => Membership.updateMany(
+      { clerkUserId: event.data.id, institutionId: membership.institutionId },
       { $set: { active: false } },
-    );
+    )));
   }
 
   return new Response("OK", { status: 200 });

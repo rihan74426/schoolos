@@ -2,6 +2,8 @@ import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import mongoose from "mongoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import { Student } from "../models/Student.js";
+import { Enrollment } from "../models/Enrollment.js";
+import { AuditEvent } from "../models/AuditEvent.js";
 
 let mongo;
 let schoolA;
@@ -77,5 +79,12 @@ describe("tenant-scoped student model", () => {
       (await Student.findOne({ _id: b._id, institutionId: schoolB }).lean())
         ?.firstName,
     ).toBe("B");
+  });
+
+  it("requires tenant scope on enrollments and applies the audit tenant field", async () => {
+    await expect(
+      Enrollment.find({ studentId: new mongoose.Types.ObjectId() }),
+    ).rejects.toThrow("Tenant scope required: find");
+    expect(AuditEvent.schema.path("institutionId")).toBeDefined();
   });
 });

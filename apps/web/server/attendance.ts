@@ -15,7 +15,7 @@ export async function submitAttendance(
     };
   }
 
-  const { sectionId, date, records } = parsed.data;
+  const { sectionId, date, records, correctionReason } = parsed.data;
   const institutionId = actor.institutionId;
   if (!isValidObjectId(sectionId)) {
     return { ok: false as const, error: "Invalid sectionId" };
@@ -61,36 +61,97 @@ export async function submitAttendance(
     status,
     ...(note ? { note } : {}),
   }));
-  const session = await AttendanceSession.findOneAndUpdate(
-    { institutionId, sectionId, date },
-    {
-      $set: {
-        entries,
-        recordedByMembershipId: actor.membershipId,
-        status: "ACTIVE",
-        submittedAt: new Date(),
-      },
-      $setOnInsert: { institutionId, sectionId, date },
-    },
-    {
-      new: true,
-      upsert: true,
-      runValidators: true,
-      setDefaultsOnInsert: true,
-    },
+  const filter = { institutionId, sectionId, date };
+  const existing = (await AttendanceSession.findOne(filter).lean()) as {
+    _id: unknown;
+    status: string;
+    updatedAt: Date;
+    entries: Array<{ studentId: unknown; status: string; note?: string }>;
+  } | null;
+
+  if (existing?.status === "ARCHIVED") {
+    return {
+      ok: false as const,
+      error: "Archived attendance sessions cannot be changed",
+    };
+  }
+  if (existing?.status === "ACTIVE" && !correctionReason) {
+    return {
+      ok: false as const,
+      error: "A correction reason is required to change submitted attendance",
+    };
+  }
+
+  const previousEntries = new Map(
+    (existing?.entries ?? []).map((entry) => [String(entry.studentId), entry]),
   );
+  const nextEntries = new Map(entries.map((entry) => [entry.studentId, entry]));
+  const changedStudentIds = new Set([
+    ...previousEntries.keys(),
+    ...nextEntries.keys(),
+  ]);
+  const changes = [...changedStudentIds].flatMap((studentId) => {
+    const before = previousEntries.get(studentId);
+    const after = nextEntries.get(studentId);
+    if (before?.status === after?.status && before?.note === after?.note)
+      return [];
+    return [
+      {
+        studentId,
+        before: before ? { status: before.status, note: before.note } : null,
+        after: after ? { status: after.status, note: after.note } : null,
+      },
+    ];
+  });
+  const isCorrection = existing?.status === "ACTIVE";
+  if (isCorrection && changes.length === 0) {
+    return {
+      ok: false as const,
+      error: "The submitted attendance is unchanged",
+    };
+  }
+
+  const update = {
+    $set: {
+      entries,
+      recordedByMembershipId: actor.membershipId,
+      status: "ACTIVE",
+      submittedAt: new Date(),
+    },
+    $setOnInsert: { institutionId, sectionId, date },
+  };
+  const session = existing
+    ? await AttendanceSession.findOneAndUpdate(
+        { _id: existing._id, institutionId, updatedAt: existing.updatedAt },
+        update,
+        { new: true, runValidators: true },
+      )
+    : await AttendanceSession.findOneAndUpdate(filter, update, {
+        new: true,
+        upsert: true,
+        runValidators: true,
+        setDefaultsOnInsert: true,
+      });
+
+  if (!session) {
+    return {
+      ok: false as const,
+      error: "Attendance changed concurrently. Reload and retry.",
+    };
+  }
 
   await AuditEvent.create({
     institutionId,
     actorMembershipId: actor.membershipId,
-    action: "ATTENDANCE_SUBMITTED",
+    action: isCorrection ? "ATTENDANCE_CORRECTED" : "ATTENDANCE_SUBMITTED",
     entityType: "AttendanceSession",
     entityId: session._id.toString(),
     metadata: {
       sectionId,
       date,
       recordCount: records.length,
-      correction: false,
+      correction: isCorrection,
+      ...(isCorrection ? { reason: correctionReason, changes } : {}),
     },
   });
 

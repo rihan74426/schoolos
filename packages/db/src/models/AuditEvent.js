@@ -3,12 +3,6 @@ import { tenantPlugin } from "../tenant-plugin.js";
 
 const schema = new mongoose.Schema(
   {
-    institutionId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Institution",
-      required: true,
-      index: true,
-    },
     actorMembershipId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Membership",

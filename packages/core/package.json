@@ -4,13 +4,21 @@
   "private": true,
   "type": "module",
   "main": "./src/index.js",
-  "exports": { ".": "./src/index.js", "./package.json": "./package.json" },
+  "exports": {
+    ".": "./src/index.js",
+    "./package.json": "./package.json"
+  },
   "scripts": {
     "test": "vitest run",
     "lint": "echo 'core lint placeholder'",
     "build": "echo 'core build placeholder'",
-    "typecheck": "tsc --allowJs --checkJs false --noEmit"
+    "typecheck": "node --check src/index.js && node --check src/schemas.js && node --check src/attendance/attendance-rules.js && node --check src/attendance/attendance-workflow.js && node --check src/fees/fee-waiver-rules.js && node --check src/grading/grade-policy.js && node --check src/hostel/hostel-allocation.js && node --check src/ranking/ranking-policy.js && node --check src/scheduling/term-calendar.js"
   },
-  "dependencies": { "zod": "^3.23.8" },
-  "devDependencies": { "vitest": "^2.1.8", "typescript": "^5.5.4" }
+  "dependencies": {
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "vitest": "^2.1.8",
+    "typescript": "^5.5.4"
+  }
 }

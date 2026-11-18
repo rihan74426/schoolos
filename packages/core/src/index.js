@@ -9,3 +9,4 @@ export { gradingPresets, gradingSchemeSchema, gradeBandSchema, validateGradingSc
 export { institutionPolicySchema, policyPresets, buildInitialPolicy, lateFeeFromPolicy, attendanceStanding } from './policy/institution-policy.js';
 export { ROLES, permissionMatrix, can, rolesFor } from './permissions/permissions.js';
 export { academicYearInputSchema, gradeLevelInputSchema, sectionInputSchema, teachingAssignmentInputSchema, parseBandLines } from './structure/structure-schemas.js';
+export { setupProgress, setupStepDefs } from './setup/setup-progress.js';

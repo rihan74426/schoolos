@@ -75,6 +75,26 @@ describe("submitAttendance", () => {
     expect(noop).toMatchObject({ ok: false, error: "The submitted attendance is unchanged" });
   });
 
+  it("requires the whole roster by default", async () => {
+    const partial = await submitAttendance(input({ date: "2026-12-05" }, records().slice(0, 1)), actor("ADMIN"));
+    expect(partial).toMatchObject({ ok: false, error: "Mark every active student (1 of 2 marked)" });
+  });
+
+  it("closes the teacher correction window but not for admins", async () => {
+    const date = "2026-12-06";
+    await TeachingAssignment.create({ institutionId: schoolA, membershipId: teacherA, sectionId, academicYearId: oid() }).catch(() => null);
+    expect((await submitAttendance(input({ date }), actor("TEACHER", teacherA))).ok).toBe(true);
+    await AttendanceSession.collection.updateOne(
+      { institutionId: schoolA, date },
+      { $set: { createdAt: new Date(Date.now() - 72 * 3_600_000) } },
+    );
+    const late = await submitAttendance(input({ date, correctionReason: "Fix after the window" }, records("ABSENT")), actor("TEACHER", teacherA));
+    expect(late).toMatchObject({ ok: false });
+    expect((late as { error: string }).error).toMatch(/window has closed/);
+    const byAdmin = await submitAttendance(input({ date, correctionReason: "Fix after the window" }, records("ABSENT")), actor("ADMIN"));
+    expect(byAdmin.ok).toBe(true);
+  });
+
   it("only one of two concurrent first submits wins", async () => {
     const date = "2026-12-01";
     const results = await Promise.all([

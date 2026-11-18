@@ -1,6 +1,7 @@
 import "server-only";
 import { isObjectIdOrHexString as isValidObjectId } from "mongoose";
 import type { ClientSession } from "mongoose";
+import { getInstitutionPolicy } from "./policy";
 import { attendanceSubmissionSchema, can } from "@schoolos/core";
 import {
   AttendanceSession,
@@ -80,6 +81,24 @@ export async function submitAttendance(
     };
   }
 
+  const policyDoc = await getInstitutionPolicy(institutionId);
+  const attendancePolicy = (policyDoc?.policy as {
+    attendance?: { requireFullRoster?: boolean; correctionWindowHours?: number };
+  } | undefined)?.attendance;
+  if (attendancePolicy?.requireFullRoster ?? true) {
+    const rosterSize = await Student.countDocuments({
+      institutionId,
+      sectionId,
+      status: "ACTIVE",
+    });
+    if (records.length !== rosterSize) {
+      return {
+        ok: false as const,
+        error: `Mark every active student (${records.length} of ${rosterSize} marked)`,
+      };
+    }
+  }
+
   const entries = records.map(({ studentId, status, note }) => ({
     studentId,
     status,
@@ -90,6 +109,7 @@ export async function submitAttendance(
     _id: unknown;
     status: string;
     updatedAt: Date;
+    createdAt: Date;
     entries: Array<{ studentId: unknown; status: string; note?: string }>;
   } | null;
 
@@ -104,6 +124,16 @@ export async function submitAttendance(
       ok: false as const,
       error: "A correction reason is required to change submitted attendance",
     };
+  }
+
+  if (existing?.status === "ACTIVE" && !can(actor.role, "attendance:any-section")) {
+    const windowMs = (attendancePolicy?.correctionWindowHours ?? 48) * 3_600_000;
+    if (Date.now() - new Date(existing.createdAt).getTime() > windowMs) {
+      return {
+        ok: false as const,
+        error: "Correction window has closed. Ask a coordinator to correct it.",
+      };
+    }
   }
 
   const previousEntries = new Map(

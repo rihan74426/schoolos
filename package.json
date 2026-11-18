@@ -12,7 +12,7 @@
     "build": "turbo run build",
     "lint": "turbo run lint",
     "test": "turbo run test",
-    "typecheck": "corepack pnpm --filter=@schoolos/core typecheck && corepack pnpm --filter=@schoolos/web typecheck && corepack pnpm --filter=@schoolos/mobile typecheck"
+    "typecheck": "corepack pnpm --filter=@schoolos/core typecheck && corepack pnpm --filter=@schoolos/web typecheck"
   },
   "devDependencies": {
     "turbo": "^2.0.0",

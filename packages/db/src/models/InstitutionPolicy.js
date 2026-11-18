@@ -11,6 +11,7 @@ const schema = new mongoose.Schema({
 }, { timestamps: true });
 
 schema.plugin(tenantPlugin);
-schema.index({ institutionId: 1 }, { unique: true });
+// One policy per institution: make the plugin's institutionId index unique (a second index on the same key conflicts).
+schema.path('institutionId').index({ unique: true });
 
 export const InstitutionPolicy = mongoose.models.InstitutionPolicy || mongoose.model('InstitutionPolicy', schema);

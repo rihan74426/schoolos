@@ -9,17 +9,17 @@ import { connectDb, Institution, Membership } from "@schoolos/db";
 
 export async function setActiveSchoolAction(formData: FormData) {
   const { userId } = await auth();
-  if (!userId) throw new Response("Unauthorized", { status: 401 });
+  if (!userId) redirect("/sign-in");
 
   const institutionId = String(formData.get("institutionId") ?? "");
-  if (!isObjectIdOrHexString(institutionId)) throw new Response("Forbidden", { status: 403 });
+  if (!isObjectIdOrHexString(institutionId)) redirect("/admin/select-school");
   await connectDb();
   const membership = await Membership.findOne({
     clerkUserId: userId,
     institutionId,
     active: true,
   }).lean();
-  if (!membership) throw new Response("Forbidden", { status: 403 });
+  if (!membership) redirect("/admin/select-school");
 
   const institution = (await Institution.findById(institutionId).lean()) as {
     defaultLocale?: string;

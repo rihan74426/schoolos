@@ -32,6 +32,9 @@ jobs:
       - name: Test database tenant isolation
         run: pnpm --filter @schoolos/db test
 
+      - name: Test web services
+        run: pnpm --filter @schoolos/web test
+
       - name: Typecheck workspace
         run: pnpm typecheck
 

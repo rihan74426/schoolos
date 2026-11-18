@@ -4,7 +4,7 @@ export { feeRules, calculateLateFee } from './fees/fee-waiver-rules.js';
 export { gradingRules, computeGrade } from './grading/grade-policy.js';
 export { schedulingRules, buildAcademicCalendar } from './scheduling/term-calendar.js';
 export { hostelRules, canAssignRoom } from './hostel/hostel-allocation.js';
-export { rankingRules, scoreRankEntry } from './ranking/ranking-policy.js';
 export * from './schemas.js';
 export { gradingPresets, gradingSchemeSchema, gradeBandSchema, validateGradingScheme, percentOf, gradeFor, gradeMarks } from './grading/grading-schemes.js';
 export { institutionPolicySchema, policyPresets, buildInitialPolicy, lateFeeFromPolicy, attendanceStanding } from './policy/institution-policy.js';
+export { ROLES, permissionMatrix, can, rolesFor } from './permissions/permissions.js';

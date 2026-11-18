@@ -11,3 +11,5 @@ export { AttendanceSession } from './AttendanceSession.js';
 export { AuditEvent } from './AuditEvent.js';
 export { GradingScheme } from './GradingScheme.js';
 export { InstitutionPolicy } from './InstitutionPolicy.js';
+export { Subject } from './Subject.js';
+export { TeachingAssignment } from './TeachingAssignment.js';

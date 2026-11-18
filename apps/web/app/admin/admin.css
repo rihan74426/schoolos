@@ -266,7 +266,7 @@
   line-height: 1.5;
 }
 .setup-arrow {
-  margin-left: auto;
+  margin-inline-start: auto;
   color: #75839a;
 }
 .badge {
@@ -297,7 +297,7 @@
 .module-arrow {
   position: absolute;
   top: 16px;
-  right: 16px;
+  inset-inline-end: 16px;
   color: #8490a2;
 }
 .table-scroll {
@@ -311,7 +311,7 @@ table {
 th,
 td {
   padding: 10px 12px;
-  text-align: left;
+  text-align: start;
   border-bottom: 1px solid #e7eaf0;
 }
 .empty-state {

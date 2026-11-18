@@ -1,5 +1,3 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap");
-
 * {
   box-sizing: border-box;
 }
@@ -12,7 +10,7 @@ body {
   background: #f5f7fb;
   color: #172033;
   font-family:
-    Inter,
+    var(--font-inter),
     ui-sans-serif,
     system-ui,
     -apple-system,
@@ -21,10 +19,10 @@ body {
     sans-serif;
 }
 .locale-bn {
-  font-family: "Noto Sans Bengali", Inter, sans-serif;
+  font-family: var(--font-bengali), var(--font-inter), sans-serif;
 }
 .locale-ar {
-  font-family: "Noto Naskh Arabic", Inter, sans-serif;
+  font-family: var(--font-arabic), var(--font-inter), sans-serif;
 }
 a {
   color: inherit;

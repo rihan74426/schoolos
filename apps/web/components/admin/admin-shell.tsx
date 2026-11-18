@@ -67,9 +67,12 @@ export async function AdminShell({ children }: { children: ReactNode }) {
           ))}
         </nav>
         <div className="sidebar-footer">
-          <span className="avatar">A</span>
+          <span className="avatar">
+            {(institutionName ?? "S").slice(0, 1).toUpperCase()}
+          </span>
           <span>
-            School administrator<small>Demo workspace</small>
+            {institutionName ?? "SchoolOS"}
+            <small>{activeMembership?.role.replace(/_/g, " ") ?? ""}</small>
           </span>
         </div>
       </aside>

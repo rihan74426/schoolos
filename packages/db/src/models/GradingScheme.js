@@ -22,6 +22,7 @@ const schema = new mongoose.Schema({
 
 schema.plugin(tenantPlugin);
 schema.index({ institutionId: 1, key: 1 }, { unique: true });
-schema.index({ institutionId: 1 }, { unique: true, partialFilterExpression: { isDefault: true } });
+// Key includes isDefault so it never collides with the plugin's { institutionId: 1 } index.
+schema.index({ institutionId: 1, isDefault: 1 }, { unique: true, partialFilterExpression: { isDefault: true } });
 
 export const GradingScheme = mongoose.models.GradingScheme || mongoose.model('GradingScheme', schema);

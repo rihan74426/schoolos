@@ -11,6 +11,7 @@ const schema = new mongoose.Schema({
 
 schema.plugin(tenantPlugin);
 schema.index({ institutionId: 1, name: 1 }, { unique: true });
-schema.index({ institutionId: 1 }, { unique: true, partialFilterExpression: { isCurrent: true } });
+// Key includes isCurrent so it never collides with the plugin's { institutionId: 1 } index.
+schema.index({ institutionId: 1, isCurrent: 1 }, { unique: true, partialFilterExpression: { isCurrent: true } });
 
 export const AcademicYear = mongoose.models.AcademicYear || mongoose.model('AcademicYear', schema);

@@ -9,6 +9,7 @@ export const gradingRules = {
   },
 };
 
+/** @deprecated Use gradeMarks/gradeFor from grading-schemes.js (configurable per institution). */
 export function computeGrade(marks, passMark = gradingRules.defaultPassMark, bands = gradingRules.gradeBands) {
   if (!Number.isFinite(marks) || marks < 0 || marks > gradingRules.maxGrade) {
     throw new RangeError(`marks must be between 0 and ${gradingRules.maxGrade}`);

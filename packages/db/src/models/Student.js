@@ -6,6 +6,8 @@ const schema = new mongoose.Schema({
   firstName: { type: String, required: true, trim: true },
   lastName: { type: String, required: true, trim: true },
   dateOfBirth: Date,
+  membershipId: { type: mongoose.Schema.Types.ObjectId, ref: 'Membership' }, // STUDENT-role login, if any
+  // Denormalized CURRENT section; Enrollment is the source of truth. Update both in one transaction.
   sectionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Section' },
   status: { type: String, enum: ['ACTIVE', 'WITHDRAWN', 'ALUMNI', 'SUSPENDED'], default: 'ACTIVE' },
   enrolledAt: { type: Date, default: Date.now },

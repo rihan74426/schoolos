@@ -9,6 +9,7 @@ const guardianLinkSchema = new mongoose.Schema({
 }, { _id: false });
 
 const schema = new mongoose.Schema({
+  membershipId: { type: mongoose.Schema.Types.ObjectId, ref: 'Membership' }, // set when the guardian has a login
   fullName: { type: String, required: true, trim: true },
   phone: { type: String, trim: true },
   email: { type: String, trim: true, lowercase: true },

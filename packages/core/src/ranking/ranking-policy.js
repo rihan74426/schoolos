@@ -1,3 +1,4 @@
+// OUT OF MVP SCOPE: not exported from the package index. Spec needs discipline + tie-breaking + configurable weights first.
 export const rankingRules = {
   academicWeight: 0.6,
   attendanceWeight: 0.2,

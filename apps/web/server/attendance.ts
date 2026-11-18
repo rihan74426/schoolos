@@ -1,10 +1,19 @@
+import "server-only";
 import { isObjectIdOrHexString as isValidObjectId } from "mongoose";
-import { attendanceSubmissionSchema } from "@schoolos/core";
-import { AttendanceSession, AuditEvent, Section, Student } from "@schoolos/db";
+import type { ClientSession } from "mongoose";
+import { attendanceSubmissionSchema, can } from "@schoolos/core";
+import {
+  AttendanceSession,
+  AuditEvent,
+  Section,
+  Student,
+  TeachingAssignment,
+  withOptionalTransaction,
+} from "@schoolos/db";
 
 export async function submitAttendance(
   input: unknown,
-  actor: { membershipId: unknown; institutionId: unknown },
+  actor: { membershipId: unknown; institutionId: unknown; role: string },
 ) {
   const parsed = attendanceSubmissionSchema.safeParse(input);
   if (!parsed.success) {
@@ -28,6 +37,21 @@ export async function submitAttendance(
   }).lean();
   if (!section) {
     return { ok: false as const, error: "Section not found" };
+  }
+
+  if (!can(actor.role, "attendance:any-section")) {
+    const assigned = await TeachingAssignment.exists({
+      institutionId,
+      membershipId: actor.membershipId,
+      sectionId,
+      status: "ACTIVE",
+    });
+    if (!assigned) {
+      return {
+        ok: false as const,
+        error: "You are not assigned to this section",
+      };
+    }
   }
 
   const invalidStudentId = records.find(
@@ -120,20 +144,57 @@ export async function submitAttendance(
     },
     $setOnInsert: { institutionId, sectionId, date },
   };
-  const session = existing
-    ? await AttendanceSession.findOneAndUpdate(
-        { _id: existing._id, institutionId, updatedAt: existing.updatedAt },
-        update,
-        { new: true, runValidators: true },
-      )
-    : await AttendanceSession.findOneAndUpdate(
-        { ...filter, status: { $ne: "ACTIVE" } },
-        update,
-        { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true },
-      ).catch((error: { code?: number }) => {
-        if (error.code === 11000) return null;
-        throw error;
-      });
+
+  // Attendance write and its audit event commit together (transaction when the DB supports it).
+  let session;
+  try {
+    session = await withOptionalTransaction(async (txn: ClientSession | null) => {
+      const opts = txn ? { session: txn } : {};
+      const saved = existing
+        ? await AttendanceSession.findOneAndUpdate(
+            { _id: existing._id, institutionId, updatedAt: existing.updatedAt },
+            update,
+            { new: true, runValidators: true, ...opts },
+          )
+        : await AttendanceSession.findOneAndUpdate(
+            { ...filter, status: { $ne: "ACTIVE" } },
+            update,
+            {
+              new: true,
+              upsert: true,
+              runValidators: true,
+              setDefaultsOnInsert: true,
+              ...opts,
+            },
+          );
+      if (!saved) return null;
+      await AuditEvent.create(
+        [
+          {
+            institutionId,
+            actorMembershipId: actor.membershipId,
+            action: isCorrection
+              ? "ATTENDANCE_CORRECTED"
+              : "ATTENDANCE_SUBMITTED",
+            entityType: "AttendanceSession",
+            entityId: saved._id.toString(),
+            metadata: {
+              sectionId,
+              date,
+              recordCount: records.length,
+              correction: isCorrection,
+              ...(isCorrection ? { reason: correctionReason, changes } : {}),
+            },
+          },
+        ],
+        opts,
+      );
+      return saved;
+    });
+  } catch (error) {
+    if ((error as { code?: number }).code === 11000) session = null;
+    else throw error;
+  }
 
   if (!session) {
     return {
@@ -141,21 +202,6 @@ export async function submitAttendance(
       error: "Attendance changed concurrently. Reload and retry.",
     };
   }
-
-  await AuditEvent.create({
-    institutionId,
-    actorMembershipId: actor.membershipId,
-    action: isCorrection ? "ATTENDANCE_CORRECTED" : "ATTENDANCE_SUBMITTED",
-    entityType: "AttendanceSession",
-    entityId: session._id.toString(),
-    metadata: {
-      sectionId,
-      date,
-      recordCount: records.length,
-      correction: isCorrection,
-      ...(isCorrection ? { reason: correctionReason, changes } : {}),
-    },
-  });
 
   return {
     ok: true as const,

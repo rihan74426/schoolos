@@ -6,7 +6,7 @@
     "node": ">=18.18.0"
   },
   "scripts": {
-    "dev": "corepack pnpm --parallel --filter=@schoolos/web --filter=@schoolos/mobile run dev",
+    "dev": "corepack pnpm --filter=@schoolos/web run dev",
     "dev:web": "corepack pnpm --filter=@schoolos/web run dev",
     "dev:mobile": "corepack pnpm --filter=@schoolos/mobile run dev",
     "build": "turbo run build",
@@ -17,5 +17,10 @@
   "devDependencies": {
     "turbo": "^2.0.0",
     "typescript": "^5.5.4"
+  },
+  "pnpm": {
+    "overrides": {
+      "@types/react": "18.3.3"
+    }
   }
 }

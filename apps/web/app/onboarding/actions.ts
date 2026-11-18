@@ -22,7 +22,7 @@ export async function createFirstInstitutionAction(
   formData: FormData,
 ): Promise<OnboardingState> {
   const { userId } = await auth();
-  if (!userId) throw new Response("Unauthorized", { status: 401 });
+  if (!userId) redirect("/sign-in");
 
   const presetInput = String(formData.get("preset") ?? "bd-school");
   const preset = Object.hasOwn(policyPresets, presetInput)

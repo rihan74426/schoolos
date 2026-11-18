@@ -2,7 +2,18 @@
 
 import { authFailure, requirePermission } from "@/server/auth";
 import { saveGradingScheme, updateInstitutionPolicy } from "@/server/policy";
-
+import { revalidatePath } from "next/cache";
+import { parseBandLines } from "@schoolos/core";
+import {
+  assignTeacher,
+  createAcademicYear,
+  createGradeLevel,
+  createSection,
+  endTeacherAssignment,
+  setCurrentAcademicYear,
+} from "@/server/structure";
+import { getInstitutionPolicy } from "@/server/policy";
+import type { Actor } from "@/server/auth";
 export async function updatePolicyAction(input: unknown, expectedVersion: number) {
   try {
     const actor = await requirePermission("policy:write");
@@ -19,4 +30,99 @@ export async function saveGradingSchemeAction(input: unknown, makeDefault = fals
   } catch (error) {
     return authFailure(error);
   }
+}
+
+// ---- Form actions (useFormState): return a message instead of throwing ----
+
+export type FormState = { ok: boolean; message: string } | null;
+
+const text = (fd: FormData, key: string) => String(fd.get(key) ?? "");
+const num = (fd: FormData, key: string) => Number(fd.get(key));
+
+async function run(
+  permission: string,
+  fn: (actor: Actor) => Promise<{ ok: true } | { ok: false; error: string }>,
+  okMessage: string,
+): Promise<FormState> {
+  try {
+    const actor = await requirePermission(permission);
+    const result = await fn(actor);
+    if (!result.ok) return { ok: false, message: result.error };
+    revalidatePath("/admin/settings");
+    return { ok: true, message: okMessage };
+  } catch (error) {
+    const failure = authFailure(error);
+    return { ok: false, message: failure.error };
+  }
+}
+
+export async function createYearAction(_: FormState, fd: FormData) {
+  return run("structure:write", (actor) => createAcademicYear({
+    name: text(fd, "name"), startsOn: text(fd, "startsOn"), endsOn: text(fd, "endsOn"),
+    makeCurrent: fd.get("makeCurrent") === "on",
+  }, actor), "Academic year added");
+}
+
+export async function setCurrentYearAction(_: FormState, fd: FormData) {
+  return run("structure:write", (actor) => setCurrentAcademicYear(text(fd, "yearId"), actor), "Current year updated");
+}
+
+export async function createGradeLevelAction(_: FormState, fd: FormData) {
+  return run("structure:write", (actor) => createGradeLevel({
+    name: text(fd, "name"), sortOrder: Number(fd.get("sortOrder") || 0),
+  }, actor), "Grade level added");
+}
+
+export async function createSectionAction(_: FormState, fd: FormData) {
+  return run("structure:write", (actor) => createSection({
+    academicYearId: text(fd, "academicYearId"), gradeLevelId: text(fd, "gradeLevelId"), name: text(fd, "name"),
+  }, actor), "Section added");
+}
+
+export async function assignTeacherAction(_: FormState, fd: FormData) {
+  return run("teaching:assign", (actor) => assignTeacher({
+    membershipId: text(fd, "membershipId"), sectionId: text(fd, "sectionId"),
+  }, actor), "Teacher assigned");
+}
+
+export async function endAssignmentAction(_: FormState, fd: FormData) {
+  return run("teaching:assign", (actor) => endTeacherAssignment(text(fd, "assignmentId"), actor), "Assignment ended");
+}
+
+export async function createGradingSchemeAction(_: FormState, fd: FormData) {
+  const parsedBands = parseBandLines(text(fd, "bands"));
+  if ("error" in parsedBands) return { ok: false, message: parsedBands.error } as FormState;
+  const key = text(fd, "name").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40);
+  return run("policy:write", (actor) => saveGradingScheme({
+    key, name: text(fd, "name"), kind: "CUSTOM", passPercent: num(fd, "passPercent"),
+    failLabel: text(fd, "failLabel") || "F", bands: parsedBands.bands,
+  }, { makeDefault: fd.get("makeDefault") === "on" }, actor), "Grading scheme saved");
+}
+
+export async function updateRulesAction(_: FormState, fd: FormData) {
+  return run("policy:write", async (actor) => {
+    const current = await getInstitutionPolicy(actor.institutionId);
+    if (!current) return { ok: false as const, error: "Policy not found" };
+    const base = current.policy as Record<string, any>;
+    const lateMode = text(fd, "lateMode");
+    const lateFee =
+      lateMode === "FLAT"
+        ? { mode: "FLAT", flatMinor: Math.round(num(fd, "lateAmount") * 100), graceDays: num(fd, "graceDays") || 0 }
+        : lateMode === "PERCENT_PER_DAY"
+          ? { mode: "PERCENT_PER_DAY", percent: num(fd, "lateAmount"), graceDays: num(fd, "graceDays") || 0, capPercent: num(fd, "capPercent") || 100 }
+          : { mode: "NONE" };
+    const next = {
+      ...base,
+      gradingSchemeKey: text(fd, "gradingSchemeKey") || base.gradingSchemeKey,
+      attendance: {
+        ...base.attendance,
+        minimumAttendancePercent: num(fd, "minimumAttendancePercent"),
+        flagBelowPercent: num(fd, "flagBelowPercent"),
+        correctionWindowHours: num(fd, "correctionWindowHours"),
+        requireFullRoster: fd.get("requireFullRoster") === "on",
+      },
+      fees: { ...base.fees, lateFee },
+    };
+    return updateInstitutionPolicy(next, num(fd, "version"), actor);
+  }, "Rules updated");
 }

@@ -10,6 +10,10 @@ export const institutionPolicySchema = z.object({
     flagBelowPercent: pct,
     maxExcusedAbsenceDays: z.number().int().min(0).max(366),
     correctionRequiresReason: z.boolean().default(true),
+    // Teachers may correct their own section only inside this window; coordinators+ any time.
+    correctionWindowHours: z.number().int().min(0).max(8760).default(48),
+    // Every active student in the section must be marked before submit.
+    requireFullRoster: z.boolean().default(true),
   }),
   fees: z.object({
     currency: z.string().length(3).default('BDT'),
@@ -42,7 +46,7 @@ export const institutionPolicySchema = z.object({
 // Starting templates offered at institution creation. Founder reviews/edits every value.
 export const policyPresets = {
   'bd-school': {
-    attendance: { minimumAttendancePercent: 75, flagBelowPercent: 80, maxExcusedAbsenceDays: 10, correctionRequiresReason: true },
+    attendance: { minimumAttendancePercent: 75, flagBelowPercent: 80, maxExcusedAbsenceDays: 10, correctionRequiresReason: true, correctionWindowHours: 48, requireFullRoster: true },
     fees: { currency: 'BDT', lateFee: { mode: 'NONE' }, scholarshipCapPercent: 50 },
     hostel: { enabled: false, genderPolicy: 'separate', roomCapacities: { single: 1, double: 2, triple: 3 } },
     ranking: { enabled: false, weights: { grade: 70, attendance: 30 } },
@@ -50,7 +54,7 @@ export const policyPresets = {
     gradingSchemeKey: 'gpa-5',
   },
   'bd-madrasa': {
-    attendance: { minimumAttendancePercent: 75, flagBelowPercent: 80, maxExcusedAbsenceDays: 10, correctionRequiresReason: true },
+    attendance: { minimumAttendancePercent: 75, flagBelowPercent: 80, maxExcusedAbsenceDays: 10, correctionRequiresReason: true, correctionWindowHours: 48, requireFullRoster: true },
     fees: { currency: 'BDT', lateFee: { mode: 'NONE' }, scholarshipCapPercent: 50 },
     hostel: { enabled: true, genderPolicy: 'separate', roomCapacities: { single: 1, double: 2, triple: 3 } },
     ranking: { enabled: false, weights: { grade: 60, attendance: 20, conduct: 20 } },

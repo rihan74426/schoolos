@@ -1,5 +1,168 @@
-import { PageHeading } from '@/components/admin/page-heading';
+import { clerkClient } from "@clerk/nextjs/server";
+import { can, gradingPresets } from "@schoolos/core";
+import { connectDb, GradingScheme } from "@schoolos/db";
+import { PageHeading } from "@/components/admin/page-heading";
+import { ActionForm } from "@/components/admin/action-form";
+import { resolveActiveMembership } from "@/server/auth";
+import { getInstitutionPolicy } from "@/server/policy";
+import { listStructure } from "@/server/structure";
+import {
+  assignTeacherAction,
+  createGradeLevelAction,
+  createGradingSchemeAction,
+  createSectionAction,
+  createYearAction,
+  endAssignmentAction,
+  setCurrentYearAction,
+  updateRulesAction,
+} from "./actions";
 
-export default function SettingsPage() {
-  return <><PageHeading title="Settings" description="School profile, academic configuration, and staff access." /><section className="panel"><h2>School settings</h2><p className="muted">Add tenant configuration and role-based access controls before exposing administrative actions.</p></section></>;
+export const dynamic = "force-dynamic";
+
+type Policy = {
+  attendance: { minimumAttendancePercent: number; flagBelowPercent: number; correctionWindowHours?: number; requireFullRoster?: boolean };
+  fees: { lateFee: { mode: string; flatMinor?: number; percent?: number; graceDays?: number; capPercent?: number } };
+  gradingSchemeKey: string;
+};
+
+async function teacherNames(ids: string[]) {
+  const names = new Map<string, string>();
+  if (!ids.length) return names;
+  try {
+    const client = await clerkClient();
+    const { data } = await client.users.getUserList({ userId: ids, limit: 100 });
+    for (const u of data) {
+      names.set(u.id, [u.firstName, u.lastName].filter(Boolean).join(" ") || u.primaryEmailAddress?.emailAddress || u.id);
+    }
+  } catch {
+    /* fall back to short ids */
+  }
+  return names;
+}
+
+export default async function SettingsPage() {
+  const actor = await resolveActiveMembership();
+  if (!can(actor.role, "structure:read")) {
+    return (
+      <>
+        <PageHeading title="Settings" description="School profile, academic configuration, and staff access." />
+        <section className="panel"><p className="muted">Your role cannot view settings.</p></section>
+      </>
+    );
+  }
+  await connectDb();
+  const canStructure = can(actor.role, "structure:write");
+  const canAssign = can(actor.role, "teaching:assign");
+  const canPolicy = can(actor.role, "policy:write");
+
+  const [data, policyDoc, schemes] = await Promise.all([
+    listStructure(actor.institutionId),
+    getInstitutionPolicy(actor.institutionId),
+    GradingScheme.find({ institutionId: actor.institutionId, status: "ACTIVE" }).sort({ name: 1 }).lean() as unknown as Promise<Array<{ key: string; name: string; isDefault: boolean }>>,
+  ]);
+  const names = await teacherNames(data.teachers.map((t) => t.clerkUserId));
+  const levelName = new Map(data.gradeLevels.map((g) => [String(g._id), g.name]));
+  const yearName = new Map(data.years.map((y) => [String(y._id), y.name]));
+  const sectionLabel = new Map(data.sections.map((s) => [String(s._id), `${levelName.get(String(s.gradeLevelId)) ?? "?"} – ${s.name} (${yearName.get(String(s.academicYearId)) ?? "?"})`]));
+  const teacherLabel = new Map(data.teachers.map((t) => [String(t._id), names.get(t.clerkUserId) ?? `Teacher …${t.clerkUserId.slice(-6)}`]));
+  const policy = policyDoc?.policy as Policy | undefined;
+  const late = policy?.fees.lateFee;
+
+  return (
+    <>
+      <PageHeading title="Settings" description="Academic structure, teaching assignments, and your school's rules." />
+
+      <section className="panel" id="years">
+        <h2>Academic years</h2>
+        {data.years.length ? (
+          <div className="table-scroll"><table><thead><tr><th>Name</th><th>Dates</th><th>Status</th>{canStructure ? <th /> : null}</tr></thead><tbody>
+            {data.years.map((y) => (
+              <tr key={String(y._id)}><td>{y.name}</td><td>{y.startsOn} → {y.endsOn}</td><td>{y.isCurrent ? <span className="badge">Current</span> : "—"}</td>
+                {canStructure ? <td>{y.isCurrent ? null : <ActionForm action={setCurrentYearAction} submitLabel="Make current" className="inline-form"><input type="hidden" name="yearId" value={String(y._id)} /></ActionForm>}</td> : null}</tr>
+            ))}</tbody></table></div>
+        ) : <p className="empty-state">No academic year yet. Add one to start.</p>}
+        {canStructure ? (
+          <ActionForm action={createYearAction} submitLabel="Add year">
+            <label>Name<input name="name" required maxLength={40} placeholder="2026" /></label>
+            <label>Starts<input type="date" name="startsOn" required /></label>
+            <label>Ends<input type="date" name="endsOn" required /></label>
+            <label className="check"><input type="checkbox" name="makeCurrent" /> Make current</label>
+          </ActionForm>
+        ) : null}
+      </section>
+
+      <section className="panel" id="classes">
+        <h2>Classes and sections</h2>
+        <p className="muted small">{data.gradeLevels.length ? data.gradeLevels.map((g) => g.name).join(" · ") : "No classes yet."}</p>
+        {data.sections.length ? <ul className="plain-list">{data.sections.map((s) => <li key={String(s._id)}>{sectionLabel.get(String(s._id))}</li>)}</ul> : null}
+        {canStructure ? (<>
+          <ActionForm action={createGradeLevelAction} submitLabel="Add class">
+            <label>Class name<input name="name" required maxLength={60} placeholder="Class 6 / Hifz" /></label>
+            <label>Order<input type="number" name="sortOrder" min={0} defaultValue={data.gradeLevels.length + 1} /></label>
+          </ActionForm>
+          {data.years.length && data.gradeLevels.length ? (
+            <ActionForm action={createSectionAction} submitLabel="Add section">
+              <label>Year<select name="academicYearId" required>{data.years.map((y) => <option key={String(y._id)} value={String(y._id)}>{y.name}</option>)}</select></label>
+              <label>Class<select name="gradeLevelId" required>{data.gradeLevels.map((g) => <option key={String(g._id)} value={String(g._id)}>{g.name}</option>)}</select></label>
+              <label>Section<input name="name" required maxLength={40} placeholder="A" /></label>
+            </ActionForm>
+          ) : <p className="form-hint">Add an academic year and a class to create sections.</p>}
+        </>) : null}
+      </section>
+
+      <section className="panel" id="teaching">
+        <h2>Teaching assignments</h2>
+        <p className="muted small">Teachers can take attendance only for sections they are assigned to.</p>
+        {data.assignments.length ? (
+          <div className="table-scroll"><table><thead><tr><th>Teacher</th><th>Section</th>{canAssign ? <th /> : null}</tr></thead><tbody>
+            {data.assignments.map((a) => (
+              <tr key={String(a._id)}><td>{teacherLabel.get(String(a.membershipId)) ?? "Unknown"}</td><td>{sectionLabel.get(String(a.sectionId)) ?? "Unknown"}</td>
+                {canAssign ? <td><ActionForm action={endAssignmentAction} submitLabel="End" className="inline-form"><input type="hidden" name="assignmentId" value={String(a._id)} /></ActionForm></td> : null}</tr>
+            ))}</tbody></table></div>
+        ) : <p className="empty-state">No assignments yet.</p>}
+        {canAssign ? (
+          data.teachers.length && data.sections.length ? (
+            <ActionForm action={assignTeacherAction} submitLabel="Assign">
+              <label>Teacher<select name="membershipId" required>{data.teachers.map((t) => <option key={String(t._id)} value={String(t._id)}>{teacherLabel.get(String(t._id))}</option>)}</select></label>
+              <label>Section<select name="sectionId" required>{data.sections.map((s) => <option key={String(s._id)} value={String(s._id)}>{sectionLabel.get(String(s._id))}</option>)}</select></label>
+            </ActionForm>
+          ) : <p className="form-hint">Needs at least one section and one staff member with the Teacher role.</p>
+        ) : null}
+      </section>
+
+      <section className="panel" id="rules">
+        <h2>School rules</h2>
+        {policy && policyDoc ? (
+          canPolicy ? (
+            <ActionForm action={updateRulesAction} submitLabel="Save rules">
+              <input type="hidden" name="version" value={policyDoc.version} />
+              <label>Default grading scheme<select name="gradingSchemeKey" defaultValue={policy.gradingSchemeKey}>{schemes.map((s) => <option key={s.key} value={s.key}>{s.name}</option>)}</select></label>
+              <label>Minimum attendance %<input type="number" name="minimumAttendancePercent" min={0} max={100} step="any" defaultValue={policy.attendance.minimumAttendancePercent} required /></label>
+              <label>Flag at-risk below %<input type="number" name="flagBelowPercent" min={0} max={100} step="any" defaultValue={policy.attendance.flagBelowPercent} required /></label>
+              <label>Teacher correction window (hours)<input type="number" name="correctionWindowHours" min={0} max={8760} defaultValue={policy.attendance.correctionWindowHours ?? 48} required /></label>
+              <label className="check"><input type="checkbox" name="requireFullRoster" defaultChecked={policy.attendance.requireFullRoster ?? true} /> Require every student to be marked</label>
+              <label>Late fee<select name="lateMode" defaultValue={late?.mode ?? "NONE"}><option value="NONE">None</option><option value="FLAT">Flat amount</option><option value="PERCENT_PER_DAY">Percent per late day</option></select></label>
+              <label>Amount (৳ for flat, % for per-day)<input type="number" name="lateAmount" min={0} step="any" defaultValue={late?.mode === "FLAT" ? (late.flatMinor ?? 0) / 100 : late?.percent ?? 0} /></label>
+              <label>Grace days<input type="number" name="graceDays" min={0} defaultValue={late?.graceDays ?? 0} /></label>
+              <label>Cap % (per-day only)<input type="number" name="capPercent" min={0} max={100} defaultValue={late?.capPercent ?? 100} /></label>
+            </ActionForm>
+          ) : <p className="muted">Only owners and admins can change rules.</p>
+        ) : <p className="empty-state">No rules saved for this school yet.</p>}
+      </section>
+
+      <section className="panel" id="grading">
+        <h2>Grading schemes</h2>
+        <p className="muted small">{schemes.map((s) => s.name + (s.isDefault ? " (default)" : "")).join(" · ") || "None"}. Presets: {Object.values(gradingPresets).map((p) => p.name).join(", ")}.</p>
+        {canPolicy ? (
+          <ActionForm action={createGradingSchemeAction} submitLabel="Save scheme">
+            <label>Scheme name<input name="name" required maxLength={80} placeholder="Our Dakhil scale" /></label>
+            <label>Pass mark %<input type="number" name="passPercent" min={0} max={100} step="any" required defaultValue={33} /></label>
+            <label>Fail label<input name="failLabel" maxLength={20} defaultValue="F" /></label>
+            <label className="wide">Bands, one per line: label, minimum %, optional grade point<textarea name="bands" rows={6} required defaultValue={"A+ 80 5\nA 70 4\nB 60 3"} /></label>
+            <label className="check"><input type="checkbox" name="makeDefault" /> Make default</label>
+          </ActionForm>
+        ) : null}
+      </section>
+    </>
+  );
 }

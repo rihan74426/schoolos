@@ -385,3 +385,62 @@ td {
     flex-direction: column;
   }
 }
+
+/* Settings forms (mobile-first) */
+.form-grid {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+}
+.form-grid label {
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+  color: #3b475c;
+}
+.form-grid input:not([type="checkbox"]),
+.form-grid select,
+.form-grid textarea {
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid #d5dbe6;
+  border-radius: 8px;
+  font: inherit;
+}
+.form-grid label.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.inline-form {
+  display: inline-flex;
+  margin: 0;
+}
+.form-ok {
+  color: #1b7a43;
+  font-size: 13px;
+}
+.form-error {
+  color: #b42318;
+  font-size: 13px;
+}
+.form-hint {
+  color: #69758b;
+  font-size: 12px;
+}
+.plain-list {
+  margin: 8px 0;
+  padding-inline-start: 18px;
+  font-size: 13px;
+}
+@media (min-width: 720px) {
+  .form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: end;
+  }
+  .form-grid .wide,
+  .form-grid .form-ok,
+  .form-grid .form-error {
+    grid-column: 1 / -1;
+  }
+}

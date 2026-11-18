@@ -13,6 +13,9 @@ export const permissionMatrix = {
   'attendance:submit': [...LEADERSHIP, 'ACADEMIC_COORDINATOR', 'TEACHER'],
   // Roles that may take attendance for ANY section; others (TEACHER) need a TeachingAssignment.
   'attendance:any-section': [...LEADERSHIP, 'ACADEMIC_COORDINATOR'],
+  'structure:read': [...LEADERSHIP, 'ACADEMIC_COORDINATOR', 'TEACHER'],
+  'structure:write': [...LEADERSHIP],
+  'teaching:assign': [...LEADERSHIP, 'ACADEMIC_COORDINATOR'],
   'fees:read': [...LEADERSHIP, 'ACCOUNTS'],
   'fees:write': ['OWNER', 'ADMIN', 'ACCOUNTS'],
   'exams:write': [...LEADERSHIP, 'ACADEMIC_COORDINATOR', 'TEACHER'],

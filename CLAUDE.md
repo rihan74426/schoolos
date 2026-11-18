@@ -12,7 +12,7 @@ pnpm 9 + Turborepo monorepo. Next.js 14 App Router, React 18.3, Clerk v6 (`@cler
 - `packages/core` — DB-free domain rules, zod schemas, permission matrix. Vitest.
 - `packages/db` — Mongoose models, `tenantPlugin`, `connectDb`, `withOptionalTransaction`. Isolation tests.
 - `packages/i18n` — en/bn/ar message tables (shell only so far).
-- `apps/mobile` — Expo scaffold, **frozen** (PWA first). Not part of `dev`; do not extend.
+- `apps/mobile` — Expo scaffold, **frozen** (PWA first). Not in `dev` or root `typecheck`; do not extend.
 
 Commands: `pnpm install`; `pnpm --filter @schoolos/core test|typecheck`; `pnpm --filter @schoolos/db test`; `pnpm --filter @schoolos/web test|typecheck|lint`. CI (`.github/workflows/ci.yml`) runs all of them. DB tests download a MongoDB binary and fail in network-restricted sandboxes; that is an environment limit, not a code bug.
 
@@ -41,8 +41,8 @@ Commands: `pnpm install`; `pnpm --filter @schoolos/core test|typecheck`; `pnpm -
 
 ## Roadmap (check `docs/` and project memory for detail)
 
-Done: monorepo/CI, Clerk auth + webhook, tenancy, onboarding bootstrap with preset rules, attendance service, grading/policy engine + services, permission matrix, teaching-assignment model.
-Next: Settings UI for policy/grading/academic structure → students + guardians (CSV import, enrollment txn) → attendance roster UI + teaching-assignment admin → notices/SMS (provider TBD) → fees → exams/marks approval → guardian view. Ranking is deferred (not exported from core). PDPA legal review is required before real child data.
+Done: monorepo/CI, Clerk auth + webhook, tenancy, onboarding bootstrap with preset rules, attendance service (full-roster + teacher correction window from policy), grading/policy engine + services, permission matrix, structure services (academic year/class/section), teaching-assignment admin, Settings page (structure, assignments, rules, custom grading schemes).
+Next: staff invites (so Teacher memberships can be created) → students + guardians (CSV import, enrollment txn) → attendance roster UI + notices/SMS (provider TBD) → fees → exams/marks approval → guardian view. Ranking is deferred (not exported from core). PDPA legal review is required before real child data.
 
 ## Conventions
 

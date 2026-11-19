@@ -14,5 +14,10 @@ const schema = new mongoose.Schema({
 schema.plugin(tenantPlugin);
 schema.index({ institutionId: 1, membershipId: 1, status: 1 });
 schema.index({ institutionId: 1, sectionId: 1, status: 1 });
+// At most one ACTIVE assignment per teacher and section (blocks double-click duplicates).
+schema.index(
+  { institutionId: 1, membershipId: 1, sectionId: 1 },
+  { unique: true, partialFilterExpression: { status: 'ACTIVE' } },
+);
 
 export const TeachingAssignment = mongoose.models.TeachingAssignment || mongoose.model('TeachingAssignment', schema);

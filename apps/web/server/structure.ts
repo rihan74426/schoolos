@@ -72,13 +72,17 @@ export async function createAcademicYear(input: unknown, actor: Actor): Promise<
   try {
     const created = await withOptionalTransaction(async (txn: ClientSession | null) => {
       const opts = txn ? { session: txn } : {};
-      if (makeCurrent) {
-        await AcademicYear.updateMany({ institutionId, isCurrent: true }, { $set: { isCurrent: false } }, opts);
-      }
+      // Create first (a duplicate name fails here, before anything is changed), then promote.
+      // Clearing the old current year first would leave the school with none if the create failed
+      // on a database without transactions.
       const [year] = await AcademicYear.create(
-        [{ ...data, institutionId, isCurrent: makeCurrent, status: makeCurrent ? "ACTIVE" : "DRAFT" }],
+        [{ ...data, institutionId, isCurrent: false, status: makeCurrent ? "ACTIVE" : "DRAFT" }],
         opts,
       );
+      if (makeCurrent) {
+        await AcademicYear.updateMany({ institutionId, isCurrent: true }, { $set: { isCurrent: false } }, opts);
+        await AcademicYear.updateOne({ _id: year._id, institutionId }, { $set: { isCurrent: true } }, opts);
+      }
       await audit(actor, "ACADEMIC_YEAR_CREATED", "AcademicYear", year._id, { ...data, makeCurrent }, txn);
       return year;
     });
@@ -158,18 +162,28 @@ export async function assignTeacher(input: unknown, actor: Actor): Promise<Ok | 
   ]);
   if (!member) return { ok: false, error: "Teacher not found" };
   if (!section) return { ok: false, error: "Section not found" };
-  if (await TeachingAssignment.exists({ institutionId, membershipId, sectionId, status: "ACTIVE" })) {
-    return { ok: false, error: "Teacher is already assigned to this section" };
+  if (!(await AcademicYear.exists({ _id: section.academicYearId, institutionId, isCurrent: true }))) {
+    return { ok: false, error: "Section is not in the current academic year. Make its year current first." };
   }
-  const created = await withOptionalTransaction(async (txn: ClientSession | null) => {
-    const [row] = await TeachingAssignment.create(
-      [{ institutionId, membershipId, sectionId, academicYearId: section.academicYearId }],
-      txn ? { session: txn } : {},
-    );
-    await audit(actor, "TEACHING_ASSIGNED", "TeachingAssignment", row._id, { membershipId, sectionId }, txn);
-    return row;
-  });
-  return { ok: true, id: String(created._id) };
+  const ALREADY = "Teacher is already assigned to this section";
+  if (await TeachingAssignment.exists({ institutionId, membershipId, sectionId, status: "ACTIVE" })) {
+    return { ok: false, error: ALREADY };
+  }
+  try {
+    const created = await withOptionalTransaction(async (txn: ClientSession | null) => {
+      const [row] = await TeachingAssignment.create(
+        [{ institutionId, membershipId, sectionId, academicYearId: section.academicYearId }],
+        txn ? { session: txn } : {},
+      );
+      await audit(actor, "TEACHING_ASSIGNED", "TeachingAssignment", row._id, { membershipId, sectionId }, txn);
+      return row;
+    });
+    return { ok: true, id: String(created._id) };
+  } catch (e) {
+    // Two simultaneous clicks: the partial unique index lets only one ACTIVE row exist.
+    if (isDuplicate(e)) return { ok: false, error: ALREADY };
+    throw e;
+  }
 }
 
 export async function endTeacherAssignment(assignmentId: string, actor: Actor): Promise<Ok | Fail> {

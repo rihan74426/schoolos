@@ -68,4 +68,33 @@ describe("academic structure", () => {
     expect((await endTeacherAssignment((first as { id: string }).id, actor())).ok).toBe(true);
     expect(await TeachingAssignment.countDocuments({ institutionId: schoolA, status: "ACTIVE" })).toBe(0);
   });
+
+  it("keeps the current year when a duplicate-named year is added as current", async () => {
+    const before = (await AcademicYear.findOne({ institutionId: schoolA, isCurrent: true }).lean()) as unknown as { _id: unknown } | null;
+    const dup = await createAcademicYear({ name: "2026", startsOn: "2026-01-01", endsOn: "2026-12-31", makeCurrent: true }, actor());
+    expect(dup).toMatchObject({ ok: false, error: "That name already exists" });
+    const after = (await AcademicYear.findOne({ institutionId: schoolA, isCurrent: true }).lean()) as unknown as { _id: unknown } | null;
+    expect(before).not.toBeNull();
+    expect(String(after?._id)).toBe(String(before?._id));
+  });
+
+  it("allows only one of two simultaneous identical assignments", async () => {
+    const section = (await Section.findOne({ institutionId: schoolA }).lean()) as unknown as { _id: unknown };
+    const teacher = await Membership.create({ institutionId: schoolA, clerkUserId: "user_t2", role: "TEACHER" });
+    const input = { membershipId: String(teacher._id), sectionId: String(section._id) };
+    const results = await Promise.all([assignTeacher(input, actor()), assignTeacher(input, actor())]);
+    expect(results.filter((r) => r.ok)).toHaveLength(1);
+    expect(await TeachingAssignment.countDocuments({ institutionId: schoolA, membershipId: teacher._id, status: "ACTIVE" })).toBe(1);
+  });
+
+  it("rejects assignments to sections outside the current year", async () => {
+    const old = await createAcademicYear({ name: "2025", startsOn: "2025-01-01", endsOn: "2025-12-31" }, actor());
+    const level = (await GradeLevel.findOne({ institutionId: schoolA }).lean()) as unknown as { _id: unknown };
+    const sec = await createSection({ academicYearId: (old as { id: string }).id, gradeLevelId: String(level._id), name: "Old" }, actor());
+    const teacher = await Membership.findOne({ institutionId: schoolA, clerkUserId: "user_t2" }).lean() as unknown as { _id: unknown };
+    expect(await assignTeacher({ membershipId: String(teacher._id), sectionId: (sec as { id: string }).id }, actor())).toMatchObject({
+      ok: false,
+      error: expect.stringContaining("not in the current academic year"),
+    });
+  });
 });

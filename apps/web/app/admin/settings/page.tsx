@@ -29,14 +29,15 @@ type Policy = {
   gradingSchemeKey: string;
 };
 
-async function teacherNames(ids: string[]) {
+// Emails are shown only to roles that manage structure; everyone else sees names or a short id.
+async function teacherNames(ids: string[], allowEmail: boolean) {
   const names = new Map<string, string>();
   if (!ids.length) return names;
   try {
     const client = await clerkClient();
     const { data } = await client.users.getUserList({ userId: ids, limit: 100 });
     for (const u of data) {
-      names.set(u.id, [u.firstName, u.lastName].filter(Boolean).join(" ") || u.primaryEmailAddress?.emailAddress || u.id);
+      names.set(u.id, [u.firstName, u.lastName].filter(Boolean).join(" ") || (allowEmail ? u.primaryEmailAddress?.emailAddress : undefined) || u.id);
     }
   } catch {
     /* fall back to short ids */
@@ -66,7 +67,7 @@ export default async function SettingsPage() {
     GradingScheme.find({ institutionId: actor.institutionId, status: "ACTIVE" }).sort({ name: 1 }).lean() as unknown as Promise<Array<{ key: string; name: string; isDefault: boolean }>>,
   ]);
   const [names, staffRows, invites] = await Promise.all([
-    teacherNames(data.teachers.map((t) => t.clerkUserId)),
+    teacherNames(data.teachers.map((t) => t.clerkUserId), canStructure),
     Staff.find({ institutionId: actor.institutionId, membershipId: { $in: data.teachers.map((t) => t._id) } }).lean() as unknown as Promise<Array<{ membershipId: unknown; fullName: string }>>,
     canInvite ? listPendingInvitations(actor.institutionId) : Promise.resolve([]),
   ]);

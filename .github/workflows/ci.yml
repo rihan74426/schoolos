@@ -40,3 +40,11 @@ jobs:
 
       - name: Lint web application
         run: pnpm --filter @schoolos/web lint
+
+      - name: Build web application
+        run: pnpm --filter @schoolos/web build
+        env:
+          # Dummy values so the build can prerender; no real services are contacted.
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_Y2xlcmsuZXhhbXBsZS5jb20k
+          CLERK_SECRET_KEY: sk_test_dummy
+          MONGODB_URI: mongodb://localhost:27017/schoolos-build

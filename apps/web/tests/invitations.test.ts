@@ -5,6 +5,7 @@ import { AuditEvent, Institution, Invitation, Membership, Staff } from "@schoolo
 import {
   acceptInvitation,
   createInvitation,
+  hashToken,
   previewInvitation,
   revokeInvitation,
 } from "@/server/invitations";
@@ -69,7 +70,8 @@ describe("invitations", () => {
     expect(await acceptInvitation(token(expired), "user_late")).toMatchObject({ ok: false });
 
     const live = await createInvitation({ role: "TEACHER" }, actor("PRINCIPAL"));
-    const row = (await Invitation.findOne({ institutionId: schoolA, status: "PENDING" }).lean()) as unknown as { _id: unknown };
+    // Look up THIS invite by its own hash; an unfiltered findOne can return an older, expired one.
+    const row = (await Invitation.findOne({ institutionId: schoolA, tokenHash: hashToken(token(live)) }).lean()) as unknown as { _id: unknown };
     expect(await revokeInvitation(String(row._id), actor("PRINCIPAL", schoolB))).toMatchObject({ ok: false });
     expect(await revokeInvitation(String(row._id), actor("PRINCIPAL"))).toEqual({ ok: true });
     expect(await acceptInvitation(token(live), "user_revoked")).toMatchObject({ ok: false });

@@ -459,3 +459,7 @@ td {
   display: grid;
   gap: 14px;
 }
+.import-report {
+  display: grid;
+  gap: 12px;
+}

@@ -30,6 +30,7 @@ Commands: `pnpm install`; `pnpm --filter @schoolos/core test|typecheck`; `pnpm -
 - Always `findOne({ _id, institutionId })`; never `findById` on tenant data. Mongo has no foreign keys: verify related ids (section, student, subject) belong to the same institution in the service.
 - Never trust a client-supplied institution. Resolve memberships from the Clerk identity and validate the HttpOnly `active-school` cookie against them (`resolveActiveMembership`).
 - Validate ids with `mongoose.isObjectIdOrHexString`, never `isValidObjectId`.
+- Never use `populate()` on tenant models (it queries without `institutionId` and the plugin rejects it); fetch related docs with a scoped query and join in code.
 - **Invites**: single-use, 7-day links at `/join/<token>`. Only the SHA-256 hash is stored (never log or audit the raw token). `Invitation` allows lookup by `tokenHash` alone (plugin option `allowTokenHashLookup`); acceptance claims atomically, never changes an existing member's role, and `invitableRoles(role)` limits who can invite whom. Invited staff must complete a `Staff` profile (`/admin/welcome`) before the dashboard.
 - Webhook: `/api/webhooks/clerk` uses `verifyWebhook`; env `CLERK_WEBHOOK_SIGNING_SECRET`. Middleware is `middleware.ts` (Next 14); `auth()` is async in Clerk v6.
 
@@ -37,13 +38,13 @@ Commands: `pnpm install`; `pnpm --filter @schoolos/core test|typecheck`; `pnpm -
 
 - Money = integer minor units (paisa). Dates = `YYYY-MM-DD` strings for school days (Asia/Dhaka) or UTC `Date`s for instants. Validate all input with zod; never trust the client.
 - **Attendance** is immutable after first submit unless a correction reason (≥10 chars) is given; corrections store a before/after diff in `AuditEvent`. First-submit races resolve via the unique index + status filter.
-- **Student vs Enrollment**: `Enrollment` is the source of truth; `Student.sectionId` is a denormalized current-section cache. Update both in one transaction (not yet implemented for enrollment flows).
+- **Student vs Enrollment**: `Enrollment` is the source of truth; `Student.sectionId` is a denormalized current-section cache. Both are updated in one transaction by `enrollStudent`/`createStudent`/CSV import (`server/students.ts`); enrollment is one row per student per academic year, a transfer edits it.
 - Audit sensitive changes (attendance, policy, grading, roles, fees) with `AuditEvent`.
 
 ## Roadmap (check `docs/` and project memory for detail)
 
-Done: monorepo/CI, Clerk auth + webhook, tenancy, onboarding bootstrap with preset rules, attendance service (full-roster + teacher correction window from policy), grading/policy engine + services, permission matrix, structure services (academic year/class/section), teaching-assignment admin, Settings page (structure, assignments, rules, custom grading schemes), setup checklist, staff invite links (WhatsApp/Messenger share) + welcome/profile flow.
-Next: students + guardians (CSV import, enrollment txn) → attendance roster UI + notices/SMS (provider TBD) → fees → exams/marks approval → guardian view. Ranking is deferred (not exported from core). PDPA legal review is required before real child data.
+Done: monorepo/CI, Clerk auth + webhook, tenancy, onboarding bootstrap with preset rules, attendance service (full-roster + teacher correction window from policy), grading/policy engine + services, permission matrix, structure services (academic year/class/section), teaching-assignment admin, Settings page (structure, assignments, rules, custom grading schemes), setup checklist, staff invite links (WhatsApp/Messenger share) + welcome/profile flow, students/guardians/enrollment services + pages, CSV import (preview → commit valid rows).
+Next: attendance roster UI + notices/SMS (provider TBD) → fees → exams/marks approval → guardian view. Ranking is deferred (not exported from core). PDPA legal review is required before real child data.
 
 ## Conventions
 

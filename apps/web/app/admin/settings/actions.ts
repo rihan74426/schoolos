@@ -14,6 +14,9 @@ import {
 } from "@/server/structure";
 import { getInstitutionPolicy } from "@/server/policy";
 import type { Actor } from "@/server/auth";
+import { createInvitation, revokeInvitation } from "@/server/invitations";
+import { appOrigin } from "@/server/origin";
+import { connectDb, Institution } from "@schoolos/db";
 export async function updatePolicyAction(input: unknown, expectedVersion: number) {
   try {
     const actor = await requirePermission("policy:write");
@@ -125,4 +128,33 @@ export async function updateRulesAction(_: FormState, fd: FormData) {
     };
     return updateInstitutionPolicy(next, num(fd, "version"), actor);
   }, "Rules updated");
+}
+
+export type InviteState = { ok: boolean; message: string; link?: string; shareText?: string } | null;
+
+export async function createInviteAction(_: InviteState, fd: FormData): Promise<InviteState> {
+  try {
+    const actor = await requirePermission("staff:invite");
+    const result = await createInvitation(
+      { role: text(fd, "role"), inviteeNote: text(fd, "inviteeNote") },
+      actor,
+    );
+    if (!result.ok) return { ok: false, message: result.error };
+    await connectDb();
+    const school = (await Institution.findOne({ _id: actor.institutionId }).lean()) as unknown as { name: string } | null;
+    const link = `${await appOrigin()}/join/${result.token}`;
+    revalidatePath("/admin/settings");
+    return {
+      ok: true,
+      message: "Link ready. It works once and expires in 7 days. Copy it now; it is not shown again.",
+      link,
+      shareText: `Assalamu alaikum. You are invited to join ${school?.name ?? "our school"} on SchoolOS as ${text(fd, "role").replace(/_/g, " ").toLowerCase()}: ${link}`,
+    };
+  } catch (error) {
+    return { ok: false, message: authFailure(error).error };
+  }
+}
+
+export async function revokeInviteAction(_: FormState, fd: FormData) {
+  return run("staff:invite", (actor) => revokeInvitation(text(fd, "invitationId"), actor), "Invitation revoked");
 }

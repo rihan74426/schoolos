@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { can, rolesFor } from './permissions.js';
+import { can, invitableRoles, rolesFor } from './permissions.js';
 
 describe('permissions', () => {
   it('grants by role and denies unknown actions/roles', () => {
@@ -13,5 +13,13 @@ describe('permissions', () => {
   it('lists roles and rejects unknown action', () => {
     expect(rolesFor('policy:write')).toEqual(['OWNER', 'ADMIN']);
     expect(() => rolesFor('nope')).toThrow(RangeError);
+  });
+
+  it('limits who can be invited by whom', () => {
+    expect(invitableRoles('ACADEMIC_COORDINATOR')).toEqual(['TEACHER']);
+    expect(invitableRoles('PRINCIPAL')).not.toContain('ADMIN');
+    expect(invitableRoles('OWNER')).not.toContain('OWNER');
+    expect(invitableRoles('TEACHER')).toEqual([]);
+    expect(invitableRoles('constructor')).toEqual([]);
   });
 });

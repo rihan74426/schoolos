@@ -1,6 +1,8 @@
 import { clerkClient } from "@clerk/nextjs/server";
-import { can, gradingPresets } from "@schoolos/core";
-import { connectDb, GradingScheme } from "@schoolos/db";
+import { can, gradingPresets, invitableRoles } from "@schoolos/core";
+import { connectDb, GradingScheme, Staff } from "@schoolos/db";
+import { InviteForm } from "@/components/admin/invite-form";
+import { listPendingInvitations } from "@/server/invitations";
 import { PageHeading } from "@/components/admin/page-heading";
 import { ActionForm } from "@/components/admin/action-form";
 import { resolveActiveMembership } from "@/server/auth";
@@ -11,7 +13,9 @@ import {
   createGradeLevelAction,
   createGradingSchemeAction,
   createSectionAction,
+  createInviteAction,
   createYearAction,
+  revokeInviteAction,
   endAssignmentAction,
   setCurrentYearAction,
   updateRulesAction,
@@ -54,17 +58,23 @@ export default async function SettingsPage() {
   const canStructure = can(actor.role, "structure:write");
   const canAssign = can(actor.role, "teaching:assign");
   const canPolicy = can(actor.role, "policy:write");
+  const canInvite = can(actor.role, "staff:invite");
 
   const [data, policyDoc, schemes] = await Promise.all([
     listStructure(actor.institutionId),
     getInstitutionPolicy(actor.institutionId),
     GradingScheme.find({ institutionId: actor.institutionId, status: "ACTIVE" }).sort({ name: 1 }).lean() as unknown as Promise<Array<{ key: string; name: string; isDefault: boolean }>>,
   ]);
-  const names = await teacherNames(data.teachers.map((t) => t.clerkUserId));
+  const [names, staffRows, invites] = await Promise.all([
+    teacherNames(data.teachers.map((t) => t.clerkUserId)),
+    Staff.find({ institutionId: actor.institutionId, membershipId: { $in: data.teachers.map((t) => t._id) } }).lean() as unknown as Promise<Array<{ membershipId: unknown; fullName: string }>>,
+    canInvite ? listPendingInvitations(actor.institutionId) : Promise.resolve([]),
+  ]);
+  const staffName = new Map(staffRows.map((r) => [String(r.membershipId), r.fullName]));
   const levelName = new Map(data.gradeLevels.map((g) => [String(g._id), g.name]));
   const yearName = new Map(data.years.map((y) => [String(y._id), y.name]));
   const sectionLabel = new Map(data.sections.map((s) => [String(s._id), `${levelName.get(String(s.gradeLevelId)) ?? "?"} – ${s.name} (${yearName.get(String(s.academicYearId)) ?? "?"})`]));
-  const teacherLabel = new Map(data.teachers.map((t) => [String(t._id), names.get(t.clerkUserId) ?? `Teacher …${t.clerkUserId.slice(-6)}`]));
+  const teacherLabel = new Map(data.teachers.map((t) => [String(t._id), staffName.get(String(t._id)) ?? names.get(t.clerkUserId) ?? `Teacher …${t.clerkUserId.slice(-6)}`]));
   const policy = policyDoc?.policy as Policy | undefined;
   const late = policy?.fees.lateFee;
 
@@ -109,6 +119,21 @@ export default async function SettingsPage() {
           ) : <p className="form-hint">Add an academic year and a class to create sections.</p>}
         </>) : null}
       </section>
+
+      {canInvite ? (
+        <section className="panel" id="staff">
+          <h2>Invite staff</h2>
+          <p className="muted small">Create a link and send it by WhatsApp, Messenger or any app. The person signs up, joins this school with the role you pick, then fills in their profile.</p>
+          <InviteForm action={createInviteAction} roles={invitableRoles(actor.role)} />
+          {invites.length ? (
+            <div className="table-scroll"><table><thead><tr><th>Role</th><th>Note</th><th>Expires</th><th /></tr></thead><tbody>
+              {invites.map((i) => (
+                <tr key={String(i._id)}><td>{i.role.replace(/_/g, " ").toLowerCase()}</td><td>{i.inviteeNote ?? "—"}</td><td>{new Date(i.expiresAt).toISOString().slice(0, 10)}</td>
+                  <td><ActionForm action={revokeInviteAction} submitLabel="Revoke" className="inline-form"><input type="hidden" name="invitationId" value={String(i._id)} /></ActionForm></td></tr>
+              ))}</tbody></table></div>
+          ) : null}
+        </section>
+      ) : null}
 
       <section className="panel" id="teaching">
         <h2>Teaching assignments</h2>

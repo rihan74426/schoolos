@@ -1,8 +1,11 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { STAFF_PROFILE_ROLES } from "@schoolos/core";
 import { connectDb } from "@schoolos/db";
 import { PageHeading } from "@/components/admin/page-heading";
 import { resolveActiveMembership } from "@/server/auth";
 import { getSetupProgress } from "@/server/setup";
+import { getStaffProfile } from "@/server/staff";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +21,10 @@ const modules = [
 export default async function DashboardPage() {
   const actor = await resolveActiveMembership();
   await connectDb();
+  // Invited staff finish their profile before using the dashboard.
+  if (STAFF_PROFILE_ROLES.includes(actor.role) && !(await getStaffProfile(actor.institutionId, actor.membershipId))) {
+    redirect("/admin/welcome");
+  }
   const progress = await getSetupProgress(actor.institutionId);
 
   return (

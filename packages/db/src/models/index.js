@@ -13,3 +13,5 @@ export { GradingScheme } from './GradingScheme.js';
 export { InstitutionPolicy } from './InstitutionPolicy.js';
 export { Subject } from './Subject.js';
 export { TeachingAssignment } from './TeachingAssignment.js';
+export { Invitation } from './Invitation.js';
+export { Staff } from './Staff.js';

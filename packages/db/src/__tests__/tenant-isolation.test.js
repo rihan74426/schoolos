@@ -4,6 +4,7 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import { Student } from "../models/Student.js";
 import { Enrollment } from "../models/Enrollment.js";
 import { AuditEvent } from "../models/AuditEvent.js";
+import { Invitation } from "../models/Invitation.js";
 
 let mongo;
 let schoolA;
@@ -104,5 +105,14 @@ describe("tenant-scoped student model", () => {
     await expect(
       Student.find({ institutionId: String(schoolA) }),
     ).resolves.toEqual([]);
+  });
+
+  it("allows invitation lookup only by a full SHA-256 token hash", async () => {
+    const hash = "a".repeat(64);
+    await expect(Invitation.findOne({ tokenHash: hash })).resolves.toBeNull();
+    await expect(Invitation.find({})).rejects.toThrow("Tenant scope required: find");
+    await expect(Invitation.findOne({ tokenHash: "short" })).rejects.toThrow("Tenant scope required");
+    await expect(Invitation.findOne({ tokenHash: { $ne: hash } })).rejects.toThrow("Tenant scope required");
+    await expect(Invitation.deleteMany({ tokenHash: hash })).rejects.toThrow("Tenant scope required");
   });
 });

@@ -7,6 +7,7 @@ export { hostelRules, canAssignRoom } from './hostel/hostel-allocation.js';
 export * from './schemas.js';
 export { gradingPresets, gradingSchemeSchema, gradeBandSchema, validateGradingScheme, percentOf, gradeFor, gradeMarks } from './grading/grading-schemes.js';
 export { institutionPolicySchema, policyPresets, buildInitialPolicy, lateFeeFromPolicy, attendanceStanding } from './policy/institution-policy.js';
-export { ROLES, permissionMatrix, can, rolesFor } from './permissions/permissions.js';
+export { ROLES, permissionMatrix, can, rolesFor, invitableRoles, STAFF_PROFILE_ROLES } from './permissions/permissions.js';
 export { academicYearInputSchema, gradeLevelInputSchema, sectionInputSchema, teachingAssignmentInputSchema, parseBandLines } from './structure/structure-schemas.js';
 export { setupProgress, setupStepDefs } from './setup/setup-progress.js';
+export { staffProfileInputSchema, normalizeBdPhone } from './staff/staff-profile.js';

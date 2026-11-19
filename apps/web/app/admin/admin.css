@@ -444,3 +444,18 @@ td {
     grid-column: 1 / -1;
   }
 }
+.invite-share {
+  display: grid;
+  gap: 8px;
+}
+.invite-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.join-card {
+  max-width: 440px;
+  margin: 8vh auto;
+  display: grid;
+  gap: 14px;
+}

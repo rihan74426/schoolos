@@ -16,6 +16,7 @@ export const permissionMatrix = {
   'structure:read': [...LEADERSHIP, 'ACADEMIC_COORDINATOR', 'TEACHER'],
   'structure:write': [...LEADERSHIP],
   'teaching:assign': [...LEADERSHIP, 'ACADEMIC_COORDINATOR'],
+  'staff:invite': ['OWNER', 'ADMIN', 'PRINCIPAL', 'ACADEMIC_COORDINATOR'],
   'fees:read': [...LEADERSHIP, 'ACCOUNTS'],
   'fees:write': ['OWNER', 'ADMIN', 'ACCOUNTS'],
   'exams:write': [...LEADERSHIP, 'ACADEMIC_COORDINATOR', 'TEACHER'],
@@ -30,3 +31,16 @@ export function rolesFor(action) {
   if (!Object.hasOwn(permissionMatrix, action)) throw new RangeError(`Unknown action: ${action}`);
   return [...permissionMatrix[action]];
 }
+
+// Roles a given role may invite (never equal to or above their own authority).
+const invitable = {
+  OWNER: ['ADMIN', 'PRINCIPAL', 'ACADEMIC_COORDINATOR', 'TEACHER', 'ACCOUNTS'],
+  ADMIN: ['PRINCIPAL', 'ACADEMIC_COORDINATOR', 'TEACHER', 'ACCOUNTS'],
+  PRINCIPAL: ['ACADEMIC_COORDINATOR', 'TEACHER', 'ACCOUNTS'],
+  ACADEMIC_COORDINATOR: ['TEACHER'],
+};
+export function invitableRoles(role) {
+  return Object.hasOwn(invitable, role) ? [...invitable[role]] : [];
+}
+// Roles that must complete a staff profile after joining.
+export const STAFF_PROFILE_ROLES = ['ADMIN', 'PRINCIPAL', 'ACADEMIC_COORDINATOR', 'TEACHER', 'ACCOUNTS'];

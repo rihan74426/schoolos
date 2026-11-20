@@ -24,6 +24,7 @@ import {
   withOptionalTransaction,
 } from "@schoolos/db";
 import type { Actor } from "./auth";
+import { todayInDhaka } from "./dates";
 
 type Fail = { ok: false; error: string };
 type GuardianInput = { fullName: string; phone: string; relationship: string; email?: string; isPrimary: boolean };
@@ -34,8 +35,6 @@ type ImportRow = {
 const isDuplicate = (e: unknown) => (e as { code?: number }).code === 11000;
 const MAX_CSV_CHARS = 1_000_000;
 
-// School days are Asia/Dhaka (UTC+6, no DST).
-export const todayInDhaka = () => new Date(Date.now() + 6 * 3_600_000).toISOString().slice(0, 10);
 
 const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 

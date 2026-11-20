@@ -76,12 +76,12 @@ describe("submitAttendance", () => {
   });
 
   it("requires the whole roster by default", async () => {
-    const partial = await submitAttendance(input({ date: "2026-12-05" }, records().slice(0, 1)), actor("ADMIN"));
+    const partial = await submitAttendance(input({ date: "2026-10-05" }, records().slice(0, 1)), actor("ADMIN"));
     expect(partial).toMatchObject({ ok: false, error: "Mark every active student (1 of 2 marked)" });
   });
 
   it("closes the teacher correction window but not for admins", async () => {
-    const date = "2026-12-06";
+    const date = "2026-10-06";
     await TeachingAssignment.create({ institutionId: schoolA, membershipId: teacherA, sectionId, academicYearId: oid() }).catch(() => null);
     expect((await submitAttendance(input({ date }), actor("TEACHER", teacherA))).ok).toBe(true);
     await AttendanceSession.collection.updateOne(
@@ -96,7 +96,7 @@ describe("submitAttendance", () => {
   });
 
   it("only one of two concurrent first submits wins", async () => {
-    const date = "2026-12-01";
+    const date = "2026-10-01";
     const results = await Promise.all([
       submitAttendance(input({ date }), actor("ADMIN")),
       submitAttendance(input({ date }, records("ABSENT")), actor("ADMIN")),
@@ -105,12 +105,12 @@ describe("submitAttendance", () => {
   });
 
   it("does not let another institution submit for this section", async () => {
-    const res = await submitAttendance(input({ date: "2026-12-02" }), actor("ADMIN", oid(), schoolB));
+    const res = await submitAttendance(input({ date: "2026-10-02" }), actor("ADMIN", oid(), schoolB));
     expect(res).toMatchObject({ ok: false, error: "Section not found" });
   });
 
   it("rejects 12-character non-hex ids", async () => {
-    const res = await submitAttendance({ sectionId: "abcdefghijkl", date: "2026-12-03", records: records() }, actor("ADMIN"));
+    const res = await submitAttendance({ sectionId: "abcdefghijkl", date: "2026-10-03", records: records() }, actor("ADMIN"));
     expect(res).toMatchObject({ ok: false, error: "Invalid sectionId" });
   });
 });

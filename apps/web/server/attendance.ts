@@ -2,6 +2,8 @@ import "server-only";
 import { isObjectIdOrHexString as isValidObjectId } from "mongoose";
 import type { ClientSession } from "mongoose";
 import { getInstitutionPolicy } from "./policy";
+import { isRealSchoolDate, todayInDhaka } from "./dates";
+import { listCurrentSections } from "./students";
 import { attendanceSubmissionSchema, can } from "@schoolos/core";
 import {
   AttendanceSession,
@@ -27,6 +29,9 @@ export async function submitAttendance(
 
   const { sectionId, date, records, correctionReason } = parsed.data;
   const institutionId = actor.institutionId;
+  if (date > todayInDhaka()) {
+    return { ok: false as const, error: "Cannot take attendance for a future date" };
+  }
   if (!isValidObjectId(sectionId)) {
     return { ok: false as const, error: "Invalid sectionId" };
   }
@@ -238,4 +243,78 @@ export async function submitAttendance(
     sessionId: session._id.toString(),
     submittedAt: session.submittedAt?.toISOString(),
   };
+}
+
+type Actor = { membershipId: unknown; institutionId: unknown; role: string };
+type Status = "PRESENT" | "LATE" | "ABSENT" | "EXCUSED";
+
+async function canAccessSection(actor: Actor, sectionId: string) {
+  if (can(actor.role, "attendance:any-section")) return true;
+  return Boolean(
+    await TeachingAssignment.exists({
+      institutionId: actor.institutionId,
+      membershipId: actor.membershipId,
+      sectionId,
+      status: "ACTIVE",
+    }),
+  );
+}
+
+/** Roster for the tap UI: active students plus any submitted entries. Null when out of scope or invalid. */
+export async function getRoster(actor: Actor, sectionId: string, date: string) {
+  if (!can(actor.role, "attendance:submit")) return null;
+  if (!isValidObjectId(sectionId) || !isRealSchoolDate(date) || date > todayInDhaka()) return null;
+  const { institutionId } = actor;
+  const section = await Section.findOne({ _id: sectionId, institutionId, status: "ACTIVE" }).lean();
+  if (!section || !(await canAccessSection(actor, sectionId))) return null;
+
+  const [students, session, policyDoc] = await Promise.all([
+    Student.find({ institutionId, sectionId, status: "ACTIVE" }).sort({ studentNumber: 1 }).lean() as unknown as Promise<
+      Array<{ _id: unknown; studentNumber: string; firstName: string; lastName?: string }>
+    >,
+    AttendanceSession.findOne({ institutionId, sectionId, date, status: "ACTIVE" }).lean() as unknown as Promise<{
+      createdAt: Date;
+      submittedAt?: Date;
+      entries: Array<{ studentId: unknown; status: Status; note?: string }>;
+    } | null>,
+    getInstitutionPolicy(institutionId),
+  ]);
+  const attendancePolicy = (policyDoc?.policy as {
+    attendance?: { requireFullRoster?: boolean; correctionWindowHours?: number };
+  } | undefined)?.attendance;
+  const windowMs = (attendancePolicy?.correctionWindowHours ?? 48) * 3_600_000;
+  const entries = new Map((session?.entries ?? []).map((e) => [String(e.studentId), e]));
+
+  return {
+    date,
+    requireFullRoster: attendancePolicy?.requireFullRoster ?? true,
+    session: session
+      ? {
+          submittedAt: (session.submittedAt ?? session.createdAt).toISOString(),
+          canCorrect: can(actor.role, "attendance:any-section") || Date.now() - new Date(session.createdAt).getTime() <= windowMs,
+        }
+      : null,
+    students: students.map((s) => ({
+      id: String(s._id),
+      number: s.studentNumber,
+      name: [s.firstName, s.lastName].filter(Boolean).join(" "),
+      status: entries.get(String(s._id))?.status ?? null,
+    })),
+  };
+}
+
+/** Sections the actor can mark that have students but no submitted attendance for `date`. */
+export async function sectionsMissingAttendance(actor: Actor, date: string) {
+  if (!can(actor.role, "attendance:submit")) return [];
+  const { institutionId } = actor;
+  const sections = await listCurrentSections(actor);
+  if (!sections.length) return [];
+  const ids = sections.map((s) => s.id);
+  const [done, populated] = await Promise.all([
+    AttendanceSession.find({ institutionId, date, status: "ACTIVE", sectionId: { $in: ids } }).distinct("sectionId"),
+    Student.find({ institutionId, status: "ACTIVE", sectionId: { $in: ids } }).distinct("sectionId"),
+  ]);
+  const doneSet = new Set(done.map(String));
+  const populatedSet = new Set(populated.map(String));
+  return sections.filter((s) => populatedSet.has(s.id) && !doneSet.has(s.id));
 }

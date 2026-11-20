@@ -16,3 +16,14 @@ Channel order proposed: in-app/push later; **SMS** (reliable for guardians) + **
 ## Adapter plan
 `NotificationJob` -> provider adapter interface (`send`, `status`) -> fake provider (tests) + SMS adapter + WhatsApp adapter. Idempotency key per job; delivery log screen; failure never blocks attendance.
 Test delivery receipts with two SMS providers before choosing.
+
+## Founder-supplied provider (decision 2026-11-20)
+Founders pick a provider and paste their own API credentials in Settings; SchoolOS ships adapters, not a single vendor. Billing and sender-ID approval stay between school and provider.
+
+- Model `MessagingChannel` (tenant-scoped): `institutionId`, `kind` (`SMS`|`WHATSAPP`), `provider` (`SMS_NET_BD`|`CUSTOM_HTTP`|`FAKE`|...), `senderId`, `credentialsEnc`, `active`, `lastTestAt`, `lastTestOk`. One active channel per kind per institution (partial unique index).
+- Credentials: encrypt at rest (AES-256-GCM, master key from env, key id stored for rotation). Never log, audit or return them to the client after save (show last 4 chars only). Edits write an `AuditEvent` without secrets. Permission `settings:write` (founder/principal only).
+- Adapter interface: `send({to, text, idempotencyKey}) -> {providerId}`, `status(providerId) -> per-recipient state`, `balance()`. Core owns Bangla/Unicode segment counting and phone normalization; adapters only map HTTP.
+- First adapter: sms.net.bd (`https://api.sms.net.bd`). Docs: `api_key` param; `POST /sendsms` (`msg`, `to`, optional `sender_id`, `schedule`, `content_id`); `GET /user/balance/`; `GET /report/request/{id}/`; JSON `{error, msg, data}`, `error:0` = ok (417 insufficient balance, 413 invalid sender ID). No webhooks, so delivery status needs a polling job. Bulk = comma-separated `to` and needs `content_id` (campaign SMS only), so per-guardian alerts send individually.
+- `CUSTOM_HTTP` adapter (URL template + headers + body mapping) only after the SSRF guard exists: allowlist https, block private/loopback IPs, timeouts. Otherwise a founder-supplied URL can hit our internal network. Ship named adapters first.
+- "Test connection" button: balance check plus a test SMS to the founder's own number; store result.
+- Failures surface in the delivery log; attendance never waits on SMS.

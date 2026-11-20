@@ -1,5 +1,54 @@
-import { PageHeading } from '@/components/admin/page-heading';
+import { can } from "@schoolos/core";
+import { connectDb } from "@schoolos/db";
+import { ActionForm } from "@/components/admin/action-form";
+import { PageHeading } from "@/components/admin/page-heading";
+import { resolveActiveMembership } from "@/server/auth";
+import { getChannelSummary } from "@/server/messaging";
+import { saveChannelAction, testChannelAction } from "./actions";
 
-export default function CommunicationsPage() {
-  return <><PageHeading title="Notices" description="Prepare institution and class announcements with clear review and delivery status." /><section className="panel"><span className="badge">Foundation planned</span><h2>Notice workspace</h2><p className="muted">Notices will be drafted, reviewed, targeted to an authorized audience, and sent through queued provider adapters. Delivery failures and retries will remain visible.</p><p className="small muted">No messages are sent from this preview.</p></section></>;
+export const dynamic = "force-dynamic";
+
+export default async function CommunicationsPage() {
+  const actor = await resolveActiveMembership();
+  await connectDb();
+  const canConfigure = can(actor.role, "settings:write");
+  const channel = canConfigure ? await getChannelSummary(actor.institutionId) : null;
+  const showFake = process.env.NODE_ENV !== "production" || process.env.ALLOW_FAKE_SMS === "true";
+
+  return (
+    <>
+      <PageHeading title="Communications" description="Notices and guardian alerts. Each school connects its own SMS provider." />
+      {canConfigure ? (
+        <section className="panel" id="sms">
+          <h2>SMS provider</h2>
+          <p className="muted">
+            {channel
+              ? `Connected: ${channel.provider === "SMS_NET_BD" ? "sms.net.bd" : "Test provider"}${channel.keyHint ? ` · key ending ${channel.keyHint}` : ""}${channel.senderId ? ` · sender ${channel.senderId}` : ""}.`
+              : "No provider yet. Create an account with a BTRC-listed provider, then paste its API key here."}
+          </p>
+          {channel?.lastTest ? (
+            <p className={channel.lastTest.ok ? "form-ok" : "form-error"}>Last test: {channel.lastTest.ok ? "passed" : "failed"}. {channel.lastTest.detail}</p>
+          ) : null}
+          <ActionForm action={saveChannelAction} submitLabel="Save channel">
+            <label>Provider
+              <select name="provider" defaultValue={channel?.provider ?? "SMS_NET_BD"}>
+                <option value="SMS_NET_BD">sms.net.bd</option>
+                {showFake ? <option value="FAKE">Test provider (sends nothing)</option> : null}
+              </select>
+            </label>
+            <label>Sender ID (approved masking name, optional)<input name="senderId" defaultValue={channel?.senderId ?? ""} maxLength={20} autoComplete="off" /></label>
+            <label>API key<input name="apiKey" type="password" autoComplete="off" placeholder={channel?.keyHint ? "Leave blank to keep the saved key" : "Paste the key from your provider panel"} /></label>
+            <p className="form-hint">The key is encrypted before it is stored and is never shown again.</p>
+          </ActionForm>
+          {channel ? (
+            <ActionForm action={testChannelAction} submitLabel="Send test SMS">
+              <label>Your mobile number<input name="phone" inputMode="tel" placeholder="01XXXXXXXXX" required /></label>
+            </ActionForm>
+          ) : null}
+        </section>
+      ) : (
+        <section className="panel"><p className="muted">Ask the school owner or administrator to connect an SMS provider.</p></section>
+      )}
+    </>
+  );
 }

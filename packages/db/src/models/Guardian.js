@@ -13,6 +13,13 @@ const schema = new mongoose.Schema({
   fullName: { type: String, required: true, trim: true },
   phone: { type: String, trim: true },
   email: { type: String, trim: true, lowercase: true },
+  // Opt-in is explicit: nothing is sent until a guardian's consent is recorded.
+  consent: {
+    sms: { type: Boolean, default: false },
+    whatsapp: { type: Boolean, default: false },
+    recordedAt: Date,
+    recordedByMembershipId: { type: mongoose.Schema.Types.ObjectId, ref: 'Membership' },
+  },
   studentLinks: { type: [guardianLinkSchema], default: [] },
 }, { timestamps: true });
 

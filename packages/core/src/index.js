@@ -12,3 +12,4 @@ export { academicYearInputSchema, gradeLevelInputSchema, sectionInputSchema, tea
 export { setupProgress, setupStepDefs } from './setup/setup-progress.js';
 export { staffProfileInputSchema, normalizeBdPhone } from './staff/staff-profile.js';
 export { guardianInputSchema, studentInputSchema, enrollmentInputSchema, studentUpdateSchema, studentStatusSchema, guardianLinkInputSchema, parseCsv, validateStudentImport, IMPORT_COLUMNS, IMPORT_TEMPLATE, MAX_IMPORT_ROWS } from './students/student-schemas.js';
+export { smsSegments, renderTemplate, DEFAULT_ABSENCE_TEMPLATES, MESSAGING_PROVIDERS, messagingChannelInputSchema } from './messaging/sms.js';

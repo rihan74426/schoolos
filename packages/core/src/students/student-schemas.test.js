@@ -25,7 +25,7 @@ describe('student import validation', () => {
     expect(r.rows[1].data.guardian.phone).toBe('+8801812345678');
   });
   it('reports per-row errors and keeps only valid rows', () => {
-    const csv = 'studentNumber,firstName,lastName,dateOfBirth,guardianName,guardianPhone\n1,A,B,2014-01-01,Karim,01712345678\n2,C,,2014-01-01,,\n1,D,E,,,\n4,F,G,not-a-date,,\n5,H,I,,Rahim,123';
+    const csv = 'studentNumber,firstName,lastName,dateOfBirth,guardianName,guardianPhone\n1,A,B,2014-01-01,Karim,01712345678\n2,,Z,2014-01-01,,\n1,D,E,,,\n4,F,G,not-a-date,,\n5,H,I,,Rahim,123';
     const r = validateStudentImport(parseCsv(csv));
     expect(r.total).toBe(5);
     expect(r.rows.map((x) => x.data.studentNumber)).toEqual(['1']);
@@ -38,6 +38,12 @@ describe('student import validation', () => {
     expect(validateStudentImport([]).fatal).toMatch(/empty/);
     const big = 'studentNumber,firstName,lastName\n' + Array.from({ length: 6 }, (_, i) => `${i},A,B`).join('\n');
     expect(validateStudentImport(parseCsv(big), { maxRows: 5 }).fatal).toMatch(/Too many rows/);
+  });
+  it('allows a single-name student (no lastName)', () => {
+    expect(studentInputSchema.safeParse({ studentNumber: '9', firstName: 'Abdullah' }).success).toBe(true);
+    const r = validateStudentImport(parseCsv('studentNumber,firstName\n9,Abdullah'));
+    expect(r.errors).toEqual([]);
+    expect(r.rows[0].data.lastName).toBe('');
   });
   it('ignores blank lines and accepts loose header names', () => {
     const r = validateStudentImport(parseCsv('Student Number,First_Name,LAST NAME\n\n7,A,B\n'));

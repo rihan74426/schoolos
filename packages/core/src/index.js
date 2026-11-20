@@ -11,4 +11,4 @@ export { ROLES, permissionMatrix, can, rolesFor, invitableRoles, STAFF_PROFILE_R
 export { academicYearInputSchema, gradeLevelInputSchema, sectionInputSchema, teachingAssignmentInputSchema, parseBandLines } from './structure/structure-schemas.js';
 export { setupProgress, setupStepDefs } from './setup/setup-progress.js';
 export { staffProfileInputSchema, normalizeBdPhone } from './staff/staff-profile.js';
-export { guardianInputSchema, studentInputSchema, enrollmentInputSchema, guardianLinkInputSchema, parseCsv, validateStudentImport, IMPORT_COLUMNS, IMPORT_TEMPLATE, MAX_IMPORT_ROWS } from './students/student-schemas.js';
+export { guardianInputSchema, studentInputSchema, enrollmentInputSchema, studentUpdateSchema, studentStatusSchema, guardianLinkInputSchema, parseCsv, validateStudentImport, IMPORT_COLUMNS, IMPORT_TEMPLATE, MAX_IMPORT_ROWS } from './students/student-schemas.js';

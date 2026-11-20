@@ -18,6 +18,7 @@ const schema = new mongoose.Schema({
 
 schema.plugin(tenantPlugin);
 schema.index({ institutionId: 1, fullName: 1 });
-schema.index({ institutionId: 1, phone: 1 });
+// One guardian per phone per school (siblings share it). Partial: guardians without a phone are allowed.
+schema.index({ institutionId: 1, phone: 1 }, { unique: true, partialFilterExpression: { phone: { $type: 'string' } } });
 
 export const Guardian = mongoose.models.Guardian || mongoose.model('Guardian', schema);

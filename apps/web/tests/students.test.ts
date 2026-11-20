@@ -1,8 +1,8 @@
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import mongoose from "mongoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
-import { AcademicYear, AuditEvent, Enrollment, GradeLevel, Guardian, Section, Student } from "@schoolos/db";
-import { addGuardian, createStudent, enrollStudent, getStudentProfile, importStudents, listCurrentSections, listStudents } from "@/server/students";
+import { AcademicYear, AuditEvent, Enrollment, GradeLevel, Guardian, Membership, Section, Student, TeachingAssignment } from "@schoolos/db";
+import { addGuardian, createStudent, enrollStudent, getStudentProfile, importStudents, listCurrentSections, listStudents, setStudentStatus, updateStudent } from "@/server/students";
 
 let mongo: MongoMemoryServer;
 const oid = () => new mongoose.Types.ObjectId();
@@ -48,14 +48,14 @@ describe("students, guardians, enrollment", () => {
       actor(),
     );
     expect(res.ok).toBe(true);
-    const profile = await getStudentProfile(schoolA, (res as { id: string }).id);
+    const profile = await getStudentProfile(actor(), (res as { id: string }).id);
     expect(String(profile?.student.sectionId)).toBe(sectionA);
     expect(profile?.enrollments).toHaveLength(1);
     expect(profile?.guardians[0]).toMatchObject({ fullName: "Karim Rahman", phone: "+8801712345678" });
     expect(profile?.guardians[0].studentLinks[0].isPrimary).toBe(true);
     expect(await createStudent({ studentNumber: "A1", firstName: "X", lastName: "Y" }, undefined, actor())).toMatchObject({ ok: false, error: "That student number already exists" });
     expect((await createStudent({ studentNumber: "A1", firstName: "X", lastName: "Y" }, undefined, actor(schoolB))).ok).toBe(true);
-    expect(await getStudentProfile(schoolB, (res as { id: string }).id)).toBeNull();
+    expect(await getStudentProfile(actor(schoolB), (res as { id: string }).id)).toBeNull();
   });
 
   it("transfers within a year without duplicating enrollment; rejects bad sections", async () => {
@@ -85,14 +85,98 @@ describe("students, guardians, enrollment", () => {
   });
 
   it("lists current-year sections with class names", async () => {
-    expect((await listCurrentSections(schoolA)).map((s) => s.label).sort()).toEqual(["Class 6 – A", "Class 6 – B"]);
+    expect((await listCurrentSections(actor())).map((s) => s.label).sort()).toEqual(["Class 6 – A", "Class 6 – B"]);
   });
 
   it("searches safely and per school", async () => {
-    expect((await listStudents(schoolA, { q: "abd" })).rows.map((r) => r.studentNumber)).toEqual(["A1"]);
-    expect((await listStudents(schoolA, { q: "(" })).rows).toEqual([]); // regex metacharacters are escaped
-    expect((await listStudents(schoolB, { q: "abd" })).rows).toEqual([]);
-    expect((await listStudents(schoolA, { sectionId: sectionA })).total).toBeGreaterThan(0);
+    expect((await listStudents(actor(), { q: "abd" })).rows.map((r) => r.studentNumber)).toEqual(["A1"]);
+    expect((await listStudents(actor(), { q: "(" })).rows).toEqual([]); // regex metacharacters are escaped
+    expect((await listStudents(actor(schoolB), { q: "abd" })).rows).toEqual([]);
+    expect((await listStudents(actor(), { sectionId: sectionA })).total).toBeGreaterThan(0);
+  });
+});
+
+describe("teacher scoping", () => {
+  it("shows a teacher only students in assigned sections, and hides the rest as not found", async () => {
+    const teacher = await Membership.create({ institutionId: schoolA, clerkUserId: "user_scope_t", role: "TEACHER" });
+    const stranger = await Membership.create({ institutionId: schoolA, clerkUserId: "user_scope_x", role: "TEACHER" });
+    await TeachingAssignment.create({ institutionId: schoolA, membershipId: teacher._id, sectionId: sectionA, academicYearId: oid() });
+    const asTeacher = { membershipId: teacher._id, institutionId: schoolA, role: "TEACHER" };
+    const asStranger = { membershipId: stranger._id, institutionId: schoolA, role: "TEACHER" };
+
+    expect((await listStudents(asTeacher, {})).rows.map((r) => r.studentNumber)).toEqual(["A1"]);
+    expect((await listStudents(asTeacher, { sectionId: sectionA2 })).rows).toEqual([]); // cannot widen via the filter
+    expect((await listStudents(asStranger, {})).total).toBe(0);
+    expect((await listStudents(actor(), {})).total).toBeGreaterThan(1);
+    expect((await listStudents({ ...actor(), role: "ACCOUNTS" }, {})).total).toBeGreaterThan(1);
+
+    const a1 = (await Student.findOne({ institutionId: schoolA, studentNumber: "A1" }).lean()) as unknown as { _id: unknown };
+    const t1 = (await Student.findOne({ institutionId: schoolA, studentNumber: "T1" }).lean()) as unknown as { _id: unknown };
+    expect(await getStudentProfile(asTeacher, String(a1._id))).not.toBeNull();
+    expect(await getStudentProfile(asTeacher, String(t1._id))).toBeNull(); // in sectionA2
+    expect(await getStudentProfile(asStranger, String(a1._id))).toBeNull();
+    expect((await listCurrentSections(asTeacher)).map((s) => s.label)).toEqual(["Class 6 – A"]);
+  });
+});
+
+describe("guardians and single names", () => {
+  it("never creates two guardians for one phone, even for simultaneous requests", async () => {
+    const x = (await createStudent({ studentNumber: "RC1", firstName: "R", lastName: "One" }, undefined, actor())) as { id: string };
+    const y = (await createStudent({ studentNumber: "RC2", firstName: "R", lastName: "Two" }, undefined, actor())) as { id: string };
+    const phone = "01955555555";
+    const results = await Promise.all([
+      addGuardian({ studentId: x.id, guardian: { fullName: "Race Parent", phone, relationship: "Father" } }, actor()),
+      addGuardian({ studentId: y.id, guardian: { fullName: "Race Parent", phone, relationship: "Father" } }, actor()),
+    ]);
+    expect(results.every((r) => r.ok)).toBe(true);
+    const docs = (await Guardian.find({ institutionId: schoolA, phone: "+8801955555555" }).lean()) as unknown as Array<{ studentLinks: unknown[] }>;
+    expect(docs).toHaveLength(1);
+    expect(docs[0].studentLinks).toHaveLength(2);
+  });
+
+  it("accepts a student with only one name", async () => {
+    const res = (await createStudent({ studentNumber: "ONE1", firstName: "Abdullah" }, undefined, actor())) as { id: string };
+    expect(res.id).toBeTruthy();
+    expect((await getStudentProfile(actor(), res.id))?.student.lastName).toBe("");
+  });
+});
+
+describe("student lifecycle", () => {
+  it("edits with a before/after audit and stays tenant-scoped", async () => {
+    const made = (await createStudent({ studentNumber: "ED1", firstName: "Old", lastName: "Name", dateOfBirth: "2014-01-01" }, undefined, actor())) as { id: string };
+    expect(await updateStudent({ studentId: made.id, firstName: "New", lastName: "", dateOfBirth: "" }, actor(schoolB))).toMatchObject({ ok: false, error: "Student not found" });
+    expect(await updateStudent({ studentId: made.id, firstName: "New", lastName: "", dateOfBirth: "" }, actor())).toEqual({ ok: true });
+    const profile = await getStudentProfile(actor(), made.id);
+    expect(profile?.student).toMatchObject({ firstName: "New", lastName: "" });
+    expect(profile?.student.dateOfBirth).toBeUndefined();
+    const audit = (await AuditEvent.findOne({ institutionId: schoolA, action: "STUDENT_UPDATED", entityId: made.id }).lean()) as unknown as { metadata: { before: { firstName: string }; after: { firstName: string } } };
+    expect(audit.metadata.before.firstName).toBe("Old");
+    expect(audit.metadata.after.firstName).toBe("New");
+  });
+
+  it("withdraws (closing enrollment), hides from the default list, then reactivates and re-enrolls", async () => {
+    const made = (await createStudent({ studentNumber: "WD1", firstName: "Leaving", lastName: "Student" }, sectionA, actor())) as { id: string };
+    expect(await setStudentStatus({ studentId: made.id, status: "WITHDRAWN" }, actor(schoolB))).toMatchObject({ ok: false });
+    expect(await setStudentStatus({ studentId: made.id, status: "WITHDRAWN" }, actor())).toEqual({ ok: true, changed: true });
+    expect(await setStudentStatus({ studentId: made.id, status: "WITHDRAWN" }, actor())).toEqual({ ok: true, changed: false });
+
+    const gone = (await Student.findOne({ institutionId: schoolA, _id: made.id }).lean()) as unknown as { status: string; sectionId?: unknown };
+    expect(gone.status).toBe("WITHDRAWN");
+    expect(gone.sectionId).toBeUndefined();
+    const enr = (await Enrollment.findOne({ institutionId: schoolA, studentId: made.id }).lean()) as unknown as { status: string; endsOn?: string };
+    expect(enr).toMatchObject({ status: "WITHDRAWN" });
+    expect(enr.endsOn).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect((await listStudents(actor(), { q: "WD1" })).total).toBe(0);
+    expect((await listStudents(actor(), { q: "WD1", status: "WITHDRAWN" })).total).toBe(1);
+    expect(await enrollStudent({ studentId: made.id, sectionId: sectionA }, actor())).toMatchObject({ ok: false, error: "Student not found" });
+
+    expect(await setStudentStatus({ studentId: made.id, status: "ACTIVE" }, actor())).toEqual({ ok: true, changed: true });
+    expect(await enrollStudent({ studentId: made.id, sectionId: sectionA2 }, actor())).toEqual({ ok: true, changed: true });
+    expect(await Enrollment.countDocuments({ institutionId: schoolA, studentId: made.id })).toBe(1);
+    const back = (await Enrollment.findOne({ institutionId: schoolA, studentId: made.id }).lean()) as unknown as { status: string; endsOn?: string };
+    expect(back.status).toBe("ACTIVE");
+    expect(back.endsOn).toBeUndefined();
+    expect(await AuditEvent.countDocuments({ institutionId: schoolA, entityId: made.id, action: { $in: ["STUDENT_WITHDRAWN", "STUDENT_REACTIVATED"] } })).toBe(2);
   });
 });
 
@@ -122,5 +206,23 @@ describe("CSV import", () => {
     expect((await importStudents(csv(thirty.slice(0, 3)), { sectionId: sectionB, commit: true }, actor(schoolB))).ok).toBe(true);
     expect(await importStudents(csv(thirty.slice(0, 1)), { sectionId: sectionB, commit: true }, actor())).toMatchObject({ ok: false, error: "Section not found" });
     expect(await importStudents("foo,bar\n1,2", { commit: false }, actor())).toMatchObject({ ok: false });
+  });
+
+  it("commits nothing when the chosen section does not exist", async () => {
+    const ghost = String(oid());
+    const rows = csv(["NS1,No,Section,,,,"]);
+    expect(await importStudents(rows, { sectionId: ghost, commit: true }, actor())).toMatchObject({ ok: false, error: "Section not found" });
+    expect(await Student.countDocuments({ institutionId: schoolA, studentNumber: "NS1" })).toBe(0);
+  });
+
+  it("undoes a half-finished import so no orphan students, guardians or enrollments remain", async () => {
+    const spy = vi.spyOn(Enrollment, "insertMany").mockRejectedValueOnce(new Error("boom"));
+    const rows = csv(["RB1,Roll,Back,,Parent One,01933333331,Father", "RB2,Roll,Back,,Parent Two,01933333332,Mother"]);
+    await expect(importStudents(rows, { sectionId: sectionA, commit: true }, actor())).rejects.toThrow("boom");
+    spy.mockRestore();
+    expect(await Student.countDocuments({ institutionId: schoolA, studentNumber: { $in: ["RB1", "RB2"] } })).toBe(0);
+    expect(await Guardian.countDocuments({ institutionId: schoolA, phone: { $in: ["+8801933333331", "+8801933333332"] } })).toBe(0);
+    // and the same file imports cleanly afterwards
+    expect((await importStudents(rows, { sectionId: sectionA, commit: true }, actor())).ok).toBe(true);
   });
 });

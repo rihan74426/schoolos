@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { authFailure, requirePermission } from "@/server/auth";
-import { addGuardian, createStudent, enrollStudent, importStudents } from "@/server/students";
+import { addGuardian, createStudent, enrollStudent, importStudents, setStudentStatus, updateStudent } from "@/server/students";
 import type { ImportReport } from "@/server/students";
 
 export type FormState = { ok: boolean; message: string } | null;
@@ -51,6 +51,17 @@ export async function enrollStudentAction(_: FormState, fd: FormData) {
 
 export async function addGuardianAction(_: FormState, fd: FormData) {
   return run((actor) => addGuardian({ studentId: text(fd, "studentId"), guardian: guardianFrom(fd) ?? {} }, actor), "Guardian linked");
+}
+
+export async function updateStudentAction(_: FormState, fd: FormData) {
+  return run(
+    (actor) => updateStudent({ studentId: text(fd, "studentId"), firstName: text(fd, "firstName"), lastName: text(fd, "lastName"), dateOfBirth: text(fd, "dateOfBirth") }, actor),
+    "Student updated",
+  );
+}
+
+export async function setStudentStatusAction(_: FormState, fd: FormData) {
+  return run((actor) => setStudentStatus({ studentId: text(fd, "studentId"), status: text(fd, "status") }, actor), "Status updated");
 }
 
 export type ImportResult = ({ ok: false; error: string } | ImportReport);

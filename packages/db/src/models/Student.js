@@ -4,7 +4,7 @@ import { tenantPlugin } from '../tenant-plugin.js';
 const schema = new mongoose.Schema({
   studentNumber: { type: String, required: true, trim: true },
   firstName: { type: String, required: true, trim: true },
-  lastName: { type: String, required: true, trim: true },
+  lastName: { type: String, trim: true, default: '' },
   dateOfBirth: Date,
   membershipId: { type: mongoose.Schema.Types.ObjectId, ref: 'Membership' }, // STUDENT-role login, if any
   // Denormalized CURRENT section; Enrollment is the source of truth. Update both in one transaction.

@@ -9,7 +9,7 @@ import { createStudentAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 
-export default async function StudentsPage({ searchParams }: { searchParams: { q?: string; section?: string; page?: string } }) {
+export default async function StudentsPage({ searchParams }: { searchParams: { q?: string; section?: string; status?: string; page?: string } }) {
   const actor = await resolveActiveMembership();
   if (!can(actor.role, "student:read")) {
     return <section className="panel"><p className="muted">Your role cannot view students.</p></section>;
@@ -18,12 +18,12 @@ export default async function StudentsPage({ searchParams }: { searchParams: { q
   const canWrite = can(actor.role, "student:write");
   const q = searchParams.q ?? "";
   const [list, sections] = await Promise.all([
-    listStudents(actor.institutionId, { q, sectionId: searchParams.section, page: Number(searchParams.page) || 1 }),
-    listCurrentSections(actor.institutionId),
+    listStudents(actor, { q, sectionId: searchParams.section, status: searchParams.status, page: Number(searchParams.page) || 1 }),
+    listCurrentSections(actor),
   ]);
   const sectionLabel = new Map(sections.map((s) => [s.id, s.label]));
   const pages = Math.max(1, Math.ceil(list.total / list.pageSize));
-  const link = (page: number) => `/admin/students?${new URLSearchParams({ ...(q ? { q } : {}), ...(searchParams.section ? { section: searchParams.section } : {}), page: String(page) })}`;
+  const link = (page: number) => `/admin/students?${new URLSearchParams({ ...(q ? { q } : {}), ...(searchParams.section ? { section: searchParams.section } : {}), ...(searchParams.status ? { status: searchParams.status } : {}), page: String(page) })}`;
 
   return (
     <>
@@ -38,6 +38,11 @@ export default async function StudentsPage({ searchParams }: { searchParams: { q
               {sections.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
             </select>
           </label>
+          <label>Status
+            <select name="status" defaultValue={searchParams.status ?? "ACTIVE"}>
+              <option value="ACTIVE">Active</option><option value="WITHDRAWN">Withdrawn</option><option value="all">All</option>
+            </select>
+          </label>
           <button className="button-link" type="submit">Search</button>
         </form>
         <div className="table-scroll"><table>
@@ -45,7 +50,7 @@ export default async function StudentsPage({ searchParams }: { searchParams: { q
           <tbody>
             {list.rows.length ? list.rows.map((s) => (
               <tr key={String(s._id)}>
-                <td><Link className="text-link" href={`/admin/students/${String(s._id)}`}>{s.firstName} {s.lastName}</Link></td>
+                <td><Link className="text-link" href={`/admin/students/${String(s._id)}`}>{`${s.firstName} ${s.lastName}`.trim()}</Link></td>
                 <td>{s.studentNumber}</td>
                 <td>{s.sectionId ? sectionLabel.get(String(s.sectionId)) ?? "—" : "Not enrolled"}</td>
                 <td>{s.status.toLowerCase()}</td>
@@ -69,7 +74,7 @@ export default async function StudentsPage({ searchParams }: { searchParams: { q
             <label>Student ID<input name="studentNumber" required maxLength={30} /></label>
             <label>Class / section<select name="sectionId" defaultValue=""><option value="">Enroll later</option>{sections.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}</select></label>
             <label>First name<input name="firstName" required maxLength={60} /></label>
-            <label>Last name<input name="lastName" required maxLength={60} /></label>
+            <label>Family name (optional)<input name="lastName" maxLength={60} /></label>
             <label>Date of birth<input type="date" name="dateOfBirth" /></label>
             <label>Guardian name (optional)<input name="guardianName" maxLength={100} /></label>
             <label>Guardian mobile<input name="guardianPhone" inputMode="tel" placeholder="01XXXXXXXXX" /></label>

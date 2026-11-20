@@ -24,10 +24,20 @@ export const guardianInputSchema = z.object({
 export const studentInputSchema = z.object({
   studentNumber: z.string().trim().min(1).max(30),
   firstName: z.string().trim().min(1).max(60),
-  lastName: z.string().trim().min(1).max(60),
+  // Many students are recorded with a single name, so the family name is optional.
+  lastName: z.string().trim().max(60).default(''),
   dateOfBirth: isoDate.optional().or(z.literal('').transform(() => undefined)),
   guardian: guardianInputSchema.optional(),
 });
+
+export const studentUpdateSchema = z.object({
+  studentId: objectId,
+  firstName: z.string().trim().min(1).max(60),
+  lastName: z.string().trim().max(60).default(''),
+  dateOfBirth: isoDate.optional().or(z.literal('').transform(() => undefined)),
+});
+
+export const studentStatusSchema = z.object({ studentId: objectId, status: z.enum(['ACTIVE', 'WITHDRAWN']) });
 
 export const enrollmentInputSchema = z.object({ studentId: objectId, sectionId: objectId });
 export const guardianLinkInputSchema = z.object({ studentId: objectId, guardian: guardianInputSchema });
@@ -69,7 +79,7 @@ export function validateStudentImport(csvRows, { maxRows = MAX_IMPORT_ROWS } = {
   if (!csvRows.length) return { rows: [], errors: [], total: 0, fatal: 'The file is empty' };
   const header = csvRows[0].map(norm);
   const index = Object.fromEntries(IMPORT_COLUMNS.map((c) => [c, header.indexOf(norm(c))]));
-  const missing = ['studentNumber', 'firstName', 'lastName'].filter((c) => index[c] < 0);
+  const missing = ['studentNumber', 'firstName'].filter((c) => index[c] < 0);
   if (missing.length) return { rows: [], errors: [], total: 0, fatal: `Missing column: ${missing.join(', ')}. Download the template.` };
 
   const body = csvRows.slice(1).map((cells, i) => ({ cells, line: i + 2 })).filter(({ cells }) => cells.some((c) => String(c).trim() !== ''));

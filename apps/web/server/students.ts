@@ -2,10 +2,13 @@ import "server-only";
 import mongoose, { isObjectIdOrHexString } from "mongoose";
 import type { ClientSession } from "mongoose";
 import {
+  can,
   enrollmentInputSchema,
   guardianLinkInputSchema,
   parseCsv,
   studentInputSchema,
+  studentStatusSchema,
+  studentUpdateSchema,
   validateStudentImport,
 } from "@schoolos/core";
 import {
@@ -16,6 +19,8 @@ import {
   Guardian,
   Section,
   Student,
+  TeachingAssignment,
+  supportsTransactions,
   withOptionalTransaction,
 } from "@schoolos/db";
 import type { Actor } from "./auth";
@@ -65,7 +70,7 @@ async function enrollInTxn(
     | null;
   if (existing && existing.status === "ACTIVE" && String(existing.sectionId) === String(section._id)) return "unchanged" as const;
   if (existing) {
-    await Enrollment.updateOne({ _id: existing._id, institutionId }, { $set: { sectionId: section._id, status: "ACTIVE" } }, opts);
+    await Enrollment.updateOne({ _id: existing._id, institutionId }, { $set: { sectionId: section._id, status: "ACTIVE" }, $unset: { endsOn: 1 } }, opts);
     await audit(actor, "STUDENT_TRANSFERRED", studentId, { fromSectionId: String(existing.sectionId), toSectionId: String(section._id) }, txn);
   } else {
     await Enrollment.create([{ institutionId, studentId, sectionId: section._id, academicYearId: section.academicYearId, startsOn: todayInDhaka() }], opts);
@@ -80,20 +85,19 @@ async function linkGuardianInTxn(studentId: unknown, input: GuardianInput, actor
   const opts = txn ? { session: txn } : {};
   const already = await Guardian.countDocuments({ institutionId, "studentLinks.studentId": studentId }, opts);
   const link = { studentId, relationship: input.relationship, isPrimary: input.isPrimary || already === 0 };
-  const existing = (await Guardian.findOne({ institutionId, phone: input.phone }, null, opts).lean()) as unknown as { _id: unknown } | null;
-  if (existing) {
-    await Guardian.updateOne(
-      { _id: existing._id, institutionId, "studentLinks.studentId": { $ne: studentId } },
-      { $push: { studentLinks: link } },
-      opts,
-    );
-    return existing._id;
-  }
-  const [created] = await Guardian.create(
-    [{ institutionId, fullName: input.fullName, phone: input.phone, email: input.email, studentLinks: [link] }],
+  // Atomic find-or-create on the unique {institutionId, phone} index: two simultaneous requests
+  // for the same phone end up with ONE guardian (no duplicate-key error to handle).
+  const guardian = await Guardian.findOneAndUpdate(
+    { institutionId, phone: input.phone },
+    { $setOnInsert: { fullName: input.fullName, ...(input.email ? { email: input.email } : {}) } },
+    { new: true, upsert: true, setDefaultsOnInsert: true, ...opts },
+  );
+  await Guardian.updateOne(
+    { _id: guardian._id, institutionId, "studentLinks.studentId": { $ne: studentId } },
+    { $push: { studentLinks: link } },
     opts,
   );
-  return created._id;
+  return guardian._id;
 }
 
 export async function createStudent(input: unknown, sectionId: string | undefined, actor: Actor): Promise<Fail | { ok: true; id: string }> {
@@ -156,14 +160,30 @@ export async function addGuardian(input: unknown, actor: Actor): Promise<Fail | 
   return { ok: true };
 }
 
-export async function listStudents(institutionId: unknown, opts: { q?: string; sectionId?: string; page?: number }) {
+// Teachers (no student:read-all) only see students currently in sections they are assigned to.
+// Returns null for "everything", else the allowed section ids.
+export async function studentScope(actor: Actor): Promise<string[] | null> {
+  if (can(actor.role, "student:read-all")) return null;
+  const ids = (await TeachingAssignment.find({ institutionId: actor.institutionId, membershipId: actor.membershipId, status: "ACTIVE" }).distinct("sectionId")) as unknown[];
+  return ids.map(String);
+}
+
+export async function listStudents(actor: Actor, opts: { q?: string; sectionId?: string; status?: string; page?: number }) {
+  const { institutionId } = actor;
+  const scope = await studentScope(actor);
   const q = (opts.q ?? "").trim().slice(0, 60);
   const filter: Record<string, unknown> = { institutionId };
   if (q) {
     const prefix = new RegExp(`^${escapeRegex(q)}`, "i");
     filter.$or = [{ studentNumber: q }, { firstName: prefix }, { lastName: prefix }];
   }
-  if (opts.sectionId && isObjectIdOrHexString(opts.sectionId)) filter.sectionId = opts.sectionId;
+  const requested = opts.sectionId && isObjectIdOrHexString(opts.sectionId) ? opts.sectionId : undefined;
+  if (scope) {
+    const allowed = requested ? scope.filter((id) => id === requested) : scope;
+    filter.sectionId = { $in: allowed };
+  } else if (requested) filter.sectionId = requested;
+  const status = opts.status === "all" ? undefined : opts.status === "WITHDRAWN" ? "WITHDRAWN" : "ACTIVE";
+  if (status) filter.status = status;
   const pageSize = 25;
   const page = Math.max(1, Math.floor(opts.page ?? 1));
   const [rows, total] = await Promise.all([
@@ -173,12 +193,16 @@ export async function listStudents(institutionId: unknown, opts: { q?: string; s
   return { rows: rows as unknown as Array<{ _id: unknown; studentNumber: string; firstName: string; lastName: string; sectionId?: unknown; status: string }>, total, page, pageSize };
 }
 
-export async function getStudentProfile(institutionId: unknown, studentId: string) {
+export async function getStudentProfile(actor: Actor, studentId: string) {
+  const { institutionId } = actor;
   if (!isObjectIdOrHexString(studentId)) return null;
   const student = (await Student.findOne({ _id: studentId, institutionId }).lean()) as unknown as
     | { _id: unknown; studentNumber: string; firstName: string; lastName: string; dateOfBirth?: Date; sectionId?: unknown; status: string }
     | null;
   if (!student) return null;
+  const scope = await studentScope(actor);
+  // Out-of-scope students look exactly like missing ones.
+  if (scope && !(student.sectionId && scope.includes(String(student.sectionId)))) return null;
   const [guardians, enrollments] = await Promise.all([
     Guardian.find({ institutionId, "studentLinks.studentId": studentId }).lean(),
     Enrollment.find({ institutionId, studentId }).sort({ startsOn: -1 }).lean(),
@@ -188,6 +212,55 @@ export async function getStudentProfile(institutionId: unknown, studentId: strin
     guardians: guardians as unknown as Array<{ _id: unknown; fullName: string; phone?: string; email?: string; studentLinks: Array<{ studentId: unknown; relationship: string; isPrimary: boolean }> }>,
     enrollments: enrollments as unknown as Array<{ _id: unknown; sectionId: unknown; academicYearId: unknown; startsOn: string; status: string }>,
   };
+}
+
+export async function updateStudent(input: unknown, actor: Actor): Promise<Fail | { ok: true }> {
+  const parsed = studentUpdateSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid student" };
+  const { institutionId } = actor;
+  const { studentId, dateOfBirth, firstName, lastName } = parsed.data;
+  const done = await withOptionalTransaction(async (txn: ClientSession | null) => {
+    const opts = txn ? { session: txn } : {};
+    const before = (await Student.findOne({ _id: studentId, institutionId }, null, opts).lean()) as unknown as { firstName: string; lastName: string; dateOfBirth?: Date } | null;
+    if (!before) return false;
+    const dob = dateOfBirth ? new Date(`${dateOfBirth}T00:00:00Z`) : undefined;
+    await Student.updateOne(
+      { _id: studentId, institutionId },
+      { $set: { firstName, lastName, ...(dob ? { dateOfBirth: dob } : {}) }, ...(dob ? {} : { $unset: { dateOfBirth: 1 } }) },
+      opts,
+    );
+    await audit(actor, "STUDENT_UPDATED", studentId, {
+      before: { firstName: before.firstName, lastName: before.lastName, dateOfBirth: before.dateOfBirth?.toISOString().slice(0, 10) },
+      after: { firstName, lastName, dateOfBirth },
+    }, txn);
+    return true;
+  });
+  return done ? { ok: true } : { ok: false, error: "Student not found" };
+}
+
+// Withdrawing closes the active enrollment and clears the current-section cache, so the student
+// drops off rosters; history stays. Reactivating does NOT restore a section: enroll again.
+export async function setStudentStatus(input: unknown, actor: Actor): Promise<Fail | { ok: true; changed: boolean }> {
+  const parsed = studentStatusSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "Invalid status" };
+  const { institutionId } = actor;
+  const { studentId, status } = parsed.data;
+  const result = await withOptionalTransaction(async (txn: ClientSession | null) => {
+    const opts = txn ? { session: txn } : {};
+    const student = (await Student.findOne({ _id: studentId, institutionId }, null, opts).lean()) as unknown as { status: string } | null;
+    if (!student) return "missing" as const;
+    if (student.status === status) return "unchanged" as const;
+    if (status === "WITHDRAWN") {
+      await Student.updateOne({ _id: studentId, institutionId }, { $set: { status }, $unset: { sectionId: 1 } }, opts);
+      await Enrollment.updateMany({ institutionId, studentId, status: "ACTIVE" }, { $set: { status: "WITHDRAWN", endsOn: todayInDhaka() } }, opts);
+    } else {
+      await Student.updateOne({ _id: studentId, institutionId }, { $set: { status } }, opts);
+    }
+    await audit(actor, status === "WITHDRAWN" ? "STUDENT_WITHDRAWN" : "STUDENT_REACTIVATED", studentId, { from: student.status, to: status }, txn);
+    return "changed" as const;
+  });
+  if (result === "missing") return { ok: false, error: "Student not found" };
+  return { ok: true, changed: result === "changed" };
 }
 
 export type ImportReport = {
@@ -246,10 +319,11 @@ export async function importStudents(
   if (!opts.commit) return report;
   if (!valid.length) return { ok: false, error: "No valid rows to import" };
 
+  const prepared = valid.map((r) => ({ id: new mongoose.Types.ObjectId(), data: r.data }));
+  const startedAt = new Date();
   try {
     await withOptionalTransaction(async (txn: ClientSession | null) => {
       const o = txn ? { session: txn } : {};
-      const prepared = valid.map((r) => ({ id: new mongoose.Types.ObjectId(), data: r.data }));
       await Student.insertMany(
         prepared.map(({ id, data }) => ({
           _id: id,
@@ -308,20 +382,33 @@ export async function importStudents(
       );
     });
   } catch (e) {
+    // With transactions the database already rolled everything back. Without them (standalone
+    // Mongo) undo exactly what this import created, so no half-imported students remain.
+    if (!(await supportsTransactions())) {
+      const ids = prepared.map((p) => p.id);
+      await Enrollment.deleteMany({ institutionId, studentId: { $in: ids } });
+      await Guardian.updateMany({ institutionId, "studentLinks.studentId": { $in: ids } }, { $pull: { studentLinks: { studentId: { $in: ids } } } });
+      await Guardian.deleteMany({ institutionId, studentLinks: { $size: 0 }, createdAt: { $gte: startedAt } });
+      await Student.deleteMany({ institutionId, _id: { $in: ids } });
+    }
     if (isDuplicate(e)) return { ok: false, error: "Some student numbers were added meanwhile. Run the preview again." };
     throw e;
   }
   return { ...report, committed: true };
 }
 
-export async function listCurrentSections(institutionId: unknown) {
+export async function listCurrentSections(actor: Actor) {
+  const { institutionId } = actor;
   const years = (await AcademicYear.find({ institutionId, isCurrent: true }).lean()) as unknown as Array<{ _id: unknown }>;
   if (!years.length) return [];
+  const scope = await studentScope(actor);
   // No populate(): it would query GradeLevel without institutionId, which the tenant plugin rejects.
   const [sections, levels] = await Promise.all([
     Section.find({ institutionId, academicYearId: years[0]._id, status: "ACTIVE" }).sort({ name: 1 }).lean() as unknown as Promise<Array<{ _id: unknown; name: string; gradeLevelId: unknown }>>,
     GradeLevel.find({ institutionId }).lean() as unknown as Promise<Array<{ _id: unknown; name: string }>>,
   ]);
   const levelName = new Map(levels.map((l) => [String(l._id), l.name]));
-  return sections.map((s) => ({ id: String(s._id), label: `${levelName.get(String(s.gradeLevelId)) ?? "Class"} – ${s.name}` }));
+  return sections
+    .filter((s) => !scope || scope.includes(String(s._id)))
+    .map((s) => ({ id: String(s._id), label: `${levelName.get(String(s.gradeLevelId)) ?? "Class"} – ${s.name}` }));
 }

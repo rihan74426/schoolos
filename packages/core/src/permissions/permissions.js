@@ -9,6 +9,8 @@ export const permissionMatrix = {
   'policy:write': ['OWNER', 'ADMIN'],
   'settings:write': ['OWNER', 'ADMIN'],
   'student:read': [...LEADERSHIP, 'ACADEMIC_COORDINATOR', 'TEACHER', 'ACCOUNTS'],
+  // Everyone else with student:read (teachers) sees only students in sections they are assigned to.
+  'student:read-all': [...LEADERSHIP, 'ACADEMIC_COORDINATOR', 'ACCOUNTS'],
   'student:write': [...LEADERSHIP, 'ACADEMIC_COORDINATOR'],
   'attendance:submit': [...LEADERSHIP, 'ACADEMIC_COORDINATOR', 'TEACHER'],
   // Roles that may take attendance for ANY section; others (TEACHER) need a TeachingAssignment.

@@ -4,6 +4,8 @@ import { STAFF_PROFILE_ROLES } from "@schoolos/core";
 import { connectDb } from "@schoolos/db";
 import { PageHeading } from "@/components/admin/page-heading";
 import { resolveActiveMembership } from "@/server/auth";
+import { sectionsMissingAttendance } from "@/server/attendance";
+import { todayInDhaka } from "@/server/dates";
 import { getSetupProgress } from "@/server/setup";
 import { getStaffProfile } from "@/server/staff";
 
@@ -26,6 +28,8 @@ export default async function DashboardPage() {
     redirect("/admin/welcome");
   }
   const progress = await getSetupProgress(actor.institutionId);
+  const today = todayInDhaka();
+  const missing = await sectionsMissingAttendance(actor, today);
 
   return (
     <>
@@ -38,6 +42,16 @@ export default async function DashboardPage() {
             <p className="muted">Next: {progress.next.title.toLowerCase()}.</p>
           </div>
           <Link className="button-link" href={progress.next.href}>Continue setup</Link>
+        </section>
+      ) : null}
+      {missing.length ? (
+        <section className="panel dashboard-callout">
+          <div>
+            <p className="eyebrow">TODAY</p>
+            <h2>Attendance not taken</h2>
+            <p className="muted">{missing.map((s) => s.label).join(", ")}</p>
+          </div>
+          <Link className="button-link" href={`/admin/academics/attendance?section=${missing[0].id}`}>Take attendance</Link>
         </section>
       ) : null}
       <section className="content-section">

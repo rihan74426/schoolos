@@ -1,8 +1,10 @@
+import Link from "next/link";
 import { can, formatMinor } from "@schoolos/core";
 import { connectDb } from "@schoolos/db";
 import { ActionForm } from "@/components/admin/action-form";
 import { PageHeading } from "@/components/admin/page-heading";
 import { resolveActiveMembership } from "@/server/auth";
+import { collectionSummary } from "@/server/invoices";
 import { getInstitutionPolicy } from "@/server/policy";
 import { updateFeeRulesAction } from "./actions";
 
@@ -32,10 +34,20 @@ export default async function FeesPage() {
   if (!doc || !fees) return <>{heading}<section className="panel"><p className="form-error">Policy not found. Finish setup first.</p></section></>;
   const late = fees.lateFee;
   const canConfigure = can(actor.role, "fees:configure");
+  const sum = await collectionSummary(actor);
 
   return (
     <>
       {heading}
+      <section className="panel">
+        <h2>Collection</h2>
+        <p>Billed {formatMinor(sum.billedMinor, sum.currency)} · Collected {formatMinor(sum.collectedMinor, sum.currency)} · Outstanding {formatMinor(sum.outstandingMinor, sum.currency)}</p>
+        <p className="muted">{sum.invoices} invoice(s). {sum.overdueCount} overdue, {formatMinor(sum.overdueMinor, sum.currency)}.</p>
+        <p>
+          <Link className="button-link" href="/admin/finance/fees/invoices">Invoices and payments</Link>{" "}
+          <Link className="button-link" href="/admin/finance/fees/plans">Fee plans</Link>
+        </p>
+      </section>
       <section className="panel" id="rules">
         <h2>Late fee and scholarship rules</h2>
         <p className="muted">{describe(late, fees.currency)} Scholarships and waivers are capped at {fees.scholarshipCapPercent}% of an invoice.</p>

@@ -17,3 +17,7 @@ export { Invitation } from './Invitation.js';
 export { Staff } from './Staff.js';
 export { MessagingChannel } from './MessagingChannel.js';
 export { NotificationJob } from './NotificationJob.js';
+export { FeePlan } from './FeePlan.js';
+export { Invoice } from './Invoice.js';
+export { Payment } from './Payment.js';
+export { Counter } from './Counter.js';

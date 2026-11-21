@@ -4,6 +4,7 @@ import type { ClientSession } from "mongoose";
 import { getInstitutionPolicy } from "./policy";
 import { isRealSchoolDate, todayInDhaka } from "./dates";
 import { listCurrentSections } from "./students";
+import { enqueueAbsenceAlerts } from "./notifications";
 import { attendanceSubmissionSchema, can } from "@schoolos/core";
 import {
   AttendanceSession,
@@ -236,6 +237,17 @@ export async function submitAttendance(
       ok: false as const,
       error: "Attendance changed concurrently. Reload and retry.",
     };
+  }
+
+  // Alerts are queued, never sent here: an SMS problem must not fail attendance.
+  try {
+    await enqueueAbsenceAlerts(institutionId, {
+      sessionId: session._id.toString(),
+      date,
+      absentStudentIds: records.filter((r) => r.status === "ABSENT").map((r) => r.studentId),
+    });
+  } catch (error) {
+    console.error("absence alert enqueue failed", (error as Error).message);
   }
 
   return {

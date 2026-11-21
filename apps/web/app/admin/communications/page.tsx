@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { can } from "@schoolos/core";
 import { connectDb } from "@schoolos/db";
 import { ActionForm } from "@/components/admin/action-form";
@@ -18,6 +19,7 @@ export default async function CommunicationsPage() {
   return (
     <>
       <PageHeading title="Communications" description="Notices and guardian alerts. Each school connects its own SMS provider." />
+      <p><Link className="button-link" href="/admin/communications/log">Delivery log</Link></p>
       {canConfigure ? (
         <section className="panel" id="sms">
           <h2>SMS provider</h2>

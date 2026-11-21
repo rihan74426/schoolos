@@ -16,3 +16,4 @@ export { TeachingAssignment } from './TeachingAssignment.js';
 export { Invitation } from './Invitation.js';
 export { Staff } from './Staff.js';
 export { MessagingChannel } from './MessagingChannel.js';
+export { NotificationJob } from './NotificationJob.js';

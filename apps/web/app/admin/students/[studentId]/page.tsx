@@ -5,7 +5,7 @@ import { ActionForm } from "@/components/admin/action-form";
 import { PageHeading } from "@/components/admin/page-heading";
 import { resolveActiveMembership } from "@/server/auth";
 import { getStudentProfile, listCurrentSections } from "@/server/students";
-import { addGuardianAction, enrollStudentAction, setStudentStatusAction, updateStudentAction } from "../actions";
+import { addGuardianAction, setGuardianConsentAction, enrollStudentAction, setStudentStatusAction, updateStudentAction } from "../actions";
 
 export const dynamic = "force-dynamic";
 
@@ -61,10 +61,13 @@ export default async function StudentDetailPage({ params }: { params: { studentI
       <section className="panel">
         <h2>Guardians</h2>
         {guardians.length ? (
-          <div className="table-scroll"><table><thead><tr><th>Name</th><th>Relationship</th><th>Mobile</th></tr></thead><tbody>
+          <div className="table-scroll"><table><thead><tr><th>Name</th><th>Relationship</th><th>Mobile</th><th>SMS alerts</th></tr></thead><tbody>
             {guardians.map((g) => {
               const link = g.studentLinks.find((l) => String(l.studentId) === String(student._id));
-              return <tr key={String(g._id)}><td>{g.fullName}{link?.isPrimary ? <span className="badge"> primary</span> : null}</td><td>{link?.relationship}</td><td>{g.phone ?? "—"}</td></tr>;
+              return <tr key={String(g._id)}><td>{g.fullName}{link?.isPrimary ? <span className="badge"> primary</span> : null}</td><td>{link?.relationship}</td><td>{g.phone ?? "—"}</td><td>{g.consent?.sms ? <span className="badge">on</span> : <span className="muted">off</span>}{canWrite && g.phone ? (
+                <ActionForm action={setGuardianConsentAction} submitLabel={g.consent?.sms ? "Turn off" : "Guardian agreed: turn on"} className="inline-form">
+                  <input type="hidden" name="studentId" value={String(student._id)} /><input type="hidden" name="guardianId" value={String(g._id)} /><input type="hidden" name="sms" value={g.consent?.sms ? "false" : "true"} />
+                </ActionForm>) : null}</td></tr>;
             })}
           </tbody></table></div>
         ) : <p className="empty-state">No guardian linked yet.</p>}

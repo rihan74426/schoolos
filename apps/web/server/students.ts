@@ -208,9 +208,33 @@ export async function getStudentProfile(actor: Actor, studentId: string) {
   ]);
   return {
     student,
-    guardians: guardians as unknown as Array<{ _id: unknown; fullName: string; phone?: string; email?: string; studentLinks: Array<{ studentId: unknown; relationship: string; isPrimary: boolean }> }>,
+    guardians: guardians as unknown as Array<{ _id: unknown; fullName: string; phone?: string; email?: string; consent?: { sms?: boolean }; studentLinks: Array<{ studentId: unknown; relationship: string; isPrimary: boolean }> }>,
     enrollments: enrollments as unknown as Array<{ _id: unknown; sectionId: unknown; academicYearId: unknown; startsOn: string; status: string }>,
   };
+}
+
+/** Records (or withdraws) a guardian's opt-in to SMS. Nothing is sent to a guardian without it. */
+export async function setGuardianConsent(input: { studentId: string; guardianId: string; sms: boolean }, actor: Actor): Promise<Fail | { ok: true }> {
+  const { institutionId } = actor;
+  if (!isObjectIdOrHexString(input.studentId) || !isObjectIdOrHexString(input.guardianId)) return { ok: false, error: "Guardian not found" };
+  const profile = await getStudentProfile(actor, input.studentId); // enforces teacher scoping
+  const guardian = profile?.guardians.find((g) => String(g._id) === input.guardianId);
+  if (!guardian) return { ok: false, error: "Guardian not found" };
+  if (input.sms && !guardian.phone) return { ok: false, error: "Add a mobile number first" };
+  if (Boolean(guardian.consent?.sms) === input.sms) return { ok: true };
+  await withOptionalTransaction(async (txn: ClientSession | null) => {
+    const opts = txn ? { session: txn } : {};
+    await Guardian.updateOne(
+      { _id: input.guardianId, institutionId },
+      { $set: { "consent.sms": input.sms, "consent.recordedAt": new Date(), "consent.recordedByMembershipId": actor.membershipId } },
+      opts,
+    );
+    await AuditEvent.create(
+      [{ institutionId, actorMembershipId: actor.membershipId, action: "GUARDIAN_SMS_CONSENT_UPDATED", entityType: "Guardian", entityId: input.guardianId, metadata: { studentId: input.studentId, sms: input.sms } }],
+      opts,
+    );
+  });
+  return { ok: true };
 }
 
 export async function updateStudent(input: unknown, actor: Actor): Promise<Fail | { ok: true }> {

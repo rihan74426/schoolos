@@ -4,6 +4,19 @@ import { gradingPresets } from '../grading/grading-schemes.js';
 const pct = z.number().min(0).max(100);
 const minor = z.number().int().min(0);
 
+export const feePolicySchema = z.object({
+  currency: z.string().length(3).default('BDT'),
+  lateFee: z.discriminatedUnion('mode', [
+    z.object({ mode: z.literal('NONE') }),
+    z.object({ mode: z.literal('FLAT'), flatMinor: minor, graceDays: z.number().int().min(0).default(0) }),
+    z.object({
+      mode: z.literal('PERCENT_PER_DAY'), percent: z.number().min(0).max(100),
+      graceDays: z.number().int().min(0).default(0), capPercent: pct.default(100),
+    }),
+  ]),
+  scholarshipCapPercent: pct,
+});
+
 export const institutionPolicySchema = z.object({
   attendance: z.object({
     minimumAttendancePercent: pct,
@@ -15,18 +28,7 @@ export const institutionPolicySchema = z.object({
     // Every active student in the section must be marked before submit.
     requireFullRoster: z.boolean().default(true),
   }),
-  fees: z.object({
-    currency: z.string().length(3).default('BDT'),
-    lateFee: z.discriminatedUnion('mode', [
-      z.object({ mode: z.literal('NONE') }),
-      z.object({ mode: z.literal('FLAT'), flatMinor: minor, graceDays: z.number().int().min(0).default(0) }),
-      z.object({
-        mode: z.literal('PERCENT_PER_DAY'), percent: z.number().min(0).max(100),
-        graceDays: z.number().int().min(0).default(0), capPercent: pct.default(100),
-      }),
-    ]),
-    scholarshipCapPercent: pct,
-  }),
+  fees: feePolicySchema,
   hostel: z.object({
     enabled: z.boolean(),
     genderPolicy: z.enum(['separate', 'mixed', 'mixed-by-request']),

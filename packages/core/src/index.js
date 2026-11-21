@@ -6,10 +6,11 @@ export { schedulingRules, buildAcademicCalendar } from './scheduling/term-calend
 export { hostelRules, canAssignRoom } from './hostel/hostel-allocation.js';
 export * from './schemas.js';
 export { gradingPresets, gradingSchemeSchema, gradeBandSchema, validateGradingScheme, percentOf, gradeFor, gradeMarks } from './grading/grading-schemes.js';
-export { institutionPolicySchema, policyPresets, buildInitialPolicy, lateFeeFromPolicy, attendanceStanding } from './policy/institution-policy.js';
+export { feePolicySchema, institutionPolicySchema, policyPresets, buildInitialPolicy, lateFeeFromPolicy, attendanceStanding } from './policy/institution-policy.js';
 export { ROLES, permissionMatrix, can, rolesFor, invitableRoles, STAFF_PROFILE_ROLES } from './permissions/permissions.js';
 export { academicYearInputSchema, gradeLevelInputSchema, sectionInputSchema, teachingAssignmentInputSchema, parseBandLines } from './structure/structure-schemas.js';
 export { setupProgress, setupStepDefs } from './setup/setup-progress.js';
 export { staffProfileInputSchema, normalizeBdPhone } from './staff/staff-profile.js';
 export { guardianInputSchema, studentInputSchema, enrollmentInputSchema, studentUpdateSchema, studentStatusSchema, guardianLinkInputSchema, parseCsv, validateStudentImport, IMPORT_COLUMNS, IMPORT_TEMPLATE, MAX_IMPORT_ROWS } from './students/student-schemas.js';
 export { smsSegments, renderTemplate, DEFAULT_ABSENCE_TEMPLATES, MESSAGING_PROVIDERS, messagingChannelInputSchema } from './messaging/sms.js';
+export { takaToMinor, formatMinor } from './fees/money.js';

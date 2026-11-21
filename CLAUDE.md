@@ -2,7 +2,7 @@
 
 Bangladesh-first, multi-tenant school/madrasa management SaaS. Goal: a pilot-ready MVP (one school can onboard, enroll students, take attendance, notify guardians) with **zero cross-school data leaks**. AI, hostel, ranking, and mobile are out of first-release scope.
 
-The user (NJ) is a Next.js/JavaScript developer who wants **short answers, low token use, and fixes that fit the current setup**. Always review your own output for errors. Any generic "Homy household SaaS" brief in older notes is stale — ignore it.
+The user (NJ) is a Next.js/JavaScript developer who wants **short answers, low token use, and fixes that fit the current setup**. Always review your own output for errors. Any generic "Homy household SaaS" brief in older notes is stale — ignore it. The blueprint docx still says PostgreSQL/Prisma/Tailwind; the decision is MongoDB/Mongoose/plain CSS.
 
 ## Stack and layout
 

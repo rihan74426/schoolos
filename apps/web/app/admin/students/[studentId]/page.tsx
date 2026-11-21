@@ -67,6 +67,12 @@ export default async function StudentDetailPage({ params }: { params: { studentI
               return <tr key={String(g._id)}><td>{g.fullName}{link?.isPrimary ? <span className="badge"> primary</span> : null}</td><td>{link?.relationship}</td><td>{g.phone ?? "—"}</td><td>{g.consent?.sms ? <span className="badge">on</span> : <span className="muted">off</span>}{canWrite && g.phone ? (
                 <ActionForm action={setGuardianConsentAction} submitLabel={g.consent?.sms ? "Turn off" : "Guardian agreed: turn on"} className="inline-form">
                   <input type="hidden" name="studentId" value={String(student._id)} /><input type="hidden" name="guardianId" value={String(g._id)} /><input type="hidden" name="sms" value={g.consent?.sms ? "false" : "true"} />
+                  {g.consent?.sms ? null : (
+                    <select name="source" required defaultValue="" aria-label="How the guardian agreed">
+                      <option value="" disabled>How did they agree?</option>
+                      <option value="VERBAL">Verbally</option><option value="WRITTEN_FORM">Signed form</option><option value="SMS_REPLY">SMS reply</option><option value="OTHER">Other</option>
+                    </select>
+                  )}
                 </ActionForm>) : null}</td></tr>;
             })}
           </tbody></table></div>

@@ -48,7 +48,7 @@ Commands: `pnpm install`; `pnpm --filter @schoolos/core test|typecheck`; `pnpm -
 Done: monorepo/CI, Clerk auth + webhook, tenancy, onboarding bootstrap with preset rules, attendance service (full-roster + teacher correction window from policy), grading/policy engine + services, permission matrix, structure services (academic year/class/section), teaching-assignment admin, Settings page (structure, assignments, rules, custom grading schemes), setup checklist, staff invite links (WhatsApp/Messenger share) + welcome/profile flow, students/guardians/enrollment services + pages, CSV import (preview → commit valid rows), student edit/withdraw/reactivate, teacher scoping, attendance roster UI (`getRoster`, tap roster, correction dialog, dashboard "not taken today"). Future dates are rejected.
 Messaging done: channel config, crypto, sms.net.bd + fake adapters, guardian SMS consent (student profile), absence-alert queue, cron route, delivery log (`/admin/communications/log`). Not yet: WhatsApp, per-school templates, notices to groups.
 Next: fees → exams/marks approval → guardian view. Ranking is deferred (not exported from core). PDPA legal review is required before real child data.
-Later (not first release): leader design studio (posters/images/sheets/video) — `docs/later-design-studio.md`; messaging providers — `docs/messaging-providers.md`.
+Later (not first release): leader design studio (posters/images/sheets/video) — `docs/later-design-studio.md`; messaging providers — `docs/messaging-providers.md`; portable teacher/learner profiles (plan only, after fees/exams + PDPA review; global models must not bypass `tenantPlugin` without isolation tests) — `docs/later-portable-profiles.md`.
 
 ## Conventions
 

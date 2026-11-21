@@ -1,7 +1,7 @@
 import "server-only";
 import type { ClientSession } from "mongoose";
 import { messagingChannelInputSchema, normalizeBdPhone } from "@schoolos/core";
-import { AuditEvent, MessagingChannel, withOptionalTransaction } from "@schoolos/db";
+import { AuditEvent, Institution, MessagingChannel, withOptionalTransaction } from "@schoolos/db";
 import type { Actor } from "./auth";
 import { decryptSecret, encryptSecret } from "./messaging/crypto";
 import { createProvider } from "./messaging/providers";
@@ -110,4 +110,26 @@ export async function testChannel(toPhone: string, actor: Actor): Promise<{ ok: 
   await MessagingChannel.updateOne({ institutionId: actor.institutionId, kind: "SMS" }, { $set: { lastTest: { at: new Date(), ok, detail: detail.slice(0, 300) } } });
   await AuditEvent.create([{ institutionId: actor.institutionId, actorMembershipId: actor.membershipId, action: "MESSAGING_CHANNEL_TESTED", entityType: "MessagingChannel", entityId: "SMS", metadata: { ok } }]);
   return ok ? { ok: true, detail } : { ok: false, error: detail };
+}
+
+/** Language of automatic alerts. Arabic has no template yet, so only English and Bangla are offered. */
+export async function setAlertLocale(locale: string, actor: Actor): Promise<{ ok: true } | Fail> {
+  if (locale !== "en" && locale !== "bn") return { ok: false, error: "Choose English or Bangla" };
+  const school = (await Institution.findOne({ _id: actor.institutionId }).select("defaultLocale").lean()) as { defaultLocale?: string } | null;
+  if (!school) return { ok: false, error: "School not found" };
+  if (school.defaultLocale === locale) return { ok: true };
+  await withOptionalTransaction(async (txn: ClientSession | null) => {
+    const opts = txn ? { session: txn } : {};
+    await Institution.updateOne({ _id: actor.institutionId }, { $set: { defaultLocale: locale } }, opts);
+    await AuditEvent.create(
+      [{ institutionId: actor.institutionId, actorMembershipId: actor.membershipId, action: "ALERT_LOCALE_CHANGED", entityType: "Institution", entityId: String(actor.institutionId), metadata: { before: school.defaultLocale ?? "en", after: locale } }],
+      opts,
+    );
+  });
+  return { ok: true };
+}
+
+export async function getAlertLocale(institutionId: unknown) {
+  const school = (await Institution.findOne({ _id: institutionId }).select("defaultLocale").lean()) as { defaultLocale?: string } | null;
+  return school?.defaultLocale === "bn" ? "bn" : "en";
 }

@@ -27,3 +27,11 @@ Founders pick a provider and paste their own API credentials in Settings; School
 - `CUSTOM_HTTP` adapter (URL template + headers + body mapping) only after the SSRF guard exists: allowlist https, block private/loopback IPs, timeouts. Otherwise a founder-supplied URL can hit our internal network. Ship named adapters first.
 - "Test connection" button: balance check plus a test SMS to the founder's own number; store result.
 - Failures surface in the delivery log; attendance never waits on SMS.
+
+## Operations notes (2026-11-21)
+- Scheduler: GitHub Actions workflow `notifications-cron.yml` calls `/api/cron/notifications` every 5 minutes (needs secrets `APP_URL`, `CRON_SECRET`). Vercel Cron is avoided: Hobby allows one run per day (verify current limits), which breaks 2-32 minute retry backoff and delivery polling. Pro Vercel Cron or any external scheduler also works.
+- Double-send risk: a worker that dies after the provider accepts a message but before we record it leaves the job in SENDING; the stale-lock recovery re-queues it and it may send twice. Accepted for the pilot.
+- Scale: `processAllQueues` walks schools in one request with a 45s budget; skipped schools run next tick. Move to per-school jobs or a real worker before many schools.
+- Consent: staff record "guardian agreed" with a source (verbal / signed form / SMS reply / other). Stronger proof (stored form scan, reply log) is a pre-launch item with the PDPA review.
+- Untested: sms.net.bd adapter has only run against mocked responses. Use "Send test SMS" with a real account first.
+- WhatsApp: pricing claim ("utility not free in a service window since 2026-10-01") comes from Meta's pricing page summary; BD rate amounts not read. Check the rate card before relying on it.

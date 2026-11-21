@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { authFailure, requirePermission } from "@/server/auth";
-import { saveChannel, testChannel } from "@/server/messaging";
+import { saveChannel, setAlertLocale, testChannel } from "@/server/messaging";
 
 export type FormState = { ok: boolean; message: string } | null;
 const text = (fd: FormData, key: string) => String(fd.get(key) ?? "");
@@ -28,6 +28,18 @@ export async function testChannelAction(_: FormState, fd: FormData): Promise<For
     const result = await testChannel(text(fd, "phone"), actor);
     revalidatePath("/admin/communications");
     return result.ok ? { ok: true, message: result.detail } : { ok: false, message: result.error };
+  } catch (error) {
+    return { ok: false, message: authFailure(error).error };
+  }
+}
+
+export async function setAlertLocaleAction(_: FormState, fd: FormData): Promise<FormState> {
+  try {
+    const actor = await requirePermission("settings:write");
+    const result = await setAlertLocale(text(fd, "locale"), actor);
+    if (!result.ok) return { ok: false, message: result.error };
+    revalidatePath("/admin/communications");
+    return { ok: true, message: "Alert language saved" };
   } catch (error) {
     return { ok: false, message: authFailure(error).error };
   }

@@ -79,5 +79,5 @@ export async function importStudentsAction(csvText: string, sectionId: string, c
 
 export async function setGuardianConsentAction(_: FormState, fd: FormData) {
   const sms = text(fd, "sms") === "true";
-  return run((actor) => setGuardianConsent({ studentId: text(fd, "studentId"), guardianId: text(fd, "guardianId"), sms }, actor), sms ? "SMS alerts enabled" : "SMS alerts turned off");
+  return run((actor) => setGuardianConsent({ studentId: text(fd, "studentId"), guardianId: text(fd, "guardianId"), sms, source: text(fd, "source") }, actor), sms ? "SMS alerts enabled" : "SMS alerts turned off");
 }

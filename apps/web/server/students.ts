@@ -214,23 +214,28 @@ export async function getStudentProfile(actor: Actor, studentId: string) {
 }
 
 /** Records (or withdraws) a guardian's opt-in to SMS. Nothing is sent to a guardian without it. */
-export async function setGuardianConsent(input: { studentId: string; guardianId: string; sms: boolean }, actor: Actor): Promise<Fail | { ok: true }> {
+export const CONSENT_SOURCES = ["VERBAL", "WRITTEN_FORM", "SMS_REPLY", "OTHER"] as const;
+export type ConsentSource = (typeof CONSENT_SOURCES)[number];
+
+export async function setGuardianConsent(input: { studentId: string; guardianId: string; sms: boolean; source?: string }, actor: Actor): Promise<Fail | { ok: true }> {
   const { institutionId } = actor;
   if (!isObjectIdOrHexString(input.studentId) || !isObjectIdOrHexString(input.guardianId)) return { ok: false, error: "Guardian not found" };
   const profile = await getStudentProfile(actor, input.studentId); // enforces teacher scoping
   const guardian = profile?.guardians.find((g) => String(g._id) === input.guardianId);
   if (!guardian) return { ok: false, error: "Guardian not found" };
   if (input.sms && !guardian.phone) return { ok: false, error: "Add a mobile number first" };
+  // Turning alerts on needs a recorded source (how the guardian agreed); turning off does not.
+  if (input.sms && !CONSENT_SOURCES.includes(input.source as ConsentSource)) return { ok: false, error: "Choose how the guardian agreed" };
   if (Boolean(guardian.consent?.sms) === input.sms) return { ok: true };
   await withOptionalTransaction(async (txn: ClientSession | null) => {
     const opts = txn ? { session: txn } : {};
     await Guardian.updateOne(
       { _id: input.guardianId, institutionId },
-      { $set: { "consent.sms": input.sms, "consent.recordedAt": new Date(), "consent.recordedByMembershipId": actor.membershipId } },
+      { $set: { "consent.sms": input.sms, "consent.recordedAt": new Date(), "consent.recordedByMembershipId": actor.membershipId, ...(input.sms ? { "consent.source": input.source } : {}) } },
       opts,
     );
     await AuditEvent.create(
-      [{ institutionId, actorMembershipId: actor.membershipId, action: "GUARDIAN_SMS_CONSENT_UPDATED", entityType: "Guardian", entityId: input.guardianId, metadata: { studentId: input.studentId, sms: input.sms } }],
+      [{ institutionId, actorMembershipId: actor.membershipId, action: "GUARDIAN_SMS_CONSENT_UPDATED", entityType: "Guardian", entityId: input.guardianId, metadata: { studentId: input.studentId, sms: input.sms, ...(input.sms ? { source: input.source } : {}) } }],
       opts,
     );
   });

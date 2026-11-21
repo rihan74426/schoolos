@@ -23,13 +23,15 @@ export async function enqueueAbsenceAlerts(
   if (!(await MessagingChannel.exists({ institutionId, kind: "SMS", active: true }))) return { queued: 0 };
 
   const [school, students, guardians] = await Promise.all([
-    Institution.findOne({ _id: institutionId }).select("name").lean() as unknown as Promise<{ name: string } | null>,
+    Institution.findOne({ _id: institutionId }).select("name defaultLocale").lean() as unknown as Promise<{ name: string; defaultLocale?: string } | null>,
     Student.find({ institutionId, _id: { $in: input.absentStudentIds } }).lean() as unknown as Promise<Array<{ _id: unknown; firstName: string; lastName?: string }>>,
     Guardian.find({ institutionId, "consent.sms": true, "studentLinks.studentId": { $in: input.absentStudentIds } }).lean() as unknown as Promise<
       Array<{ _id: unknown; phone?: string; studentLinks: Array<{ studentId: unknown }> }>
     >,
   ]);
   const schoolName = school?.name ?? "school";
+  // Template follows the school's language; Arabic has no template yet, so it falls back to English.
+  const template = school?.defaultLocale === "bn" ? DEFAULT_ABSENCE_TEMPLATES.bn : DEFAULT_ABSENCE_TEMPLATES.en;
   let queued = 0;
   for (const student of students) {
     const sid = String(student._id);
@@ -39,7 +41,7 @@ export async function enqueueAbsenceAlerts(
       const to = guardian.phone ? normalizeBdPhone(guardian.phone) : null;
       if (!to || seenPhones.has(to)) continue;
       seenPhones.add(to);
-      const text = renderTemplate(DEFAULT_ABSENCE_TEMPLATES.en, {
+      const text = renderTemplate(template, {
         student: [student.firstName, student.lastName].filter(Boolean).join(" "),
         school: schoolName,
         date: input.date,
@@ -118,10 +120,16 @@ export async function processInstitutionQueue(institutionId: unknown, opts: { no
 }
 
 /** Cron entry: every school with an active SMS channel. Institution is the tenant root, so it is listed unscoped. */
-export async function processAllQueues(now = new Date()) {
+export async function processAllQueues(now = new Date(), budgetMs = 45_000) {
   const ids = (await Institution.find({}).distinct("_id")) as unknown[];
-  const totals = { schools: 0, sent: 0, retried: 0, failed: 0, delivered: 0 };
+  const totals = { schools: 0, sent: 0, retried: 0, failed: 0, delivered: 0, skipped: 0 };
+  const startedAt = Date.now();
   for (const id of ids) {
+    // Stay under the function timeout; skipped schools are picked up by the next run.
+    if (Date.now() - startedAt > budgetMs) {
+      totals.skipped += 1;
+      continue;
+    }
     const s = await processInstitutionQueue(id, { now });
     totals.schools += 1;
     totals.sent += s.sent;

@@ -4,8 +4,8 @@ import { connectDb } from "@schoolos/db";
 import { ActionForm } from "@/components/admin/action-form";
 import { PageHeading } from "@/components/admin/page-heading";
 import { resolveActiveMembership } from "@/server/auth";
-import { getChannelSummary } from "@/server/messaging";
-import { saveChannelAction, testChannelAction } from "./actions";
+import { getAlertLocale, getChannelSummary } from "@/server/messaging";
+import { saveChannelAction, setAlertLocaleAction, testChannelAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +14,7 @@ export default async function CommunicationsPage() {
   await connectDb();
   const canConfigure = can(actor.role, "settings:write");
   const channel = canConfigure ? await getChannelSummary(actor.institutionId) : null;
+  const locale = canConfigure ? await getAlertLocale(actor.institutionId) : "en";
   const showFake = process.env.NODE_ENV !== "production" || process.env.ALLOW_FAKE_SMS === "true";
 
   return (
@@ -41,6 +42,11 @@ export default async function CommunicationsPage() {
             <label>Sender ID (approved masking name, optional)<input name="senderId" defaultValue={channel?.senderId ?? ""} maxLength={20} autoComplete="off" /></label>
             <label>API key<input name="apiKey" type="password" autoComplete="off" placeholder={channel?.keyHint ? "Leave blank to keep the saved key" : "Paste the key from your provider panel"} /></label>
             <p className="form-hint">The key is encrypted before it is stored and is never shown again.</p>
+          </ActionForm>
+          <ActionForm action={setAlertLocaleAction} submitLabel="Save language">
+            <label>Alert language
+              <select name="locale" defaultValue={locale}><option value="en">English</option><option value="bn">বাংলা (Bangla, up to 70 characters per SMS segment)</option></select>
+            </label>
           </ActionForm>
           {channel ? (
             <ActionForm action={testChannelAction} submitLabel="Send test SMS">

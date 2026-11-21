@@ -44,7 +44,13 @@ One person, one profile, many schools. A teacher who changes institution keeps t
 - Marketplace needs supply on both sides; do not build discovery before the school product has real users.
 - Duplicate people (same teacher, two Clerk accounts): add a verified-phone merge flow later.
 
-## Decisions needed from the founder
-1. Who may issue stars: school leaders only, or also verified colleagues/guardians?
-2. Public teacher profile pages indexed by search engines, or visible only inside the platform?
-3. Learner record: transfer-only, or may a learner hold a private lifetime portfolio?
+## Founder decisions (21 Nov 2026)
+1. Anyone can issue stars/reviews. Guardrails (needed because open reviews invite abuse and defamation claims):
+   - Reviewer must be a verified platform user. Tiers: INSTITUTION (leader of a school the person worked at), COLLEAGUE (shared school via Employment), GUARDIAN/STUDENT (linked via enrollment at that school), COMMUNITY (any verified account).
+   - Each review shows its tier. Profile score weights tiers; COMMUNITY alone never forms the headline score.
+   - One review per reviewer per person per school-period. Edits are logged.
+   - Subject can reply, flag or dispute; flagged reviews go to a moderation queue; withdrawn reviews keep an audit record.
+   - Rate limits and new-account holds to stop brigading.
+   - Guardians/students review teachers they actually had; minors' reviews are submitted via the guardian account and hidden from the public page (aggregate only).
+2. Teacher pages may be search-indexed. Publishing is the teacher's own opt-in switch (default noindex until published). Show only name, subjects, portfolio, endorsements. Never phone, address or private records. Provide remove-from-search on request.
+3. Learners get a profile and private lifetime portfolio, managed WITH the guardian until high school. At the high-school transition the learner takes control; guardian keeps view access per consent. Learner profiles are NEVER search-indexed and never public; sharing is by explicit, expiring link.

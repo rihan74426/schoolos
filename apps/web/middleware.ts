@@ -7,6 +7,7 @@ const isPublic = createRouteMatcher([
   "/join(.*)",
   "/api/health",
   "/api/webhooks(.*)",
+  "/api/cron(.*)", // protected by CRON_SECRET in the route
 ]);
 
 export default clerkMiddleware(async (auth, req) => {

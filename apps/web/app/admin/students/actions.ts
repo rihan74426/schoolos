@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { authFailure, requirePermission } from "@/server/auth";
-import { addGuardian, createStudent, enrollStudent, importStudents, setStudentStatus, updateStudent } from "@/server/students";
+import { addGuardian, createStudent, setGuardianConsent, enrollStudent, importStudents, setStudentStatus, updateStudent } from "@/server/students";
 import type { ImportReport } from "@/server/students";
 
 export type FormState = { ok: boolean; message: string } | null;
@@ -75,4 +75,9 @@ export async function importStudentsAction(csvText: string, sectionId: string, c
   } catch (error) {
     return { ok: false, error: authFailure(error).error };
   }
+}
+
+export async function setGuardianConsentAction(_: FormState, fd: FormData) {
+  const sms = text(fd, "sms") === "true";
+  return run((actor) => setGuardianConsent({ studentId: text(fd, "studentId"), guardianId: text(fd, "guardianId"), sms }, actor), sms ? "SMS alerts enabled" : "SMS alerts turned off");
 }

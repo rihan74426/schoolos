@@ -17,6 +17,7 @@ const schema = new mongoose.Schema({
   consent: {
     sms: { type: Boolean, default: false },
     whatsapp: { type: Boolean, default: false },
+    source: { type: String, enum: ['VERBAL', 'WRITTEN_FORM', 'SMS_REPLY', 'OTHER'] }, // how the guardian agreed
     recordedAt: Date,
     recordedByMembershipId: { type: mongoose.Schema.Types.ObjectId, ref: 'Membership' },
   },

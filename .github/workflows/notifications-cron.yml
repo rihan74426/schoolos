@@ -1,0 +1,23 @@
+name: Notification worker
+
+# Calls the app every 5 minutes (GitHub's minimum) to send queued SMS, retry failures and poll delivery.
+# Needs repository secrets: APP_URL (https://your-domain, no trailing slash) and CRON_SECRET.
+# Vercel Cron is not used: as far as we know the Hobby plan allows only one run per day, which breaks retries.
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Run worker
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$APP_URL" ] || [ -z "$CRON_SECRET" ]; then echo "APP_URL / CRON_SECRET secrets not set; skipping"; exit 0; fi
+          curl --fail-with-body --silent --show-error --max-time 60 \
+            -H "Authorization: Bearer $CRON_SECRET" "$APP_URL/api/cron/notifications"

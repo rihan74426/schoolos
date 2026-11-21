@@ -4,7 +4,7 @@ import { randomBytes } from "node:crypto";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import { AcademicYear, AttendanceSession, AuditEvent, GradeLevel, Guardian, Institution, MessagingChannel, NotificationJob, Section, Student, TeachingAssignment } from "@schoolos/db";
 import { submitAttendance } from "@/server/attendance";
-import { saveChannel } from "@/server/messaging";
+import { saveChannel, setAlertLocale } from "@/server/messaging";
 import { enqueueAbsenceAlerts, listNotifications, processInstitutionQueue } from "@/server/notifications";
 import { setGuardianConsent } from "@/server/students";
 
@@ -63,6 +63,20 @@ describe("absence alerts", () => {
     expect(jobs.map((j) => j.to).sort()).toEqual(["+8801711111111", "+8801744444999", "+8801755555000"]);
     expect(jobs.every((j) => j.status === "QUEUED")).toBe(true);
     expect(jobs.find((j) => j.to === "+8801711111111")?.text).toBe(`Dear guardian, consent was absent from Nur Madrasa on ${yesterday}.`);
+  });
+
+  it("writes the alert in Bangla when the school language is Bangla", async () => {
+    expect(await setAlertLocale("fr", as(schoolA))).toMatchObject({ ok: false });
+    expect(await setAlertLocale("bn", as(schoolA))).toEqual({ ok: true });
+    expect(await AuditEvent.countDocuments({ institutionId: schoolA, action: "ALERT_LOCALE_CHANGED" })).toBe(1);
+    expect(await setAlertLocale("bn", as(schoolA))).toEqual({ ok: true }); // no-op, no second audit
+    expect(await AuditEvent.countDocuments({ institutionId: schoolA, action: "ALERT_LOCALE_CHANGED" })).toBe(1);
+    await enqueueAbsenceAlerts(schoolA, { sessionId: "bn-session", date: yesterday, absentStudentIds: [kids.consent] });
+    const job = (await NotificationJob.findOne({ institutionId: schoolA, idempotencyKey: { $regex: "^absence:bn-session" } }).lean()) as unknown as { text: string; segments: number };
+    expect(job.text).toContain("অনুপস্থিত");
+    expect(job.text).toContain("Nur Madrasa");
+    expect(job.segments).toBeGreaterThanOrEqual(1);
+    await setAlertLocale("en", as(schoolA));
   });
 
   it("does not re-send when attendance is corrected", async () => {
@@ -144,11 +158,13 @@ describe("delivery log", () => {
 describe("guardian consent", () => {
   it("toggles with an audit event, rejects strangers and missing phones", async () => {
     const g = (await Guardian.findOne({ institutionId: schoolA, phone: "01722222222" }).lean()) as unknown as { _id: unknown };
-    expect(await setGuardianConsent({ studentId: kids.noconsent, guardianId: String(g._id), sms: true }, as(schoolB))).toMatchObject({ ok: false });
-    expect(await setGuardianConsent({ studentId: kids.noconsent, guardianId: String(g._id), sms: true }, as(schoolA))).toEqual({ ok: true });
-    expect(await Guardian.findOne({ institutionId: schoolA, phone: "01722222222" }).lean()).toMatchObject({ consent: { sms: true } });
+    expect(await setGuardianConsent({ studentId: kids.noconsent, guardianId: String(g._id), sms: true, source: "VERBAL" }, as(schoolB))).toMatchObject({ ok: false });
+    expect(await setGuardianConsent({ studentId: kids.noconsent, guardianId: String(g._id), sms: true }, as(schoolA))).toMatchObject({ ok: false, error: "Choose how the guardian agreed" });
+    expect(await setGuardianConsent({ studentId: kids.noconsent, guardianId: String(g._id), sms: true, source: "MADE_UP" }, as(schoolA))).toMatchObject({ ok: false });
+    expect(await setGuardianConsent({ studentId: kids.noconsent, guardianId: String(g._id), sms: true, source: "WRITTEN_FORM" }, as(schoolA))).toEqual({ ok: true });
+    expect(await Guardian.findOne({ institutionId: schoolA, phone: "01722222222" }).lean()).toMatchObject({ consent: { sms: true, source: "WRITTEN_FORM" } });
     expect(await AuditEvent.countDocuments({ institutionId: schoolA, action: "GUARDIAN_SMS_CONSENT_UPDATED" })).toBe(1);
-    expect(await setGuardianConsent({ studentId: kids.noconsent, guardianId: String(g._id), sms: true }, as(schoolA))).toEqual({ ok: true }); // no-op
+    expect(await setGuardianConsent({ studentId: kids.noconsent, guardianId: String(g._id), sms: true, source: "WRITTEN_FORM" }, as(schoolA))).toEqual({ ok: true }); // no-op
     expect(await AuditEvent.countDocuments({ institutionId: schoolA, action: "GUARDIAN_SMS_CONSENT_UPDATED" })).toBe(1);
     expect(await setGuardianConsent({ studentId: kids.consent, guardianId: String(g._id), sms: false }, as(schoolA))).toMatchObject({ ok: false }); // not linked to that student
   });

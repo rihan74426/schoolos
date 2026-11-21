@@ -11,6 +11,7 @@ const schema = new mongoose.Schema(
         "OWNER",
         "ADMIN",
         "PRINCIPAL",
+        "VICE_PRINCIPAL",
         "ACADEMIC_COORDINATOR",
         "TEACHER",
         "ACCOUNTS",

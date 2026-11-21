@@ -7,7 +7,7 @@ const schema = new mongoose.Schema({
   tokenHash: { type: String, required: true, match: /^[a-f0-9]{64}$/ },
   role: {
     type: String, required: true,
-    enum: ['ADMIN', 'PRINCIPAL', 'ACADEMIC_COORDINATOR', 'TEACHER', 'ACCOUNTS'],
+    enum: ['ADMIN', 'PRINCIPAL', 'VICE_PRINCIPAL', 'ACADEMIC_COORDINATOR', 'TEACHER', 'ACCOUNTS'],
   },
   inviteeNote: { type: String, trim: true, maxlength: 80 },
   status: { type: String, enum: ['PENDING', 'ACCEPTED', 'REVOKED'], default: 'PENDING' },

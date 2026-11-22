@@ -6,7 +6,7 @@ import { PageHeading } from "@/components/admin/page-heading";
 import { resolveActiveMembership } from "@/server/auth";
 import { todayInDhaka } from "@/server/dates";
 import { getInvoiceDetail } from "@/server/invoices";
-import { applyAdjustmentAction, recordPaymentAction } from "../../actions";
+import { applyAdjustmentAction, recordPaymentAction, reversePaymentAction, voidInvoiceAction } from "../../actions";
 
 export const dynamic = "force-dynamic";
 
@@ -24,7 +24,8 @@ export default async function InvoicePage({ params }: { params: { invoiceId: str
       <PageHeading title={`Invoice ${inv.number}`} description={`${d.student.name} (${d.student.number}) · ${inv.period} · due ${inv.dueDate}`} />
       <p><Link href="/admin/finance/fees/invoices">← All invoices</Link></p>
       <section className="panel">
-        <h2>{inv.status === "PAID" ? "Paid" : s.overdue ? "Overdue" : "Open"}</h2>
+        <h2>{inv.status === "VOID" ? "Void" : inv.status === "PAID" ? "Paid" : s.overdue ? "Overdue" : "Open"}</h2>
+        {inv.voidReason ? <p className="muted">Voided: {inv.voidReason}</p> : null}
         <ul>{inv.lines.map((l) => <li key={l.title}>{l.title}: {money(l.amountMinor)}</li>)}</ul>
         <p>Subtotal {money(inv.subtotalMinor)}{inv.discountMinor ? ` · Discount −${money(inv.discountMinor)}` : ""} · Late fee {money(s.lateDueMinor)}</p>
         <p><strong>Total {money(s.totalMinor)} · Paid {money(inv.paidMinor)} · Balance {money(s.balanceMinor)}</strong></p>
@@ -54,9 +55,29 @@ export default async function InvoicePage({ params }: { params: { invoiceId: str
           </ActionForm>
         </section>
       ) : null}
+      {open && inv.paidMinor === 0 && can(actor.role, "fees:reverse") ? (
+        <section className="panel">
+          <h2>Void invoice</h2>
+          <p className="muted">For an invoice issued by mistake. Nothing has been paid. A reason is required and recorded.</p>
+          <ActionForm action={voidInvoiceAction} submitLabel="Void invoice">
+            <input type="hidden" name="invoiceId" value={inv.id} />
+            <label>Reason (10+ characters)<textarea name="reason" rows={2} required minLength={10} maxLength={300} /></label>
+          </ActionForm>
+        </section>
+      ) : null}
       <section className="panel">
         <h2>Payments</h2>
-        {d.payments.length ? <ul>{d.payments.map((p) => <li key={p.id}><Link href={`/admin/finance/fees/receipts/${p.id}`}>{p.receiptNumber}</Link> · {money(p.amountMinor)} · {p.method} · {p.paidOn}{p.reference ? ` · ${p.reference}` : ""}</li>)}</ul> : <p className="muted">No payments yet.</p>}
+        {d.payments.length ? <ul>{d.payments.map((p) => (
+          <li key={p.id}>
+            <Link href={`/admin/finance/fees/receipts/${p.id}`}>{p.receiptNumber}</Link> · {p.kind === "REVERSAL" ? `Reversal −${money(-p.amountMinor)}: ${p.reason ?? ""}` : money(p.amountMinor)} · {p.method} · {p.paidOn}{p.reference ? ` · ${p.reference}` : ""}{p.reversed ? " · reversed" : ""}
+            {p.kind === "PAYMENT" && !p.reversed && inv.status !== "VOID" && can(actor.role, "fees:reverse") ? (
+              <ActionForm action={reversePaymentAction} submitLabel="Reverse payment">
+                <input type="hidden" name="paymentId" value={p.id} />
+                <label>Reason (10+ characters)<textarea name="reason" rows={2} required minLength={10} maxLength={300} /></label>
+              </ActionForm>
+            ) : null}
+          </li>
+        ))}</ul> : <p className="muted">No payments yet.</p>}
         {inv.adjustments.length ? <><h3>Adjustments</h3><ul>{inv.adjustments.map((a, i) => <li key={i}>{a.kind === "DISCOUNT" ? "Discount" : "Late fee remitted"} {money(a.amountMinor)}: {a.reason}</li>)}</ul></> : null}
       </section>
     </>

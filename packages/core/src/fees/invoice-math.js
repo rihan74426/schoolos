@@ -81,8 +81,21 @@ export const feePlanInputSchema = z.object({
   lines: z.array(z.object({ title: z.string().trim().min(1).max(60), amountMinor: z.number().int().min(1).max(100_000_000_00) })).min(1).max(30),
 });
 
+/** Billing month, always YYYY-MM, so "Jan 2026" and "january 2026" can never be two keys. */
+export const periodString = z.string().trim().regex(/^\d{4}-(0[1-9]|1[0-2])$/, 'Choose a billing month');
+
+export const reversalInputSchema = z.object({
+  paymentId: z.string().regex(/^[a-f\d]{24}$/i, 'Invalid payment'),
+  reason: z.string().trim().min(10, 'Give a reason of at least 10 characters').max(300),
+});
+
+export const voidInvoiceSchema = z.object({
+  invoiceId: z.string().regex(/^[a-f\d]{24}$/i, 'Invalid invoice'),
+  reason: z.string().trim().min(10, 'Give a reason of at least 10 characters').max(300),
+});
+
 export const invoiceGenerationSchema = z.object({
   planId: z.string().regex(/^[a-f\d]{24}$/i, 'Choose a plan'),
-  period: z.string().trim().min(1).max(30),
+  period: periodString,
   dueDate: isoDateString,
 });

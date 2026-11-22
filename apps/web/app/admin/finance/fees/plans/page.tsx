@@ -42,10 +42,10 @@ export default async function PlansPage() {
       {canBill && plans.length ? (
         <section className="panel">
           <h2>Generate invoices</h2>
-          <p className="muted">Creates one invoice per active student of the plan class. Running it again for the same period skips students who already have one.</p>
+          <p className="muted">Creates one invoice per active student placed in the plan academic year (and class, if set). Running it again for the same month skips students who already have one.</p>
           <ActionForm action={generateInvoicesAction} submitLabel="Generate">
             <label>Plan<select name="planId" required>{plans.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label>
-            <label>Period<input name="period" required maxLength={30} placeholder="2026-12 or Term 1" /></label>
+            <label>Billing month<input name="period" type="month" required /></label>
             <label>Due date<input name="dueDate" type="date" required /></label>
           </ActionForm>
         </section>

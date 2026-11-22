@@ -25,6 +25,7 @@ export const permissionMatrix = {
   'fees:write': [...LEADERSHIP, 'ACCOUNTS'],
   'fees:configure': [...LEADERSHIP],
   'fees:waive': [...LEADERSHIP, 'ACADEMIC_COORDINATOR'],
+  'fees:reverse': [...LEADERSHIP],
   'exams:write': [...LEADERSHIP, 'ACADEMIC_COORDINATOR', 'TEACHER'],
   'notices:send': [...LEADERSHIP, 'ACADEMIC_COORDINATOR'],
 };

@@ -52,6 +52,7 @@ export async function submitAttendance(
       membershipId: actor.membershipId,
       sectionId,
       status: "ACTIVE",
+      subjectId: { $exists: false }, // class teacher only; subject teachers do not take attendance
     });
     if (!assigned) {
       return {
@@ -268,6 +269,7 @@ async function canAccessSection(actor: Actor, sectionId: string) {
       membershipId: actor.membershipId,
       sectionId,
       status: "ACTIVE",
+      subjectId: { $exists: false }, // class teacher only; subject teachers do not take attendance
     }),
   );
 }

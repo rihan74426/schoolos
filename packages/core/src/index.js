@@ -15,3 +15,4 @@ export { guardianInputSchema, studentInputSchema, enrollmentInputSchema, student
 export { smsSegments, renderTemplate, DEFAULT_ABSENCE_TEMPLATES, MESSAGING_PROVIDERS, messagingChannelInputSchema } from './messaging/sms.js';
 export { takaToMinor, formatMinor } from './fees/money.js';
 export { daysLate, invoiceSummary, remainingDiscountMinor, parseFeeLines, PAYMENT_METHODS, paymentInputSchema, adjustmentInputSchema, feePlanInputSchema, invoiceGenerationSchema, isoDateString, periodString, reversalInputSchema, voidInvoiceSchema } from './fees/invoice-math.js';
+export { EXAM_STATUSES, EXAM_TRANSITIONS, canExamTransition, SHEET_STATUSES, ENTRY_STATUSES, PASS_RULES, examStatusFromSheets, markError, maxMarksSchema, examInputSchema, markEntrySchema, saveMarksSchema, reasonSchema, sheetReturnSchema, passOverrideSchema, correctionRequestSchema, assessmentUpdateSchema, subjectInputSchema, classSubjectInputSchema, computeResult } from './exams/exam-rules.js';

@@ -26,7 +26,14 @@ export const permissionMatrix = {
   'fees:configure': [...LEADERSHIP],
   'fees:waive': [...LEADERSHIP, 'ACADEMIC_COORDINATOR'],
   'fees:reverse': [...LEADERSHIP],
-  'exams:write': [...LEADERSHIP, 'ACADEMIC_COORDINATOR', 'TEACHER'],
+  // Exams: leadership/coordinators set up and approve; teachers enter marks only for sections+subjects they teach;
+  // only leadership publishes. A published result changes only through an approved, versioned correction.
+  'exams:read': [...LEADERSHIP, 'ACADEMIC_COORDINATOR', 'TEACHER'],
+  'exams:write': [...LEADERSHIP, 'ACADEMIC_COORDINATOR'],
+  'exams:enter': [...LEADERSHIP, 'ACADEMIC_COORDINATOR', 'TEACHER'],
+  'exams:any-section': [...LEADERSHIP, 'ACADEMIC_COORDINATOR'],
+  'exams:approve': [...LEADERSHIP, 'ACADEMIC_COORDINATOR'],
+  'exams:publish': [...LEADERSHIP],
   'notices:send': [...LEADERSHIP, 'ACADEMIC_COORDINATOR'],
 };
 

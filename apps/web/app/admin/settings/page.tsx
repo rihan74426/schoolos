@@ -8,8 +8,13 @@ import { ActionForm } from "@/components/admin/action-form";
 import { resolveActiveMembership } from "@/server/auth";
 import { getInstitutionPolicy } from "@/server/policy";
 import { listStructure } from "@/server/structure";
+import { listSubjects } from "@/server/subjects";
 import {
   assignTeacherAction,
+  createSubjectAction,
+  mapSubjectAction,
+  setSubjectCoreAction,
+  unmapSubjectAction,
   createGradeLevelAction,
   createGradingSchemeAction,
   createSectionAction,
@@ -61,11 +66,13 @@ export default async function SettingsPage() {
   const canPolicy = can(actor.role, "policy:write");
   const canInvite = can(actor.role, "staff:invite");
 
-  const [data, policyDoc, schemes] = await Promise.all([
+  const [data, policyDoc, schemes, subjectData] = await Promise.all([
     listStructure(actor.institutionId),
     getInstitutionPolicy(actor.institutionId),
     GradingScheme.find({ institutionId: actor.institutionId, status: "ACTIVE" }).sort({ name: 1 }).lean() as unknown as Promise<Array<{ key: string; name: string; isDefault: boolean }>>,
+    listSubjects(actor.institutionId),
   ]);
+  const subjectName = new Map(subjectData.subjects.map((x) => [x.id, x.name]));
   const [names, staffRows, invites] = await Promise.all([
     teacherNames(data.teachers.map((t) => t.clerkUserId), canStructure),
     Staff.find({ institutionId: actor.institutionId, membershipId: { $in: data.teachers.map((t) => t._id) } }).lean() as unknown as Promise<Array<{ membershipId: unknown; fullName: string }>>,
@@ -136,13 +143,52 @@ export default async function SettingsPage() {
         </section>
       ) : null}
 
+      <section className="panel" id="subjects">
+        <h2>Subjects</h2>
+        <p className="muted small">Core subjects decide pass or fail when an exam uses the core-subjects-only rule. By default a student must pass every subject.</p>
+        {subjectData.subjects.length ? (
+          <div className="table-scroll"><table><thead><tr><th>Code</th><th>Subject</th><th>Core</th>{canStructure ? <th /> : null}</tr></thead><tbody>
+            {subjectData.subjects.map((x) => (
+              <tr key={x.id}><td>{x.code}</td><td>{x.name}</td><td>{x.isCore ? "Yes" : "No"}</td>
+                {canStructure ? <td><ActionForm action={setSubjectCoreAction} submitLabel={x.isCore ? "Make not core" : "Make core"} className="inline-form"><input type="hidden" name="subjectId" value={x.id} /><input type="hidden" name="isCore" value={x.isCore ? "0" : "1"} /></ActionForm></td> : null}</tr>
+            ))}</tbody></table></div>
+        ) : <p className="empty-state">No subjects yet.</p>}
+        {canStructure ? (
+          <ActionForm action={createSubjectAction} submitLabel="Add subject">
+            <label>Code<input name="code" required maxLength={12} placeholder="MATH" /></label>
+            <label>Name<input name="name" required maxLength={60} placeholder="Mathematics" /></label>
+            <label className="check"><input type="checkbox" name="isCore" /> Core subject</label>
+          </ActionForm>
+        ) : null}
+        <h3>Subjects per class</h3>
+        {subjectData.levels.map((l) => {
+          const rows = subjectData.mappings.filter((m) => m.gradeLevelId === l.id);
+          return (
+            <div key={l.id}>
+              <strong>{l.name}</strong>
+              {rows.length ? <ul className="plain-list">{rows.map((m) => (
+                <li key={m.id}>{subjectName.get(m.subjectId) ?? "?"} · full marks {m.defaultMaxMarks}
+                  {canStructure ? <ActionForm action={unmapSubjectAction} submitLabel="Remove" className="inline-form"><input type="hidden" name="gradeLevelId" value={l.id} /><input type="hidden" name="subjectId" value={m.subjectId} /></ActionForm> : null}</li>
+              ))}</ul> : <p className="muted small">No subjects mapped.</p>}
+            </div>
+          );
+        })}
+        {canStructure && subjectData.levels.length && subjectData.subjects.length ? (
+          <ActionForm action={mapSubjectAction} submitLabel="Add to class">
+            <label>Class<select name="gradeLevelId" required>{subjectData.levels.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}</select></label>
+            <label>Subject<select name="subjectId" required>{subjectData.subjects.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}</select></label>
+            <label>Full marks<input name="defaultMaxMarks" type="number" min={1} max={1000} defaultValue={100} /></label>
+          </ActionForm>
+        ) : null}
+      </section>
+
       <section className="panel" id="teaching">
         <h2>Teaching assignments</h2>
-        <p className="muted small">Teachers can take attendance only for sections they are assigned to.</p>
+        <p className="muted small">Class teachers (no subject) take attendance. Subject teachers enter exam marks only for the subject and section they are assigned.</p>
         {data.assignments.length ? (
-          <div className="table-scroll"><table><thead><tr><th>Teacher</th><th>Section</th>{canAssign ? <th /> : null}</tr></thead><tbody>
+          <div className="table-scroll"><table><thead><tr><th>Teacher</th><th>Section</th><th>Subject</th>{canAssign ? <th /> : null}</tr></thead><tbody>
             {data.assignments.map((a) => (
-              <tr key={String(a._id)}><td>{teacherLabel.get(String(a.membershipId)) ?? "Unknown"}</td><td>{sectionLabel.get(String(a.sectionId)) ?? "Unknown"}</td>
+              <tr key={String(a._id)}><td>{teacherLabel.get(String(a.membershipId)) ?? "Unknown"}</td><td>{sectionLabel.get(String(a.sectionId)) ?? "Unknown"}</td><td>{a.subjectId ? subjectName.get(String(a.subjectId)) ?? "Unknown" : "Class teacher"}</td>
                 {canAssign ? <td><ActionForm action={endAssignmentAction} submitLabel="End" className="inline-form"><input type="hidden" name="assignmentId" value={String(a._id)} /></ActionForm></td> : null}</tr>
             ))}</tbody></table></div>
         ) : <p className="empty-state">No assignments yet.</p>}
@@ -151,6 +197,7 @@ export default async function SettingsPage() {
             <ActionForm action={assignTeacherAction} submitLabel="Assign">
               <label>Teacher<select name="membershipId" required>{data.teachers.map((t) => <option key={String(t._id)} value={String(t._id)}>{teacherLabel.get(String(t._id))}</option>)}</select></label>
               <label>Section<select name="sectionId" required>{data.sections.map((s) => <option key={String(s._id)} value={String(s._id)}>{sectionLabel.get(String(s._id))}</option>)}</select></label>
+              <label>Subject<select name="subjectId"><option value="">Class teacher (attendance)</option>{subjectData.subjects.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}</select></label>
             </ActionForm>
           ) : <p className="form-hint">Needs at least one section and one staff member with the Teacher role.</p>
         ) : null}

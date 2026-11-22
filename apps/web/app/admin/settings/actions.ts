@@ -12,6 +12,7 @@ import {
   endTeacherAssignment,
   setCurrentAcademicYear,
 } from "@/server/structure";
+import { createSubject, mapSubjectToClass, setSubjectCore, unmapSubjectFromClass } from "@/server/subjects";
 import { getInstitutionPolicy } from "@/server/policy";
 import type { Actor } from "@/server/auth";
 import { createInvitation, revokeInvitation } from "@/server/invitations";
@@ -84,7 +85,7 @@ export async function createSectionAction(_: FormState, fd: FormData) {
 
 export async function assignTeacherAction(_: FormState, fd: FormData) {
   return run("teaching:assign", (actor) => assignTeacher({
-    membershipId: text(fd, "membershipId"), sectionId: text(fd, "sectionId"),
+    membershipId: text(fd, "membershipId"), sectionId: text(fd, "sectionId"), ...(text(fd, "subjectId") ? { subjectId: text(fd, "subjectId") } : {}),
   }, actor), "Teacher assigned");
 }
 
@@ -157,4 +158,20 @@ export async function createInviteAction(_: InviteState, fd: FormData): Promise<
 
 export async function revokeInviteAction(_: FormState, fd: FormData) {
   return run("staff:invite", (actor) => revokeInvitation(text(fd, "invitationId"), actor), "Invitation revoked");
+}
+
+export async function createSubjectAction(_: FormState, fd: FormData) {
+  return run("structure:write", (actor) => createSubject({ code: text(fd, "code"), name: text(fd, "name"), isCore: fd.get("isCore") === "on" }, actor), "Subject added");
+}
+
+export async function setSubjectCoreAction(_: FormState, fd: FormData) {
+  return run("structure:write", (actor) => setSubjectCore(text(fd, "subjectId"), text(fd, "isCore") === "1", actor), "Subject updated");
+}
+
+export async function mapSubjectAction(_: FormState, fd: FormData) {
+  return run("structure:write", (actor) => mapSubjectToClass({ gradeLevelId: text(fd, "gradeLevelId"), subjectId: text(fd, "subjectId"), defaultMaxMarks: Number(text(fd, "defaultMaxMarks") || 100) }, actor), "Subject added to class");
+}
+
+export async function unmapSubjectAction(_: FormState, fd: FormData) {
+  return run("structure:write", (actor) => unmapSubjectFromClass(text(fd, "gradeLevelId"), text(fd, "subjectId"), actor), "Subject removed from class");
 }

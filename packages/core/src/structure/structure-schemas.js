@@ -27,6 +27,7 @@ export const sectionInputSchema = z.object({
 export const teachingAssignmentInputSchema = z.object({
   membershipId: objectId,
   sectionId: objectId,
+  subjectId: objectId.optional(), // set = subject teacher (marks entry); unset = class teacher (attendance)
 });
 
 // "A+ 80 5" / "Pass 50" lines -> bands. Returns { bands } or { error }.

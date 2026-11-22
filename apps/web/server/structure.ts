@@ -12,6 +12,7 @@ import {
   AuditEvent,
   GradeLevel,
   Membership,
+  Subject,
   Section,
   TeachingAssignment,
   withOptionalTransaction,
@@ -59,7 +60,7 @@ export async function listStructure(institutionId: unknown) {
     years: Array<{ _id: unknown; name: string; startsOn: string; endsOn: string; isCurrent: boolean }>;
     gradeLevels: Array<{ _id: unknown; name: string; sortOrder: number }>;
     sections: Array<{ _id: unknown; name: string; gradeLevelId: unknown; academicYearId: unknown }>;
-    assignments: Array<{ _id: unknown; membershipId: unknown; sectionId: unknown }>;
+    assignments: Array<{ _id: unknown; membershipId: unknown; sectionId: unknown; subjectId?: unknown }>;
     teachers: Array<{ _id: unknown; clerkUserId: string }>;
   };
 }
@@ -155,27 +156,28 @@ export async function assignTeacher(input: unknown, actor: Actor): Promise<Ok | 
   const parsed = teachingAssignmentInputSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Invalid assignment" };
   const { institutionId } = actor;
-  const { membershipId, sectionId } = parsed.data;
+  const { membershipId, sectionId, subjectId } = parsed.data;
   const [member, section] = await Promise.all([
     Membership.exists({ _id: membershipId, institutionId, role: "TEACHER", active: true }),
     Section.findOne({ _id: sectionId, institutionId, status: "ACTIVE" }).lean() as Promise<{ academicYearId: unknown } | null>,
   ]);
   if (!member) return { ok: false, error: "Teacher not found" };
+  if (subjectId && !(await Subject.exists({ _id: subjectId, institutionId, status: "ACTIVE" }))) return { ok: false, error: "Subject not found" };
   if (!section) return { ok: false, error: "Section not found" };
   if (!(await AcademicYear.exists({ _id: section.academicYearId, institutionId, isCurrent: true }))) {
     return { ok: false, error: "Section is not in the current academic year. Make its year current first." };
   }
-  const ALREADY = "Teacher is already assigned to this section";
-  if (await TeachingAssignment.exists({ institutionId, membershipId, sectionId, status: "ACTIVE" })) {
+  const ALREADY = subjectId ? "Teacher already teaches this subject in this section" : "Teacher is already assigned to this section";
+  if (await TeachingAssignment.exists({ institutionId, membershipId, sectionId, status: "ACTIVE", ...(subjectId ? { subjectId } : { subjectId: { $exists: false } }) })) {
     return { ok: false, error: ALREADY };
   }
   try {
     const created = await withOptionalTransaction(async (txn: ClientSession | null) => {
       const [row] = await TeachingAssignment.create(
-        [{ institutionId, membershipId, sectionId, academicYearId: section.academicYearId }],
+        [{ institutionId, membershipId, sectionId, ...(subjectId ? { subjectId } : {}), academicYearId: section.academicYearId }],
         txn ? { session: txn } : {},
       );
-      await audit(actor, "TEACHING_ASSIGNED", "TeachingAssignment", row._id, { membershipId, sectionId }, txn);
+      await audit(actor, "TEACHING_ASSIGNED", "TeachingAssignment", row._id, { membershipId, sectionId, subjectId: subjectId ?? null }, txn);
       return row;
     });
     return { ok: true, id: String(created._id) };

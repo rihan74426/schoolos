@@ -16,7 +16,7 @@ const schema = new mongoose.Schema({
   invoiceNumber: { type: String, required: true },
   studentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Student', required: true },
   planId: { type: mongoose.Schema.Types.ObjectId, ref: 'FeePlan', required: true },
-  period: { type: String, required: true, trim: true, maxlength: 30 },
+  period: { type: String, required: true, match: /^\d{4}-(0[1-9]|1[0-2])$/ },
   lines: { type: [line], validate: (v) => v.length > 0 },
   subtotalMinor: { type: Number, required: true, min: 1 },
   discountMinor: { type: Number, default: 0, min: 0 },
@@ -27,6 +27,9 @@ const schema = new mongoose.Schema({
   settledOn: { type: String, match: /^\d{4}-\d{2}-\d{2}$/ },
   lateFeeFrozenMinor: { type: Number, min: 0 },
   adjustments: { type: [adjustment], default: [] },
+  voidReason: { type: String, maxlength: 300 },
+  voidedAt: Date,
+  voidedByMembershipId: { type: mongoose.Schema.Types.ObjectId, ref: 'Membership' },
   createdByMembershipId: { type: mongoose.Schema.Types.ObjectId, ref: 'Membership' },
 }, { timestamps: true });
 

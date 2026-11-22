@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { adjustmentInputSchema, daysLate, invoiceSummary, parseFeeLines, paymentInputSchema, remainingDiscountMinor } from '../index.js';
+import { adjustmentInputSchema, daysLate, invoiceGenerationSchema, invoiceSummary, parseFeeLines, paymentInputSchema, remainingDiscountMinor, reversalInputSchema, voidInvoiceSchema } from '../index.js';
 
 const none = { mode: 'NONE' };
 const flat = { mode: 'FLAT', flatMinor: 10000, graceDays: 2 };
@@ -75,5 +75,16 @@ describe('input schemas', () => {
   it('adjustments need a reason of 10+ characters', () => {
     expect(adjustmentInputSchema.safeParse({ invoiceId: id, kind: 'DISCOUNT', amountMinor: 100, reason: 'short' }).success).toBe(false);
     expect(adjustmentInputSchema.safeParse({ invoiceId: id, kind: 'LATE_FEE_REMIT', amountMinor: 100, reason: 'Family hardship, approved by principal' }).success).toBe(true);
+  });
+  it('billing period is a YYYY-MM month', () => {
+    const base = { planId: id, dueDate: '2026-12-10' };
+    expect(invoiceGenerationSchema.safeParse({ ...base, period: '2026-12' }).success).toBe(true);
+    for (const bad of ['Jan 2026', 'january 2026', '2026-13', '2026-1', '2026-12-01', 'once']) expect(invoiceGenerationSchema.safeParse({ ...base, period: bad }).success).toBe(false);
+  });
+  it('reversal and void need a reason of 10+ characters', () => {
+    expect(reversalInputSchema.safeParse({ paymentId: id, reason: 'Wrong student' }).success).toBe(true);
+    expect(reversalInputSchema.safeParse({ paymentId: id, reason: 'oops' }).success).toBe(false);
+    expect(voidInvoiceSchema.safeParse({ invoiceId: id, reason: 'Billed to wrong class' }).success).toBe(true);
+    expect(voidInvoiceSchema.safeParse({ invoiceId: id, reason: '' }).success).toBe(false);
   });
 });

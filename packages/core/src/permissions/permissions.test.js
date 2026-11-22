@@ -37,10 +37,13 @@ describe('permissions', () => {
       expect(can(role, 'fees:configure')).toBe(true);
       expect(can(role, 'fees:waive')).toBe(true);
       expect(can(role, 'fees:write')).toBe(true);
+      expect(can(role, 'fees:reverse')).toBe(true);
     }
     expect(can('ACADEMIC_COORDINATOR', 'fees:waive')).toBe(true);
     expect(can('ACADEMIC_COORDINATOR', 'fees:configure')).toBe(false);
     expect(can('ACADEMIC_COORDINATOR', 'fees:write')).toBe(false);
+    expect(can('ACADEMIC_COORDINATOR', 'fees:reverse')).toBe(false);
+    expect(can('ACCOUNTS', 'fees:reverse')).toBe(false);
     expect(can('ACADEMIC_COORDINATOR', 'fees:read')).toBe(true);
     expect(can('ACCOUNTS', 'fees:write')).toBe(true);
     expect(can('ACCOUNTS', 'fees:waive')).toBe(false);

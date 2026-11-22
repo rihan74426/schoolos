@@ -5,7 +5,7 @@ import { parseFeeLines, takaToMinor } from "@schoolos/core";
 import { authFailure, requirePermission } from "@/server/auth";
 import type { Actor } from "@/server/auth";
 import { updateFeePolicy } from "@/server/fees";
-import { applyAdjustment, createFeePlan, generateInvoices, recordPayment } from "@/server/invoices";
+import { applyAdjustment, createFeePlan, generateInvoices, recordPayment, reversePayment, voidInvoice } from "@/server/invoices";
 import { getInstitutionPolicy } from "@/server/policy";
 
 export type FormState = { ok: boolean; message: string } | null;
@@ -97,4 +97,15 @@ export async function applyAdjustmentAction(_: FormState, fd: FormData) {
     const res = await applyAdjustment({ invoiceId: text(fd, "invoiceId"), kind: text(fd, "kind"), amountMinor, reason: text(fd, "reason") }, actor);
     return res.ok ? { ok: true as const, message: res.settled ? "Adjustment saved. Invoice fully paid." : "Adjustment saved" } : res;
   }, "Adjustment saved");
+}
+
+export async function reversePaymentAction(_: FormState, fd: FormData) {
+  return guard("fees:reverse", async (actor) => {
+    const res = await reversePayment({ paymentId: text(fd, "paymentId"), reason: text(fd, "reason") }, actor);
+    return res.ok ? { ok: true as const, message: `Payment reversed (${res.reversalNumber}). The invoice is open again.` } : res;
+  }, "Payment reversed");
+}
+
+export async function voidInvoiceAction(_: FormState, fd: FormData) {
+  return guard("fees:reverse", async (actor) => voidInvoice({ invoiceId: text(fd, "invoiceId"), reason: text(fd, "reason") }, actor), "Invoice voided");
 }

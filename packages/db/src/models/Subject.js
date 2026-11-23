@@ -4,6 +4,8 @@ import { tenantPlugin } from '../tenant-plugin.js';
 const schema = new mongoose.Schema({
   code: { type: String, required: true, trim: true, uppercase: true },
   name: { type: String, required: true, trim: true },
+  // Core subjects decide pass/fail when an exam uses the CORE_ONLY pass rule.
+  isCore: { type: Boolean, default: false },
   status: { type: String, enum: ['ACTIVE', 'ARCHIVED'], default: 'ACTIVE' },
 }, { timestamps: true });
 

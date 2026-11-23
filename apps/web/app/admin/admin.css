@@ -492,3 +492,22 @@ td {
 .roster-dialog-actions { display: flex; justify-content: flex-end; gap: 10px; margin-block-start: 12px; }
 .button-secondary { padding: 11px 16px; border: 1px solid #cfd8e6; border-radius: 9px; background: white; font-size: 12px; font-weight: 650; cursor: pointer; }
 @media (min-width: 720px) { .roster-picker { grid-template-columns: 1fr 200px auto; align-items: end; } }
+
+/* Exams: marks entry, results, report card */
+.marks-list { display: grid; gap: 0.5rem; }
+.marks-row { display: grid; grid-template-columns: 1fr 5.5rem auto; gap: 0.5rem; align-items: center; padding: 0.5rem 0; border-block-end: 1px solid var(--border, #e5e7eb); }
+.marks-row input { inline-size: 100%; padding: 0.5rem; font-size: 1rem; text-align: center; }
+.marks-flags { display: flex; gap: 0.25rem; }
+.marks-flags button { padding: 0.4rem 0.5rem; font-size: 0.8rem; border: 1px solid var(--border, #d1d5db); border-radius: 6px; background: transparent; cursor: pointer; }
+.marks-flags button[aria-pressed="true"] { background: #111827; color: #fff; }
+.marks-actions { margin-block-start: 1rem; }
+.report { max-inline-size: 42rem; margin-inline: auto; padding: 1.5rem; background: #fff; border: 1px solid var(--border, #d1d5db); border-radius: 8px; font-family: var(--font-inter), var(--font-bengali), var(--font-arabic), sans-serif; }
+.report table { inline-size: 100%; border-collapse: collapse; }
+.report th, .report td { padding: 0.4rem 0.5rem; border: 1px solid #d1d5db; text-align: start; }
+.report .result-pass { color: #166534; } .report .result-fail { color: #991b1b; }
+@media print {
+  .sidebar, .topbar, .mobile-brand, .no-print { display: none !important; }
+  .admin-layout { display: block; }
+  .admin-main, .page-content { padding: 0; margin: 0; }
+  .report { border: 0; box-shadow: none; max-inline-size: none; padding: 0; }
+}

@@ -21,7 +21,7 @@ export type ExamDoc = {
   passRule: "ALL_SUBJECTS" | "CORE_ONLY"; passOverrides: Array<{ studentId: unknown; reason: string }>; resultVersion: number; publishedAt?: Date;
 };
 export type AssessmentDoc = { _id: unknown; examId: unknown; sectionId: unknown; subjectId: unknown; maxMarks: number; date?: string };
-export type SheetDoc = { _id: unknown; examId: unknown; assessmentId: unknown; sectionId: unknown; subjectId: unknown; status: "ENTRY" | "SUBMITTED" | "APPROVED"; entries: Entry[]; returnReason?: string; submittedAt?: Date };
+export type SheetDoc = { _id: unknown; examId: unknown; assessmentId: unknown; sectionId: unknown; subjectId: unknown; status: "ENTRY" | "SUBMITTED" | "APPROVED"; entries: Entry[]; returnReason?: string; submittedAt?: Date; submittedByMembershipId?: unknown };
 
 export async function audit(actor: Actor, action: string, entityType: string, entityId: unknown, metadata: Record<string, unknown>, txn: ClientSession | null) {
   await AuditEvent.create([{ institutionId: actor.institutionId, actorMembershipId: actor.membershipId, action, entityType, entityId: String(entityId), metadata }], txn ? { session: txn } : {});
@@ -262,10 +262,11 @@ export async function approveSheet(assessmentId: string, actor: Actor): Promise<
   const ctx = await loadAssessment(institutionId, assessmentId);
   if (!ctx?.sheet) return { ok: false, error: "Sheet not found" };
   if (ctx.exam.status === "PUBLISHED" || ctx.exam.status === "DRAFT") return { ok: false, error: "This exam is not in review" };
+  if (ctx.sheet.submittedByMembershipId && String(ctx.sheet.submittedByMembershipId) === String(actor.membershipId)) return { ok: false, error: "You submitted this sheet. Someone else must approve it." };
   try {
     await withOptionalTransaction(async (txn: ClientSession | null) => {
       const opts = txn ? { session: txn } : {};
-      const res = await MarkSheet.updateOne({ institutionId, assessmentId, status: "SUBMITTED" }, { $set: { status: "APPROVED", approvedByMembershipId: actor.membershipId, approvedAt: new Date() } }, opts);
+      const res = await MarkSheet.updateOne({ institutionId, assessmentId, status: "SUBMITTED", submittedByMembershipId: { $ne: actor.membershipId } }, { $set: { status: "APPROVED", approvedByMembershipId: actor.membershipId, approvedAt: new Date() } }, opts);
       if (!res.modifiedCount) throw new Stale();
       await syncExamStatus(institutionId, ctx.exam._id, txn);
       await audit(actor, "SHEET_APPROVED", "MarkSheet", ctx.sheet!._id, { assessmentId }, txn);
@@ -351,6 +352,40 @@ export async function getExamDetail(actor: Actor, examId: string) {
     pendingCorrections: pending,
     students: entryStudents.map((x) => ({ id: String(x._id), label: `${fullName(x)} (${x.studentNumber})` })),
   };
+}
+
+/** Adds papers for sections or subjects added after setup. Existing papers and marks are untouched. */
+export async function syncPapers(examId: string, actor: Actor): Promise<Fail | { ok: true; added: number }> {
+  if (!idOk(examId)) return { ok: false, error: "Exam not found" };
+  const { institutionId } = actor;
+  const exam = (await Exam.findOne({ _id: examId, institutionId }).lean()) as unknown as ExamDoc | null;
+  if (!exam) return { ok: false, error: "Exam not found" };
+  if (exam.status === "PUBLISHED") return { ok: false, error: "Published exams cannot change" };
+  const { academicYearId, gradeLevelId } = exam;
+  const [sections, mappings, existing] = await Promise.all([
+    Section.find({ institutionId, academicYearId, gradeLevelId, status: "ACTIVE" }).lean() as unknown as Promise<Array<{ _id: unknown }>>,
+    ClassSubject.find({ institutionId, gradeLevelId }).lean() as unknown as Promise<Array<{ subjectId: unknown; defaultMaxMarks: number }>>,
+    Assessment.find({ institutionId, examId }, "sectionId subjectId").lean() as unknown as Promise<Array<{ sectionId: unknown; subjectId: unknown }>>,
+  ]);
+  const live = new Set(((await Subject.find({ institutionId, status: "ACTIVE", _id: { $in: mappings.map((m) => m.subjectId) } }).distinct("_id")) as unknown[]).map(String));
+  const have = new Set(existing.map((a) => `${a.sectionId}:${a.subjectId}`));
+  const docs = sections.flatMap((sec) => mappings.filter((m) => live.has(String(m.subjectId)) && !have.has(`${sec._id}:${m.subjectId}`)).map((m) => ({ institutionId, examId, sectionId: sec._id, subjectId: m.subjectId, maxMarks: m.defaultMaxMarks })));
+  if (!docs.length) return { ok: true, added: 0 };
+  try {
+    await withOptionalTransaction(async (txn: ClientSession | null) => {
+      const opts = txn ? { session: txn } : {};
+      const fresh = await Assessment.insertMany(docs, opts);
+      if (exam.status !== "DRAFT") {
+        await MarkSheet.insertMany(fresh.map((a: { _id: unknown; sectionId: unknown; subjectId: unknown }) => ({ institutionId, examId, assessmentId: a._id, sectionId: a.sectionId, subjectId: a.subjectId })), opts);
+        await syncExamStatus(institutionId, examId, txn);
+      }
+      await audit(actor, "EXAM_PAPERS_SYNCED", "Exam", examId, { added: docs.length }, txn);
+    });
+  } catch (e) {
+    if (isDup(e)) return { ok: false, error: "Papers changed while syncing. Reload and try again." };
+    throw e;
+  }
+  return { ok: true, added: docs.length };
 }
 
 /** Sheets the actor may fill in (open exams only). */

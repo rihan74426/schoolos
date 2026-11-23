@@ -1,9 +1,9 @@
 import "server-only";
 import type { ClientSession } from "mongoose";
 import { Types } from "mongoose";
-import { computeResult, correctionRequestSchema, gradingPresets, markError, reasonSchema, validateGradingScheme } from "@schoolos/core";
+import { can, computeResult, correctionRequestSchema, gradingPresets, markError, reasonSchema, validateGradingScheme } from "@schoolos/core";
 import {
-  Assessment, AuditEvent, Exam, GradeLevel, GradingScheme, Institution, MarkCorrection, MarkSheet, ResultSnapshot, Section, Student, Subject, withOptionalTransaction,
+  Assessment, AuditEvent, Exam, GradeLevel, GradingScheme, Institution, MarkCorrection, MarkSheet, ResultSnapshot, Section, Student, Subject, TeachingAssignment, withOptionalTransaction,
 } from "@schoolos/db";
 import type { Actor } from "./auth";
 import { audit, canEnterAssessment, fullName, idOk, isDup, Stale } from "./exams";
@@ -47,6 +47,11 @@ async function buildResults(institutionId: unknown, exam: ExamDoc, scheme: Schem
       studentSection.set(String(e.studentId), String(sh.sectionId));
     }
   }
+  // Policy: every active student placed in a section with papers must be on the sheets. Late joiners block publish until the sheets are sent back and completed.
+  const paperSections = [...papersBySection.keys()];
+  const rostered = (await Student.find({ institutionId, sectionId: { $in: paperSections }, status: "ACTIVE" }, "studentNumber firstName lastName", opts).lean()) as unknown as Array<{ _id: unknown; studentNumber: string; firstName: string; lastName?: string }>;
+  const absent = rostered.filter((st) => !studentSection.has(String(st._id)));
+  if (absent.length) return { ok: false, error: `${absent.length} active student(s) are not on the mark sheets, e.g. ${absent.slice(0, 3).map((st) => `${fullName(st)} (${st.studentNumber})`).join(", ")}. Send a sheet back so their marks (or Absent/Exempt) can be added, or withdraw them.` };
   const students = studentSection.size ? ((await Student.find({ institutionId, _id: { $in: [...studentSection.keys()] } }, null, opts).lean()) as unknown as Array<{ _id: unknown; studentNumber: string; firstName: string; lastName?: string }>) : [];
   const overrides = new Map(exam.passOverrides.map((o) => [String(o.studentId), o.reason]));
   const results: Row[] = [];
@@ -114,6 +119,13 @@ export async function publishExam(examId: string, actor: Actor): Promise<Fail | 
 
 // ---------- reads ----------
 
+/** null = any section; otherwise only sections the actor has an active teaching assignment for. */
+async function visibleSectionIds(actor: Actor): Promise<Set<string> | null> {
+  if (can(actor.role, "exams:any-section")) return null;
+  const ids = (await TeachingAssignment.find({ institutionId: actor.institutionId, membershipId: actor.membershipId, status: "ACTIVE" }, "sectionId").lean()) as unknown as Array<{ sectionId: unknown }>;
+  return new Set(ids.map((a) => String(a.sectionId)));
+}
+
 export async function getResults(actor: Actor, examId: string) {
   if (!idOk(examId)) return null;
   const { institutionId } = actor;
@@ -122,7 +134,9 @@ export async function getResults(actor: Actor, examId: string) {
   const snap = (await ResultSnapshot.findOne({ institutionId, examId, version: exam.resultVersion }).lean()) as unknown as { version: number; publishedAt: Date; scheme: Scheme; results: Row[]; examName: string; term: string; passRule: string } | null;
   if (!snap) return null;
   const level = (await GradeLevel.findOne({ _id: exam.gradeLevelId, institutionId }).lean()) as unknown as { name: string } | null;
-  return { exam: { id: String(exam._id), name: snap.examName, term: snap.term, className: level?.name ?? "", passRule: snap.passRule }, version: snap.version, publishedAt: snap.publishedAt.toISOString(), scheme: snap.scheme, results: snap.results };
+  const visible = await visibleSectionIds(actor);
+  const results = visible ? snap.results.filter((r) => visible.has(String(r.sectionId))) : snap.results;
+  return { exam: { id: String(exam._id), name: snap.examName, term: snap.term, className: level?.name ?? "", passRule: snap.passRule }, version: snap.version, publishedAt: snap.publishedAt.toISOString(), scheme: snap.scheme, results };
 }
 
 export async function getReportCard(actor: Actor, examId: string, studentId: string) {

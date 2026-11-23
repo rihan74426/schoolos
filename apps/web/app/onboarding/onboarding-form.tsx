@@ -1,10 +1,10 @@
 "use client";
 
-import { useFormState } from "react-dom";
+import { useActionState } from "react";
 import { createFirstInstitutionAction } from "./actions";
 
 export function OnboardingForm() {
-  const [state, formAction] = useFormState(createFirstInstitutionAction, null);
+  const [state, formAction] = useActionState(createFirstInstitutionAction, null);
 
   return (
     <form action={formAction} className="onboarding-form">

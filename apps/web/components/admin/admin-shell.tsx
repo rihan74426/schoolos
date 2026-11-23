@@ -5,7 +5,7 @@ import { cookies } from "next/headers";
 import { Institution } from "@schoolos/db";
 import { locales } from "@schoolos/i18n";
 import { getActiveMemberships } from "@/server/auth";
-import { setActiveSchoolAction } from "@/app/admin/actions";
+import { setActiveSchoolAction, setThemeAction } from "@/app/admin/actions";
 
 const navigation = [
   { href: "/admin/dashboard", label: "overview", icon: "⌂" },
@@ -31,6 +31,9 @@ export async function AdminShell({ children }: { children: ReactNode }) {
       ? (requestedLocale as keyof typeof locales)
       : "en";
   const messages = locales[locale];
+  const themeCookie = cookieStore.get("schoolos-theme")?.value;
+  const theme = themeCookie === "light" || themeCookie === "dark" ? themeCookie : "system";
+  const nextTheme = theme === "system" ? "light" : theme === "light" ? "dark" : "system";
   const activeMembership =
     memberships.find(
       (membership) => String(membership.institutionId) === activeSchoolId,
@@ -116,6 +119,12 @@ export async function AdminShell({ children }: { children: ReactNode }) {
               {messages.finishSetup}
             </Link>
           ) : null}
+          <form action={setThemeAction} className="school-switcher">
+            <input type="hidden" name="theme" value={nextTheme} />
+            <button type="submit" aria-label={`Theme: ${theme}. Switch to ${nextTheme}`} title={`Theme: ${theme}`}>
+              {theme === "dark" ? "☾" : theme === "light" ? "☀" : "◐"}
+            </button>
+          </form>
           <span className="topbar-user">
             {activeMembership?.role ?? messages.setupRequired}
           </span>

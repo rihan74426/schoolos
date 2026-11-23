@@ -9,7 +9,8 @@ import { requestCorrectionAction } from "../../actions";
 
 export const dynamic = "force-dynamic";
 
-export default async function SheetPage({ params }: { params: { assessmentId: string } }) {
+export default async function SheetPage(props: { params: Promise<{ assessmentId: string }> }) {
+  const params = await props.params;
   const actor = await resolveActiveMembership();
   await connectDb();
   const m = await getMarkSheet(actor, params.assessmentId);

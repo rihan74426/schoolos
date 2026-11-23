@@ -10,7 +10,8 @@ export const dynamic = "force-dynamic";
 
 type SubjectRow = { subjectId: string; name: string; maxMarks: number; status: string; marks: number | null; grade: string | null; passed: boolean | null };
 
-export default async function ReportCardPage({ params }: { params: { examId: string; studentId: string } }) {
+export default async function ReportCardPage(props: { params: Promise<{ examId: string; studentId: string }> }) {
+  const params = await props.params;
   const actor = await resolveActiveMembership();
   await connectDb();
   if (!can(actor.role, "exams:read")) return <section className="panel"><p className="muted">Your role cannot view results.</p></section>;

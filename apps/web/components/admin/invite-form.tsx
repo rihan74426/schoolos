@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useFormState, useFormStatus } from "react-dom";
+import { useActionState } from "react";
+import { useFormStatus } from "react-dom";
 import type { InviteState } from "@/app/admin/settings/actions";
 
 function Submit() {
@@ -16,7 +17,7 @@ export function InviteForm({
   action: (state: InviteState, formData: FormData) => Promise<InviteState>;
   roles: string[];
 }) {
-  const [state, formAction] = useFormState(action, null);
+  const [state, formAction] = useActionState(action, null);
   const [copied, setCopied] = useState(false);
   const canShare = typeof navigator !== "undefined" && "share" in navigator;
 

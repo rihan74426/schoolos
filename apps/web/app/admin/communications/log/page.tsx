@@ -7,7 +7,8 @@ import { listNotifications } from "@/server/notifications";
 
 export const dynamic = "force-dynamic";
 
-export default async function DeliveryLogPage({ searchParams }: { searchParams: { page?: string } }) {
+export default async function DeliveryLogPage(props: { searchParams: Promise<{ page?: string }> }) {
+  const searchParams = await props.searchParams;
   const actor = await resolveActiveMembership();
   await connectDb();
   if (!can(actor.role, "notices:send")) {

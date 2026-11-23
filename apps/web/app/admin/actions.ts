@@ -42,3 +42,20 @@ export async function setActiveSchoolAction(formData: FormData) {
   revalidatePath("/admin", "layout");
   redirect("/admin/dashboard");
 }
+
+const THEMES = ["system", "light", "dark"] as const;
+
+export async function setThemeAction(formData: FormData) {
+  const requested = String(formData.get("theme") ?? "system");
+  const theme = (THEMES as readonly string[]).includes(requested) ? requested : "system";
+  const cookieStore = await cookies();
+  if (theme === "system") cookieStore.delete("schoolos-theme");
+  else
+    cookieStore.set("schoolos-theme", theme, {
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 365,
+    });
+  revalidatePath("/", "layout");
+}

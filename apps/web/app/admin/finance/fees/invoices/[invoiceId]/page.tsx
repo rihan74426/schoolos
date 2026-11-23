@@ -10,7 +10,8 @@ import { applyAdjustmentAction, recordPaymentAction, reversePaymentAction, voidI
 
 export const dynamic = "force-dynamic";
 
-export default async function InvoicePage({ params }: { params: { invoiceId: string } }) {
+export default async function InvoicePage(props: { params: Promise<{ invoiceId: string }> }) {
+  const params = await props.params;
   const actor = await resolveActiveMembership();
   await connectDb();
   if (!can(actor.role, "fees:read")) return <section className="panel"><p className="muted">Your role cannot view fees.</p></section>;

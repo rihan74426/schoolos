@@ -22,6 +22,7 @@ export default async function ImportPage() {
         <p className="muted small">
           Columns: studentNumber, firstName, lastName (optional), dateOfBirth (YYYY-MM-DD), guardianName, guardianPhone, guardianRelationship, guardianEmail.
           Up to 500 rows. Students sharing a guardian phone number are linked to one guardian.{" "}
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- file download route handler */}
           <a className="text-link" href="/admin/students/import/template">Download template</a> · <Link className="text-link" href="/admin/students">Back to students</Link>
         </p>
         <ImportClient sections={sections} />

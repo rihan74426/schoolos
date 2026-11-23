@@ -6,7 +6,8 @@ import { Institution } from "@schoolos/db";
 
 export const dynamic = "force-dynamic";
 
-export default async function ReceiptPage({ params }: { params: { paymentId: string } }) {
+export default async function ReceiptPage(props: { params: Promise<{ paymentId: string }> }) {
+  const params = await props.params;
   const actor = await resolveActiveMembership();
   await connectDb();
   if (!can(actor.role, "fees:read")) return <section className="panel"><p className="muted">Your role cannot view fees.</p></section>;

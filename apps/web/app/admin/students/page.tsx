@@ -9,7 +9,8 @@ import { createStudentAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 
-export default async function StudentsPage({ searchParams }: { searchParams: { q?: string; section?: string; status?: string; page?: string } }) {
+export default async function StudentsPage(props: { searchParams: Promise<{ q?: string; section?: string; status?: string; page?: string }> }) {
+  const searchParams = await props.searchParams;
   const actor = await resolveActiveMembership();
   if (!can(actor.role, "student:read")) {
     return <section className="panel"><p className="muted">Your role cannot view students.</p></section>;

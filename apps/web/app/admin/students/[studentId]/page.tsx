@@ -9,7 +9,8 @@ import { addGuardianAction, setGuardianConsentAction, enrollStudentAction, setSt
 
 export const dynamic = "force-dynamic";
 
-export default async function StudentDetailPage({ params }: { params: { studentId: string } }) {
+export default async function StudentDetailPage(props: { params: Promise<{ studentId: string }> }) {
+  const params = await props.params;
   const actor = await resolveActiveMembership();
   if (!can(actor.role, "student:read")) {
     return <section className="panel"><p className="muted">Your role cannot view students.</p></section>;

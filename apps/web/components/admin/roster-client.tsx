@@ -30,8 +30,8 @@ export function RosterClient({
   canCorrect: boolean;
 }) {
   const router = useRouter();
-  const initial = useRef(Object.fromEntries(students.map((s) => [s.id, s.status])));
-  const [marks, setMarks] = useState<Record<string, Status | null>>(initial.current);
+  const [initial] = useState<Record<string, Status | null>>(() => Object.fromEntries(students.map((s) => [s.id, s.status])));
+  const [marks, setMarks] = useState<Record<string, Status | null>>(initial);
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
@@ -40,7 +40,7 @@ export function RosterClient({
   const marked = students.filter((s) => marks[s.id]);
   const counts = OPTIONS.map((o) => ({ ...o, n: students.filter((s) => marks[s.id] === o.value).length }));
   const isCorrection = Boolean(submittedAt);
-  const changed = students.some((s) => marks[s.id] !== initial.current[s.id]);
+  const changed = students.some((s) => marks[s.id] !== initial[s.id]);
   const complete = requireFullRoster ? marked.length === students.length : marked.length > 0;
   const locked = isCorrection && !canCorrect;
   const canSubmit = complete && !busy && !locked && (!isCorrection || changed);

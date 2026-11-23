@@ -9,7 +9,8 @@ import { listCurrentSections } from "@/server/students";
 
 export const dynamic = "force-dynamic";
 
-export default async function AttendancePage({ searchParams }: { searchParams: { section?: string; date?: string } }) {
+export default async function AttendancePage(props: { searchParams: Promise<{ section?: string; date?: string }> }) {
+  const searchParams = await props.searchParams;
   const actor = await resolveActiveMembership();
   await connectDb();
   const heading = <PageHeading title="Attendance" description="Take daily attendance for your sections." />;

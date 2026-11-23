@@ -1,7 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useFormState, useFormStatus } from "react-dom";
+import { useActionState } from "react";
+import { useFormStatus } from "react-dom";
 
 type State = { ok: boolean; message: string } | null;
 
@@ -25,7 +26,7 @@ export function ActionForm({
   children: ReactNode;
   className?: string;
 }) {
-  const [state, formAction] = useFormState(action, null);
+  const [state, formAction] = useActionState(action, null);
   return (
     <form action={formAction} className={className}>
       {children}

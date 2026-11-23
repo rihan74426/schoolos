@@ -7,7 +7,8 @@ import { getResults } from "@/server/results";
 
 export const dynamic = "force-dynamic";
 
-export default async function ResultsPage({ params }: { params: { examId: string } }) {
+export default async function ResultsPage(props: { params: Promise<{ examId: string }> }) {
+  const params = await props.params;
   const actor = await resolveActiveMembership();
   await connectDb();
   if (!can(actor.role, "exams:read")) return <section className="panel"><p className="muted">Your role cannot view results.</p></section>;

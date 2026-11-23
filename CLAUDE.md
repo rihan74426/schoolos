@@ -6,7 +6,7 @@ The user (NJ) is a Next.js/JavaScript developer who wants **short answers, low t
 
 ## Stack and layout
 
-pnpm 9 + Turborepo monorepo. Next.js 14 App Router, React 18.3, Clerk v6 (`@clerk/nextjs`), MongoDB via Mongoose 8, zod, plain CSS (no Tailwind/shadcn). Core and db are plain JS (ESM); web is TypeScript.
+pnpm 9 + Turborepo monorepo. Next.js 16 App Router, React 19, Clerk v6 (`@clerk/nextjs`), MongoDB via Mongoose 8, zod, plain CSS (no Tailwind/shadcn). Core and db are plain JS (ESM); web is TypeScript.
 
 - `apps/web` — Next.js app. `server/` = server-only services (`import "server-only"`); `app/**/actions.ts` = thin server actions; `tests/` = service tests (vitest + mongodb-memory-server).
 - `packages/core` — DB-free domain rules, zod schemas, permission matrix. Vitest.
@@ -32,7 +32,7 @@ Commands: `pnpm install`; `pnpm --filter @schoolos/core test|typecheck`; `pnpm -
 - Validate ids with `mongoose.isObjectIdOrHexString`, never `isValidObjectId`.
 - Never use `populate()` on tenant models (it queries without `institutionId` and the plugin rejects it); fetch related docs with a scoped query and join in code.
 - **Invites**: single-use, 7-day links at `/join/<token>`. Only the SHA-256 hash is stored (never log or audit the raw token). `Invitation` allows lookup by `tokenHash` alone (plugin option `allowTokenHashLookup`); acceptance claims atomically, never changes an existing member's role, and `invitableRoles(role)` limits who can invite whom. Invited staff must complete a `Staff` profile (`/admin/welcome`) before the dashboard.
-- Webhook: `/api/webhooks/clerk` uses `verifyWebhook`; env `CLERK_WEBHOOK_SIGNING_SECRET`. Middleware is `middleware.ts` (Next 14); `auth()` is async in Clerk v6.
+- Webhook: `/api/webhooks/clerk` uses `verifyWebhook`; env `CLERK_WEBHOOK_SIGNING_SECRET`. Middleware is `proxy.ts` (Next 16); `auth()` is async in Clerk v6.
 
 ## Data rules
 

@@ -9,7 +9,8 @@ export const dynamic = "force-dynamic";
 // The token is in the URL: never leak it through the Referer header.
 export const metadata: Metadata = { title: "Join your school", referrer: "no-referrer", robots: { index: false } };
 
-export default async function JoinPage({ params }: { params: { token: string } }) {
+export default async function JoinPage(props: { params: Promise<{ token: string }> }) {
+  const params = await props.params;
   const { token } = params;
   await connectDb();
   const preview = await previewInvitation(token);

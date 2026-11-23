@@ -6,7 +6,7 @@ import { PageHeading } from "@/components/admin/page-heading";
 import { resolveActiveMembership } from "@/server/auth";
 import { getExamDetail } from "@/server/exams";
 import { listCorrections } from "@/server/results";
-import { openExamAction, publishExamAction, setPassOverrideAction, updateAssessmentAction, updateExamRulesAction } from "../actions";
+import { openExamAction, publishExamAction, setPassOverrideAction, syncPapersAction, updateAssessmentAction, updateExamRulesAction } from "../actions";
 
 export const dynamic = "force-dynamic";
 
@@ -38,6 +38,12 @@ export default async function ExamPage(props: { params: Promise<{ examId: string
 
       <section className="panel">
         <h2>Papers</h2>
+        {canWrite && !published ? (
+          <>
+            <p className="muted small">Added a section or subject after setting up this exam? Sync adds the missing papers. Existing papers and marks are not touched.</p>
+            <ActionForm action={syncPapersAction} submitLabel="Sync papers"><input type="hidden" name="examId" value={exam.id} /></ActionForm>
+          </>
+        ) : null}
         <div className="table-scroll"><table><thead><tr><th>Section</th><th>Subject</th><th>Full marks</th><th>Date</th><th>Sheet</th><th /></tr></thead><tbody>
           {d.papers.map((p) => (
             <tr key={p.id}>

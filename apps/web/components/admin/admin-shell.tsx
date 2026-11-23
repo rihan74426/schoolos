@@ -3,20 +3,22 @@ import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 import { cookies } from "next/headers";
 import { Institution } from "@schoolos/db";
+import { can } from "@schoolos/core";
 import { locales } from "@schoolos/i18n";
+import { NavLink } from "./nav-link";
 import { getActiveMemberships } from "@/server/auth";
 import { setActiveSchoolAction, setThemeAction } from "@/app/admin/actions";
 
 const navigation = [
-  { href: "/admin/dashboard", label: "overview", icon: "⌂" },
-  { href: "/admin/admissions", label: "admissions", icon: "↗" },
-  { href: "/admin/students", label: "students", icon: "♙" },
-  { href: "/admin/academics/attendance", label: "attendance", icon: "✓" },
-  { href: "/admin/academics/schedule", label: "timetable", icon: "▦" },
-  { href: "/admin/finance/fees", label: "fees", icon: "$" },
-  { href: "/admin/exams", label: "exams", icon: "▤" },
-  { href: "/admin/communications", label: "notices", icon: "✉" },
-  { href: "/admin/settings", label: "institutionSetup", icon: "⚙" },
+  { href: "/admin/dashboard", label: "overview", icon: "⌂", permission: null },
+  { href: "/admin/admissions", label: "admissions", icon: "↗", permission: "student:write" },
+  { href: "/admin/students", label: "students", icon: "♙", permission: "student:read" },
+  { href: "/admin/academics/attendance", label: "attendance", icon: "✓", permission: "attendance:submit" },
+  { href: "/admin/academics/schedule", label: "timetable", icon: "▦", permission: "structure:read" },
+  { href: "/admin/finance/fees", label: "fees", icon: "$", permission: "fees:read" },
+  { href: "/admin/exams", label: "exams", icon: "▤", permission: "exams:read" },
+  { href: "/admin/communications", label: "notices", icon: "✉", permission: "notices:send" },
+  { href: "/admin/settings", label: "institutionSetup", icon: "⚙", permission: "policy:read" },
 ];
 
 export async function AdminShell({ children }: { children: ReactNode }) {
@@ -38,6 +40,10 @@ export async function AdminShell({ children }: { children: ReactNode }) {
     memberships.find(
       (membership) => String(membership.institutionId) === activeSchoolId,
     ) ?? (memberships.length === 1 ? memberships[0] : undefined);
+  const role = activeMembership?.role;
+  const visibleNav = navigation
+    .filter((item) => !item.permission || (role !== undefined && can(role, item.permission)))
+    .map((item) => ({ href: item.href, icon: item.icon, label: messages[item.label as keyof typeof locales.en] }));
   const institutions =
     memberships.length > 0
       ? ((await Institution.find({
@@ -62,11 +68,8 @@ export async function AdminShell({ children }: { children: ReactNode }) {
         </Link>
         <nav className="sidebar-nav" aria-label="Main navigation">
           <p className="nav-caption">{messages.schoolOperations}</p>
-          {navigation.map((item) => (
-            <Link className="nav-link" href={item.href} key={item.href}>
-              <span aria-hidden="true">{item.icon}</span>
-              {messages[item.label as keyof typeof locales.en]}
-            </Link>
+          {visibleNav.map((item) => (
+            <NavLink key={item.href} {...item} />
           ))}
         </nav>
         <div className="sidebar-footer">
@@ -131,6 +134,11 @@ export async function AdminShell({ children }: { children: ReactNode }) {
         </header>
         <main className="page-content">{children}</main>
       </div>
+      <nav className="tabbar" aria-label="Quick navigation">
+        {visibleNav.slice(0, 5).map((item) => (
+          <NavLink key={item.href} {...item} variant="tab" />
+        ))}
+      </nav>
     </div>
   );
 }

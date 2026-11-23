@@ -207,10 +207,14 @@ describe("marks entry", () => {
     expect(await submitSheet(sciA, teacher.sci)).toEqual({ ok: true });
     expect(await AuditEvent.countDocuments({ institutionId: A, action: "SHEET_RETURNED" })).toBe(1);
   });
+  it("does not let the submitter approve their own sheet", async () => {
+    const artA = await paper("art");
+    expect(await approveSheet(artA, coordinator)).toMatchObject({ ok: false, error: expect.stringContaining("Someone else must approve") });
+  });
   it("approves every sheet, then the exam is APPROVED and entry is locked", async () => {
     const sheets = (await MarkSheet.find({ institutionId: A, examId }).lean()) as unknown as Array<{ assessmentId: unknown }>;
     for (const [i, s] of sheets.entries()) {
-      expect(await approveSheet(String(s.assessmentId), coordinator)).toEqual({ ok: true });
+      expect(await approveSheet(String(s.assessmentId), principal)).toEqual({ ok: true });
       expect((await Exam.findOne({ _id: examId, institutionId: A }).lean()) as unknown).toMatchObject({ status: i === sheets.length - 1 ? "APPROVED" : "SUBMITTED" });
     }
     expect(await saveMarks({ assessmentId: await paper("math"), entries: [P(ids.s1, 1)] }, teacher.math)).toMatchObject({ ok: false });

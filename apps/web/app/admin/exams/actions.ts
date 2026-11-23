@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { authFailure, requirePermission } from "@/server/auth";
 import type { Actor } from "@/server/auth";
 import {
-  approveSheet, createExam, openExam, returnSheet, saveMarks, setPassOverride, submitSheet, updateAssessment, updateExamRules,
+  approveSheet, createExam, openExam, returnSheet, saveMarks, setPassOverride, submitSheet, syncPapers, updateAssessment, updateExamRules,
 } from "@/server/exams";
 import { decideCorrection, publishExam, requestCorrection } from "@/server/results";
 
@@ -37,6 +37,13 @@ export async function updateAssessmentAction(_: FormState, fd: FormData) {
 
 export async function openExamAction(_: FormState, fd: FormData) {
   return guard("exams:write", (actor) => openExam(text(fd, "examId"), actor), "Exam opened. Teachers can enter marks.");
+}
+
+export async function syncPapersAction(_: FormState, fd: FormData) {
+  return guard("exams:write", async (actor) => {
+    const res = await syncPapers(text(fd, "examId"), actor);
+    return res.ok ? { ok: true as const, message: res.added ? `Added ${res.added} paper(s).` : "Papers are already up to date." } : res;
+  }, "Papers synced");
 }
 
 export async function updateExamRulesAction(_: FormState, fd: FormData) {

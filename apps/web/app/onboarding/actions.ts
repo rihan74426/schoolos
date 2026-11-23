@@ -1,16 +1,23 @@
 "use server";
 
-import mongoose from "mongoose";
+import { randomBytes } from "node:crypto";
+import type { ClientSession, Types } from "mongoose";
 import { auth } from "@clerk/nextjs/server";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { buildInitialPolicy, gradingPresets, policyPresets } from "@schoolos/core";
+import {
+  buildInitialPolicy,
+  gradingPresets,
+  policyPresets,
+} from "@schoolos/core";
 import {
   connectDb,
   GradingScheme,
   Institution,
   InstitutionPolicy,
   Membership,
+  supportsTransactions,
+  withOptionalTransaction,
 } from "@schoolos/db";
 
 const INITIAL_BOOTSTRAP_KEY = "initial-owner";
@@ -54,7 +61,7 @@ export async function createFirstInstitutionAction(
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-|-$/g, "")
       .slice(0, 70) || "school";
-  const slug = `${slugBase}-${new mongoose.Types.ObjectId().toString().slice(-6)}`;
+  const slug = `${slugBase}-${randomBytes(3).toString("hex")}`;
   const institutionData = {
     name,
     slug,
@@ -62,8 +69,9 @@ export async function createFirstInstitutionAction(
     bootstrapKey: INITIAL_BOOTSTRAP_KEY,
   };
   const policy = buildInitialPolicy(preset);
-  const scheme = gradingPresets[policy.gradingSchemeKey as keyof typeof gradingPresets];
-  const seedDocs = (institutionId: mongoose.Types.ObjectId, membershipId?: unknown) => ({
+  const scheme =
+    gradingPresets[policy.gradingSchemeKey as keyof typeof gradingPresets];
+  const seedDocs = (institutionId: Types.ObjectId, membershipId?: unknown) => ({
     policy: {
       institutionId,
       policy,
@@ -77,16 +85,12 @@ export async function createFirstInstitutionAction(
       isDefault: true,
     },
   });
-  let institutionId: mongoose.Types.ObjectId;
-  const hello = await mongoose.connection.db?.admin().command({ hello: 1 });
-  const supportsTransactions = Boolean(
-    hello?.setName || hello?.msg === "isdbgrid",
-  );
+  let institutionId: Types.ObjectId;
 
-  if (supportsTransactions) {
-    const session = await mongoose.startSession();
+  if (await supportsTransactions()) {
     try {
-      await session.withTransaction(async () => {
+      await withOptionalTransaction(async (session: ClientSession | null) => {
+        if (!session) throw new Error("Expected a transaction session");
         const [institution] = await Institution.create([institutionData], {
           session,
         });
@@ -111,8 +115,6 @@ export async function createFirstInstitutionAction(
         return { error: "Initial setup was completed by another user." };
       }
       throw error;
-    } finally {
-      await session.endSession();
     }
   } else {
     const [institution] = await Institution.create([institutionData]);
@@ -131,7 +133,11 @@ export async function createFirstInstitutionAction(
       await Promise.all([
         InstitutionPolicy.deleteMany({ institutionId }),
         GradingScheme.deleteMany({ institutionId }),
-        Membership.deleteMany({ institutionId, clerkUserId: userId, active: true }),
+        Membership.deleteMany({
+          institutionId,
+          clerkUserId: userId,
+          active: true,
+        }),
       ]);
       await Institution.deleteOne({
         _id: institutionId,

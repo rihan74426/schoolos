@@ -63,6 +63,9 @@
   color: white;
   outline: none;
 }
+.nav-link em { font-style: normal; }
+.nav-link[aria-current="page"] { background: var(--side-hover); color: white; box-shadow: inset 3px 0 0 var(--brand); }
+.tabbar { display: none; }
 .nav-link span {
   width: 17px;
   text-align: center;
@@ -335,33 +338,33 @@ td {
 }
 @media (max-width: 700px) {
   .sidebar {
-    width: 64px;
-    flex-basis: 64px;
-    padding: 16px 8px;
-  }
-  .brand {
-    justify-content: center;
-    padding: 0 0 22px;
-  }
-  .brand > span:last-child,
-  .nav-caption,
-  .nav-link {
-    font-size: 0;
-  }
-  .nav-link {
-    justify-content: center;
-    padding: 12px 4px;
-  }
-  .nav-link span {
-    font-size: 16px;
-  }
-  .sidebar-footer {
-    justify-content: center;
-    padding: 12px 0 0;
-  }
-  .sidebar-footer > span:last-child {
     display: none;
   }
+  .tabbar {
+    position: fixed;
+    inset-inline: 0;
+    inset-block-end: 0;
+    z-index: 20;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    border-block-start: 1px solid var(--border);
+    background: var(--surface);
+    padding-block-end: env(safe-area-inset-bottom);
+  }
+  .tab-link {
+    display: grid;
+    justify-items: center;
+    gap: 2px;
+    min-height: 56px;
+    padding: 8px 2px;
+    color: var(--text-2);
+    font-size: 11px;
+  }
+  .tab-link span { font-size: 18px; line-height: 1; }
+  .tab-link em { font-style: normal; max-inline-size: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tab-link[aria-current="page"] { color: var(--brand); font-weight: 650; }
+  .admin-main { padding-block-end: 72px; }
   .topbar {
     justify-content: space-between;
     padding: 0 18px;
@@ -506,7 +509,7 @@ td {
 .report th, .report td { padding: 0.4rem 0.5rem; border: 1px solid var(--border-strong); text-align: start; }
 .report .result-pass { color: var(--ok); } .report .result-fail { color: var(--err); }
 @media print {
-  .sidebar, .topbar, .mobile-brand, .no-print { display: none !important; }
+  .sidebar, .tabbar, .topbar, .mobile-brand, .no-print { display: none !important; }
   .admin-layout { display: block; }
   .admin-main, .page-content { padding: 0; margin: 0; }
   .report { border: 0; box-shadow: none; max-inline-size: none; padding: 0; }

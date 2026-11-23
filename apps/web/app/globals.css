@@ -7,8 +7,8 @@ body {
   min-height: 100%;
 }
 body {
-  background: #f5f7fb;
-  color: #172033;
+  background: var(--bg);
+  color: var(--text);
   font-family:
     var(--font-inter),
     ui-sans-serif,
@@ -41,43 +41,27 @@ input {
 .landing-card {
   max-width: 560px;
   padding: 48px;
-  background: white;
-  border: 1px solid #e6eaf0;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 20px;
-  box-shadow: 0 20px 60px #25324a12;
+  box-shadow: var(--shadow);
 }
 .landing-card h1 {
   margin: 4px 0 12px;
   font-size: 40px;
 }
 .landing-card > p:not(.eyebrow) {
-  color: #657187;
+  color: var(--text-2);
   line-height: 1.6;
   margin-bottom: 28px;
 }
-.button-link {
-  display: inline-flex;
+.landing-card .button-link,
+.onboarding-form .button-link {
   padding: 12px 18px;
-  border-radius: 9px;
-  background: #3156d3;
-  color: white;
-  font-weight: 650;
-}
-.eyebrow {
-  margin: 0 0 8px;
-  color: #61708a;
-  font-size: 11px;
-  font-weight: 750;
-  letter-spacing: 0.12em;
-}
-.muted {
-  color: #69758b;
-}
-.small {
-  font-size: 12px;
+  font-size: 14px;
 }
 code {
-  color: #3156d3;
+  color: var(--brand);
 }
 .onboarding-card {
   width: min(100%, 560px);
@@ -88,7 +72,7 @@ code {
   margin-top: 24px;
 }
 .onboarding-form label {
-  color: #26334a;
+  color: var(--text);
   font-size: 13px;
   font-weight: 650;
 }
@@ -97,20 +81,15 @@ code {
   min-height: 42px;
   margin-bottom: 8px;
   padding: 9px 11px;
-  border: 1px solid #d6dce7;
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
-  background: white;
-  color: #172033;
+  background: var(--surface);
+  color: var(--text);
 }
 .onboarding-form .button-link {
   justify-content: center;
   border: 0;
   cursor: pointer;
-}
-.form-error {
-  margin: 0;
-  color: #b42318;
-  font-size: 13px;
 }
 .school-picker-list {
   display: grid;
@@ -123,15 +102,15 @@ code {
   justify-content: space-between;
   gap: 16px;
   padding: 15px;
-  border: 1px solid #e6eaf0;
+  border: 1px solid var(--border);
   border-radius: 10px;
-  background: white;
-  color: #172033;
+  background: var(--surface);
+  color: var(--text);
   cursor: pointer;
   text-align: start;
 }
 .school-picker-option span {
-  color: #3156d3;
+  color: var(--brand);
 }
 .visually-hidden {
   position: absolute;

@@ -135,7 +135,7 @@ export async function AdminShell({ children }: { children: ReactNode }) {
         </header>
         <main className="page-content">{children}</main>
       </div>
-      <MobileNav items={visibleNav} moreLabel="More" />
+      <MobileNav items={visibleNav} moreLabel={messages.more} />
     </div>
   );
 }

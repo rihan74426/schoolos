@@ -1,6 +1,7 @@
 const en = {
   appName: "SchoolOS",
   overview: "Overview",
+  more: "More",
   admissions: "Admissions",
   students: "Students",
   attendance: "Attendance",
@@ -33,6 +34,7 @@ const en = {
 const bn = {
   appName: "স্কুলওএস",
   overview: "সারসংক্ষেপ",
+  more: "আরও",
   admissions: "ভর্তি",
   students: "শিক্ষার্থী",
   attendance: "উপস্থিতি",
@@ -66,6 +68,7 @@ const bn = {
 const ar = {
   appName: "مدرسة أوس",
   overview: "نظرة عامة",
+  more: "المزيد",
   admissions: "القبول",
   students: "الطلاب",
   attendance: "الحضور",

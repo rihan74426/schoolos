@@ -546,3 +546,10 @@ td {
 .text-link { font-weight: 600; }
 .list-row { padding: 14px 0; }
 .dashboard-callout { border-inline-start: 4px solid var(--brand); }
+
+/* Report card: comfortable on phones, unchanged in print */
+.report { padding: clamp(0.75rem, 4vw, 1.5rem); }
+.report h1 { font-size: clamp(1.25rem, 5vw, 1.75rem); }
+.report h2 { font-size: clamp(0.95rem, 3.5vw, 1.15rem); }
+@media (max-width: 700px) { .report table { font-size: 13px; } .report th, .report td { padding: 0.35rem 0.4rem; } }
+@media print { .report { padding: 0; } }

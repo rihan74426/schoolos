@@ -2,6 +2,8 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { auth } from "@clerk/nextjs/server";
 import { connectDb } from "@schoolos/db";
+import { buttonVariants, Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { previewInvitation } from "@/server/invitations";
 import { acceptInviteAction } from "./actions";
 
@@ -18,10 +20,10 @@ export default async function JoinPage(props: { params: Promise<{ token: string 
   if (!preview) {
     return (
       <main className="landing">
-        <section className="panel join-card">
+        <Card className="mx-auto grid w-full max-w-md gap-3 p-6">
           <h1>Invitation not valid</h1>
           <p className="muted">This link has expired, was already used, or was cancelled. Ask your school to send a new one.</p>
-        </section>
+        </Card>
       </main>
     );
   }
@@ -32,7 +34,7 @@ export default async function JoinPage(props: { params: Promise<{ token: string 
 
   return (
     <main className="landing">
-      <section className="panel join-card">
+      <Card className="mx-auto grid w-full max-w-md gap-3 p-6">
         <p className="eyebrow">YOU ARE INVITED</p>
         <h1>Welcome to {preview.institutionName}</h1>
         <p className="muted">
@@ -41,15 +43,15 @@ export default async function JoinPage(props: { params: Promise<{ token: string 
         {userId ? (
           <form action={acceptInviteAction}>
             <input type="hidden" name="token" value={token} />
-            <button className="button-link" type="submit">Join {preview.institutionName}</button>
+            <Button type="submit" className="w-full">Join {preview.institutionName}</Button>
           </form>
         ) : (
           <>
-            <Link className="button-link" href={`/sign-up?redirect_url=${back}`}>Create account to join</Link>
+            <Link className={buttonVariants({ className: "w-full" })} href={`/sign-up?redirect_url=${back}`}>Create account to join</Link>
             <p className="muted small">Already have an account? <Link className="text-link" href={`/sign-in?redirect_url=${back}`}>Sign in</Link></p>
           </>
         )}
-      </section>
+      </Card>
     </main>
   );
 }

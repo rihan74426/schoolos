@@ -1,3 +1,8 @@
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import Link from "next/link";
 import { can, formatMinor } from "@schoolos/core";
 import { connectDb } from "@schoolos/db";
@@ -21,13 +26,13 @@ export default async function InvoicesPage(props: { searchParams: Promise<{ stat
   return (
     <>
       {heading}
-      <section className="panel">
-        <form method="get" className="roster-picker">
-          <label>Search student<input name="q" defaultValue={searchParams.q ?? ""} placeholder="Name or number" /></label>
-          <label>Status<select name="status" defaultValue={status}><option value="">All</option><option value="OPEN">Open</option><option value="OVERDUE">Overdue</option><option value="PAID">Paid</option></select></label>
-          <button className="button-link" type="submit">Filter</button>
+      <Card className="mb-4">
+        <form method="get" className="grid gap-3 md:grid-cols-[1fr_200px_auto] md:items-end">
+          <label className="grid gap-1 text-sm font-medium text-fg">Search student<Input name="q" defaultValue={searchParams.q ?? ""} placeholder="Name or number" /></label>
+          <label className="grid gap-1 text-sm font-medium text-fg">Status<Select name="status" defaultValue={status}><option value="">All</option><option value="OPEN">Open</option><option value="OVERDUE">Overdue</option><option value="PAID">Paid</option></Select></label>
+          <Button type="submit">Filter</Button>
         </form>
-      </section>
+      </Card>
       <section className="panel">
         {list.rows.length ? (
           <div className="table-scroll"><table className="table-cards">
@@ -38,7 +43,7 @@ export default async function InvoicesPage(props: { searchParams: Promise<{ stat
                 <td data-label="Student">{r.student.name} <small className="muted">{r.student.number}</small></td>
                 <td data-label="Period">{r.period}</td><td data-label="Due">{r.dueDate}</td>
                 <td data-label="Total">{formatMinor(r.totalMinor, list.currency)}</td><td data-label="Balance">{formatMinor(r.balanceMinor, list.currency)}</td>
-                <td data-label="Status"><span className="badge">{r.overdue ? "OVERDUE" : r.status}</span></td>
+                <td data-label="Status"><Badge tone={r.overdue ? "err" : r.status === "PAID" ? "ok" : "brand"}>{r.overdue ? "OVERDUE" : r.status}</Badge></td>
               </tr>
             ))}</tbody>
           </table></div>

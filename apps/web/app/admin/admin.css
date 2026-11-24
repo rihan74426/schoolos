@@ -458,34 +458,7 @@ td {
   gap: 12px;
 }
 
-/* Attendance roster (mobile-first) */
-.roster-picker { display: grid; gap: 12px; }
-.roster-picker label { display: grid; gap: 4px; font-size: 13px; }
-.roster-picker select, .roster-picker input { min-height: 44px; padding-inline: 10px; }
-.roster-banner { margin: 0 0 12px; padding: 10px 12px; border-radius: 9px; background: var(--brand-soft); color: var(--brand); font-size: 13px; }
-.roster-tools { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
-.roster-tools .button-link { min-height: 44px; align-items: center; }
-.roster-counts { font-size: 13px; color: var(--text-2); }
-.roster-list { list-style: none; margin: 0; padding: 0; display: grid; }
-.roster-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 0; border-block-end: 1px solid var(--border); }
-.roster-name { display: grid; min-width: 0; }
-.roster-name strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
-.roster-name small { color: var(--text-2); font-size: 12px; }
-.roster-buttons { display: inline-flex; gap: 6px; flex: 0 0 auto; }
-.roster-btn { width: 44px; height: 44px; border: 1px solid var(--border-strong); border-radius: 10px; background: var(--surface); color: var(--text); font-size: 14px; font-weight: 700; cursor: pointer; }
-.roster-btn[aria-pressed="true"].roster-present { background: var(--ok); border-color: var(--ok); color: white; }
-.roster-btn[aria-pressed="true"].roster-absent { background: var(--err); border-color: var(--err); color: white; }
-.roster-btn[aria-pressed="true"].roster-late { background: var(--warn); border-color: var(--warn); color: white; }
-.roster-btn[aria-pressed="true"].roster-excused { background: var(--brand); border-color: var(--brand); color: white; }
-.roster-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.roster-submit { position: sticky; inset-block-end: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 12px 0; background: var(--surface); }
-.roster-submit .button-link { min-height: 44px; align-items: center; }
-.roster-dialog { width: min(92vw, 420px); border: 0; border-radius: 14px; padding: 18px; }
-.roster-dialog::backdrop { background: rgba(23, 36, 59, 0.5); }
-.roster-dialog textarea { width: 100%; padding: 10px; border: 1px solid var(--border-strong); border-radius: 9px; font: inherit; }
-.roster-dialog-actions { display: flex; justify-content: flex-end; gap: 10px; margin-block-start: 12px; }
 .button-secondary { padding: 11px 16px; border: 1px solid var(--border-strong); border-radius: 9px; background: var(--surface); font-size: 12px; font-weight: 650; cursor: pointer; }
-@media (min-width: 720px) { .roster-picker { grid-template-columns: 1fr 200px auto; align-items: end; } }
 
 /* Exams: marks entry, results, report card */
 .marks-list { display: grid; gap: 0.5rem; }

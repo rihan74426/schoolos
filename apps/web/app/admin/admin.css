@@ -481,8 +481,7 @@ td {
 .button-secondary { color: var(--text); }
 :focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 .form-grid input:not([type="checkbox"]), .form-grid select, .form-grid textarea,
-.roster-dialog textarea, .onboarding-form input, .onboarding-form select { background: var(--surface); color: var(--text); }
-.roster-dialog { background: var(--surface); color: var(--text); }
+.onboarding-form input, .onboarding-form select { background: var(--surface); color: var(--text); }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 
 /* Tablet: icon rail sidebar (labels stay available via aria-label/title). */

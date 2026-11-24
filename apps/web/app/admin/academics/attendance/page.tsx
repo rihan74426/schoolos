@@ -2,6 +2,10 @@ import { connectDb } from "@schoolos/db";
 import { can } from "@schoolos/core";
 import { PageHeading } from "@/components/admin/page-heading";
 import { RosterClient } from "@/components/admin/roster-client";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import { resolveActiveMembership } from "@/server/auth";
 import { getRoster } from "@/server/attendance";
 import { todayInDhaka } from "@/server/dates";
@@ -27,25 +31,25 @@ export default async function AttendancePage(props: { searchParams: Promise<{ se
   return (
     <>
       {heading}
-      <section className="panel">
+      <Card className="mb-4">
         {sections.length === 0 ? (
-          <p className="muted">No sections yet. Ask an administrator to assign you to a section.</p>
+          <p className="m-0 text-sm text-fg-muted">No sections yet. Ask an administrator to assign you to a section.</p>
         ) : (
-          <form className="roster-picker" method="get">
-            <label>Section
-              <select name="section" defaultValue={sectionId}>
+          <form className="grid gap-3 md:grid-cols-[1fr_200px_auto] md:items-end" method="get">
+            <label className="grid gap-1 text-sm font-medium text-fg">Section
+              <Select name="section" defaultValue={sectionId}>
                 <option value="">Choose…</option>
                 {sections.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
-              </select>
+              </Select>
             </label>
-            <label>Date<input type="date" name="date" defaultValue={date} max={today} /></label>
-            <button className="button-link" type="submit">Open</button>
+            <label className="grid gap-1 text-sm font-medium text-fg">Date<Input type="date" name="date" defaultValue={date} max={today} /></label>
+            <Button type="submit">Open</Button>
           </form>
         )}
-      </section>
-      {sectionId && !roster ? <section className="panel"><p className="form-error" role="alert">That section or date is not available to you.</p></section> : null}
+      </Card>
+      {sectionId && !roster ? <Card><p className="m-0 text-sm text-err" role="alert">That section or date is not available to you.</p></Card> : null}
       {roster ? (
-        <section className="panel">
+        <Card>
           <RosterClient
             key={`${sectionId}-${date}-${roster.session?.submittedAt ?? "new"}`}
             sectionId={sectionId}
@@ -55,7 +59,7 @@ export default async function AttendancePage(props: { searchParams: Promise<{ se
             submittedAt={roster.session?.submittedAt ?? null}
             canCorrect={roster.session?.canCorrect ?? true}
           />
-        </section>
+        </Card>
       ) : null}
     </>
   );

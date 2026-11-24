@@ -3,6 +3,8 @@ import { can } from "@schoolos/core";
 import { connectDb } from "@schoolos/db";
 import { ActionForm } from "@/components/admin/action-form";
 import { PageHeading } from "@/components/admin/page-heading";
+import { StatusBadge } from "@/components/admin/status-badge";
+import { EmptyState } from "@/components/ui/empty-state";
 import { resolveActiveMembership } from "@/server/auth";
 import { listExams, mySheets } from "@/server/exams";
 import { createExamAction } from "./actions";
@@ -28,10 +30,10 @@ export default async function ExamsPage() {
       <section className="panel">
         <h2>Exams</h2>
         {exams.length ? (
-          <div className="table-scroll"><table><thead><tr><th>Exam</th><th>Class</th><th>Year</th><th>Status</th><th /></tr></thead><tbody>
-            {exams.map((e) => <tr key={e.id}><td>{e.name}{e.term ? ` · ${e.term}` : ""}</td><td>{e.level}</td><td>{e.year}</td><td><span className="badge">{e.status.toLowerCase()}</span>{e.resultVersion > 1 ? ` v${e.resultVersion}` : ""}</td><td><Link href={`/admin/exams/${e.id}`}>Open</Link></td></tr>)}
+          <div className="table-scroll"><table className="table-cards"><thead><tr><th>Exam</th><th>Class</th><th>Year</th><th>Status</th><th /></tr></thead><tbody>
+            {exams.map((e) => <tr key={e.id}><td data-label="Exam"><strong>{e.name}</strong>{e.term ? ` · ${e.term}` : ""}</td><td data-label="Class">{e.level}</td><td data-label="Year">{e.year}</td><td data-label="Status"><StatusBadge status={e.status} />{e.resultVersion > 1 ? ` v${e.resultVersion}` : ""}</td><td data-label=""><Link className="font-semibold text-brand" href={`/admin/exams/${e.id}`}>Open →</Link></td></tr>)}
           </tbody></table></div>
-        ) : <p className="empty-state">No exams yet.</p>}
+        ) : <EmptyState title="No exams yet">Create one below to start entering marks.</EmptyState>}
       </section>
       {can(actor.role, "exams:write") ? (
         <section className="panel">

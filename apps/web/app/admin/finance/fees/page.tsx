@@ -3,6 +3,9 @@ import { can, formatMinor } from "@schoolos/core";
 import { connectDb } from "@schoolos/db";
 import { ActionForm } from "@/components/admin/action-form";
 import { PageHeading } from "@/components/admin/page-heading";
+import { buttonVariants } from "@/components/ui/button";
+import { Card, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import { resolveActiveMembership } from "@/server/auth";
 import { collectionSummary } from "@/server/invoices";
 import { getInstitutionPolicy } from "@/server/policy";
@@ -39,17 +42,26 @@ export default async function FeesPage() {
   return (
     <>
       {heading}
-      <section className="panel">
-        <h2>Collection</h2>
-        <p>Billed {formatMinor(sum.billedMinor, sum.currency)} · Collected {formatMinor(sum.collectedMinor, sum.currency)} · Outstanding {formatMinor(sum.outstandingMinor, sum.currency)}</p>
-        <p className="muted">{sum.invoices} invoice(s). {sum.overdueCount} overdue, {formatMinor(sum.overdueMinor, sum.currency)}.</p>
-        <p>
-          <Link className="button-link" href="/admin/finance/fees/invoices">Invoices and payments</Link>{" "}
-          <Link className="button-link" href="/admin/finance/fees/plans">Fee plans</Link>
-        </p>
+      <section aria-label="Collection summary" className="mb-4 grid grid-cols-1 gap-3 xs:grid-cols-2 lg:grid-cols-4">
+        {[
+          ["Billed", formatMinor(sum.billedMinor, sum.currency), `${sum.invoices} invoice(s)`, "text-fg"],
+          ["Collected", formatMinor(sum.collectedMinor, sum.currency), "Payments received", "text-ok"],
+          ["Outstanding", formatMinor(sum.outstandingMinor, sum.currency), "Still to collect", "text-warn"],
+          ["Overdue", formatMinor(sum.overdueMinor, sum.currency), `${sum.overdueCount} invoice(s)`, sum.overdueCount ? "text-err" : "text-fg"],
+        ].map(([label, value, hint, tone]) => (
+          <div key={label} className="grid gap-1 rounded-card border border-line bg-surface p-4 shadow-card">
+            <span className="text-xs font-semibold uppercase tracking-wide text-fg-muted">{label}</span>
+            <span className={cn("text-xl font-bold tracking-tight", tone)}>{value}</span>
+            <span className="text-xs text-fg-muted">{hint}</span>
+          </div>
+        ))}
       </section>
-      <section className="panel" id="rules">
-        <h2>Late fee and scholarship rules</h2>
+      <div className="mb-4 flex flex-wrap gap-2">
+        <Link className={buttonVariants()} href="/admin/finance/fees/invoices">Invoices and payments</Link>
+        <Link className={buttonVariants({ variant: "secondary" })} href="/admin/finance/fees/plans">Fee plans</Link>
+      </div>
+      <Card id="rules" className="grid gap-3">
+        <CardTitle>Late fee and scholarship rules</CardTitle>
         <p className="muted">{describe(late, fees.currency)} Scholarships and waivers are capped at {fees.scholarshipCapPercent}% of an invoice.</p>
         {canConfigure ? (
           <ActionForm action={updateFeeRulesAction} submitLabel="Save fee rules">
@@ -70,7 +82,7 @@ export default async function FeesPage() {
             <p className="form-hint">Applies to invoices from now on. Changes are audited with before and after.</p>
           </ActionForm>
         ) : <p className="form-hint">Only the owner, administrator, principal or vice principal can change these rules.</p>}
-      </section>
+      </Card>
     </>
   );
 }

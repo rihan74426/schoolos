@@ -1,3 +1,5 @@
+import { Pager } from "@/components/admin/pager";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -33,23 +35,23 @@ export default async function InvoicesPage(props: { searchParams: Promise<{ stat
           <Button type="submit">Filter</Button>
         </form>
       </Card>
-      <section className="panel">
+      <Card>
         {list.rows.length ? (
           <div className="table-scroll"><table className="table-cards">
             <thead><tr><th>Invoice</th><th>Student</th><th>Period</th><th>Due</th><th>Total</th><th>Balance</th><th>Status</th></tr></thead>
             <tbody>{list.rows.map((r) => (
               <tr key={r.id}>
-                <td data-label="Invoice"><Link href={`/admin/finance/fees/invoices/${r.id}`}>{r.number}</Link></td>
-                <td data-label="Student">{r.student.name} <small className="muted">{r.student.number}</small></td>
+                <td data-label="Invoice"><Link className="font-semibold text-brand" href={`/admin/finance/fees/invoices/${r.id}`}>{r.number}</Link></td>
+                <td data-label="Student">{r.student.name} <small className="text-fg-muted">{r.student.number}</small></td>
                 <td data-label="Period">{r.period}</td><td data-label="Due">{r.dueDate}</td>
                 <td data-label="Total">{formatMinor(r.totalMinor, list.currency)}</td><td data-label="Balance">{formatMinor(r.balanceMinor, list.currency)}</td>
                 <td data-label="Status"><Badge tone={r.overdue ? "err" : r.status === "PAID" ? "ok" : "brand"}>{r.overdue ? "OVERDUE" : r.status}</Badge></td>
               </tr>
             ))}</tbody>
           </table></div>
-        ) : <p className="empty-state">No invoices match.</p>}
-        {pages > 1 ? <p className="small muted">Page {page} of {pages} {page > 1 ? <Link href={qs(page - 1)}>Previous</Link> : null} {page < pages ? <Link href={qs(page + 1)}>Next</Link> : null}</p> : null}
-      </section>
+        ) : <EmptyState title="No invoices match">Change the filter or generate invoices from a fee plan.</EmptyState>}
+        <Pager page={page} pages={pages} href={qs} />
+      </Card>
     </>
   );
 }

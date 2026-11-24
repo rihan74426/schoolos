@@ -3,6 +3,13 @@ import { can } from "@schoolos/core";
 import { connectDb } from "@schoolos/db";
 import { ActionForm } from "@/components/admin/action-form";
 import { PageHeading } from "@/components/admin/page-heading";
+import { Pager } from "@/components/admin/pager";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardTitle } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import { resolveActiveMembership } from "@/server/auth";
 import { listCurrentSections, listStudents } from "@/server/students";
 import { createStudentAction } from "./actions";
@@ -13,7 +20,7 @@ export default async function StudentsPage(props: { searchParams: Promise<{ q?: 
   const searchParams = await props.searchParams;
   const actor = await resolveActiveMembership();
   if (!can(actor.role, "student:read")) {
-    return <section className="panel"><p className="muted">Your role cannot view students.</p></section>;
+    return <Card><p className="m-0 text-sm text-fg-muted">Your role cannot view students.</p></Card>;
   }
   await connectDb();
   const canWrite = can(actor.role, "student:write");
@@ -29,44 +36,44 @@ export default async function StudentsPage(props: { searchParams: Promise<{ q?: 
   return (
     <>
       <PageHeading title="Students" description="Student directory, enrollment, and profile management." />
-      <section className="panel">
-        <div className="panel-heading"><h2>Directory</h2><span className="badge">{list.total} students</span></div>
-        <form method="get" className="form-grid">
-          <label>Search name or ID<input name="q" defaultValue={q} maxLength={60} placeholder="Name or student ID" /></label>
-          <label>Class / section
-            <select name="section" defaultValue={searchParams.section ?? ""}>
+      <Card className="mb-4 grid gap-4">
+        <div className="flex items-center justify-between gap-2"><CardTitle>Directory</CardTitle><Badge>{list.total} students</Badge></div>
+        <form method="get" className="grid gap-3 md:grid-cols-[1fr_1fr_160px_auto] md:items-end">
+          <label className="grid gap-1 text-sm font-medium text-fg">Search name or ID<Input name="q" defaultValue={q} maxLength={60} placeholder="Name or student ID" /></label>
+          <label className="grid gap-1 text-sm font-medium text-fg">Class / section
+            <Select name="section" defaultValue={searchParams.section ?? ""}>
               <option value="">All</option>
               {sections.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
-            </select>
+            </Select>
           </label>
-          <label>Status
-            <select name="status" defaultValue={searchParams.status ?? "ACTIVE"}>
+          <label className="grid gap-1 text-sm font-medium text-fg">Status
+            <Select name="status" defaultValue={searchParams.status ?? "ACTIVE"}>
               <option value="ACTIVE">Active</option><option value="WITHDRAWN">Withdrawn</option><option value="all">All</option>
-            </select>
+            </Select>
           </label>
-          <button className="button-link" type="submit">Search</button>
+          <Button type="submit">Search</Button>
         </form>
-        <div className="table-scroll"><table className="table-cards">
-          <thead><tr><th>Student</th><th>ID</th><th>Class / section</th><th>Status</th></tr></thead>
-          <tbody>
-            {list.rows.length ? list.rows.map((s) => (
-              <tr key={String(s._id)}>
-                <td data-label="Student"><Link className="text-link" href={`/admin/students/${String(s._id)}`}>{`${s.firstName} ${s.lastName}`.trim()}</Link></td>
-                <td data-label="ID">{s.studentNumber}</td>
-                <td data-label="Class / section">{s.sectionId ? sectionLabel.get(String(s.sectionId)) ?? "—" : "Not enrolled"}</td>
-                <td data-label="Status">{s.status.toLowerCase()}</td>
-              </tr>
-            )) : <tr><td colSpan={4} className="empty-state">{q || searchParams.section ? "No students match." : "No students yet. Add one or import a CSV."}</td></tr>}
-          </tbody>
-        </table></div>
-        {pages > 1 ? (
-          <p className="muted small">
-            Page {list.page} of {pages} ·{" "}
-            {list.page > 1 ? <Link className="text-link" href={link(list.page - 1)}>Previous</Link> : null}{" "}
-            {list.page < pages ? <Link className="text-link" href={link(list.page + 1)}>Next</Link> : null}
-          </p>
-        ) : null}
-      </section>
+        {list.rows.length ? (
+          <div className="table-scroll"><table className="table-cards">
+            <thead><tr><th>Student</th><th>ID</th><th>Class / section</th><th>Status</th></tr></thead>
+            <tbody>
+              {list.rows.map((s) => (
+                <tr key={String(s._id)}>
+                  <td data-label="Student"><Link className="font-semibold text-brand" href={`/admin/students/${String(s._id)}`}>{`${s.firstName} ${s.lastName ?? ""}`.trim()}</Link></td>
+                  <td data-label="ID">{s.studentNumber}</td>
+                  <td data-label="Class / section">{s.sectionId ? sectionLabel.get(String(s.sectionId)) ?? "—" : <Badge tone="warn">Not enrolled</Badge>}</td>
+                  <td data-label="Status"><Badge tone={s.status === "ACTIVE" ? "ok" : "muted"}>{s.status.toLowerCase()}</Badge></td>
+                </tr>
+              ))}
+            </tbody>
+          </table></div>
+        ) : (
+          <EmptyState title={q || searchParams.section ? "No students match" : "No students yet"}>
+            {q || searchParams.section ? "Try a different name, ID or section." : "Add one below or import a CSV."}
+          </EmptyState>
+        )}
+        <Pager page={list.page} pages={pages} href={link} />
+      </Card>
 
       {canWrite ? (
         <section className="panel">

@@ -1,3 +1,4 @@
+import { Card } from "@/components/ui/card";
 import Link from "next/link";
 import { connectDb } from "@schoolos/db";
 import { ActionForm } from "@/components/admin/action-form";
@@ -14,20 +15,20 @@ export default async function SheetPage(props: { params: Promise<{ assessmentId:
   const actor = await resolveActiveMembership();
   await connectDb();
   const m = await getMarkSheet(actor, params.assessmentId);
-  if (!m) return <><PageHeading title="Marks" description="" /><section className="panel"><p className="form-error">Sheet not found, or you are not assigned to this subject and section.</p></section></>;
+  if (!m) return <><PageHeading title="Marks" description="" /><Card className="mb-4"><p className="form-error">Sheet not found, or you are not assigned to this subject and section.</p></Card></>;
   return (
     <>
       <PageHeading title={`${m.paper.subject} · ${m.paper.section}`} description={`${m.exam.name} · full marks ${m.paper.maxMarks}${m.paper.date ? ` · ${m.paper.date}` : ""} · sheet ${m.sheet.status.toLowerCase()}`} />
       <p><Link href="/admin/exams">← Exams</Link></p>
       {m.sheet.returnReason ? <p className="form-error" role="alert">Sent back: {m.sheet.returnReason}</p> : null}
-      {m.exam.status === "DRAFT" ? <section className="panel"><p className="muted">This exam is still a draft. Marks open when it is opened.</p></section> : (
-        <section className="panel">
+      {m.exam.status === "DRAFT" ? <Card className="mb-4"><p className="muted">This exam is still a draft. Marks open when it is opened.</p></Card> : (
+        <Card className="mb-4">
           <MarksEntry assessmentId={m.paper.id} maxMarks={m.paper.maxMarks} students={m.students.map((s) => ({ ...s, status: s.status as "PRESENT" | "ABSENT" | "EXEMPT" | null }))} canEdit={m.canEdit} />
           {!m.canEdit && !m.canCorrect ? <p className="muted small">This sheet is locked ({m.sheet.status.toLowerCase()}).</p> : null}
-        </section>
+        </Card>
       )}
       {m.canCorrect ? (
-        <section className="panel">
+        <Card className="mb-4">
           <h2>Request a correction</h2>
           <p className="muted small">Results are published. A change needs a reason and approval from leadership, and creates a new result version.</p>
           <ActionForm action={requestCorrectionAction} submitLabel="Send for approval">
@@ -37,7 +38,7 @@ export default async function SheetPage(props: { params: Promise<{ assessmentId:
             <label>Marks (if marks)<input name="marks" inputMode="decimal" /></label>
             <label>Reason (10+ characters)<textarea name="reason" rows={2} required minLength={10} maxLength={300} /></label>
           </ActionForm>
-        </section>
+        </Card>
       ) : null}
     </>
   );

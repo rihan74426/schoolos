@@ -1,5 +1,5 @@
-import { PageHeading } from '@/components/admin/page-heading';
+import { ComingSoon } from "@/components/admin/coming-soon";
 
-export default function ReportsPage() {
-  return <><PageHeading title="Reports" description="Operational summaries for academics, attendance, and finance." /><section className="panel"><h2>Reports workspace</h2><p className="muted">Reports will be available after data sources and access policies are connected.</p></section></>;
+export default function Page() {
+  return <ComingSoon title="Reports" description="Operational summaries for academics, attendance, and finance." summary="Cross-module reports and exports are planned. Fee collection and exam results are already available in their own sections." />;
 }

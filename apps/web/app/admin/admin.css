@@ -460,14 +460,7 @@ td {
 
 .button-secondary { padding: 11px 16px; border: 1px solid var(--border-strong); border-radius: 9px; background: var(--surface); font-size: 12px; font-weight: 650; cursor: pointer; }
 
-/* Exams: marks entry, results, report card */
-.marks-list { display: grid; gap: 0.5rem; }
-.marks-row { display: grid; grid-template-columns: 1fr 5.5rem auto; gap: 0.5rem; align-items: center; padding: 0.5rem 0; border-block-end: 1px solid var(--border); }
-.marks-row input { inline-size: 100%; padding: 0.5rem; font-size: 1rem; text-align: center; }
-.marks-flags { display: flex; gap: 0.25rem; }
-.marks-flags button { padding: 0.4rem 0.5rem; font-size: 0.85rem; border: 1px solid var(--border); border-radius: 6px; background: transparent; cursor: pointer; }
-.marks-flags button[aria-pressed="true"] { background: var(--text); color: var(--surface); }
-.marks-actions { margin-block-start: 1rem; }
+/* Exams: report card */
 .report { max-inline-size: 42rem; margin-inline: auto; padding: 1.5rem; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; font-family: var(--font-inter), var(--font-bengali), var(--font-arabic), sans-serif; }
 .report table { inline-size: 100%; border-collapse: collapse; }
 .report th, .report td { padding: 0.4rem 0.5rem; border: 1px solid var(--border-strong); text-align: start; }
@@ -488,8 +481,7 @@ td {
 .button-secondary { color: var(--text); }
 :focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 .form-grid input:not([type="checkbox"]), .form-grid select, .form-grid textarea,
-.roster-dialog textarea, .onboarding-form input, .onboarding-form select { background: var(--surface); color: var(--text); }
-.roster-dialog { background: var(--surface); color: var(--text); }
+.onboarding-form input, .onboarding-form select { background: var(--surface); color: var(--text); }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 
 /* Tablet: icon rail sidebar (labels stay available via aria-label/title). */
@@ -541,3 +533,22 @@ td {
 }
 @keyframes page-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 @media print { .topbar { position: static; backdrop-filter: none; } .page-content { animation: none; } }
+
+/* Legacy form and panel polish (until pages move to ui components) */
+.panel { margin-block-end: 16px; }
+.form-grid input:not([type="checkbox"]), .form-grid select, .form-grid textarea { min-height: 44px; border-color: var(--border-strong); }
+.form-grid textarea { min-height: 88px; }
+.form-grid label { font-weight: 500; color: var(--text); }
+.form-grid input:focus-visible, .form-grid select:focus-visible, .form-grid textarea:focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; }
+.form-grid input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--brand); }
+.badge { padding: 4px 10px; font-size: 12px; }
+.text-link { font-weight: 600; }
+.list-row { padding: 14px 0; }
+.dashboard-callout { border-inline-start: 4px solid var(--brand); }
+
+/* Report card: comfortable on phones, unchanged in print */
+.report { padding: clamp(0.75rem, 4vw, 1.5rem); }
+.report h1 { font-size: clamp(1.25rem, 5vw, 1.75rem); }
+.report h2 { font-size: clamp(0.95rem, 3.5vw, 1.15rem); }
+@media (max-width: 700px) { .report table { font-size: 13px; } .report th, .report td { padding: 0.35rem 0.4rem; } }
+@media print { .report { padding: 0; } }

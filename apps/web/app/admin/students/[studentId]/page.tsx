@@ -1,3 +1,4 @@
+import { Card } from "@/components/ui/card";
 import Link from "next/link";
 import { can } from "@schoolos/core";
 import { connectDb } from "@schoolos/db";
@@ -13,12 +14,12 @@ export default async function StudentDetailPage(props: { params: Promise<{ stude
   const params = await props.params;
   const actor = await resolveActiveMembership();
   if (!can(actor.role, "student:read")) {
-    return <section className="panel"><p className="muted">Your role cannot view students.</p></section>;
+    return <Card className="mb-4"><p className="muted">Your role cannot view students.</p></Card>;
   }
   await connectDb();
   const [profile, sections] = await Promise.all([getStudentProfile(actor, params.studentId), listCurrentSections(actor)]);
   if (!profile) {
-    return <section className="panel"><h2>Student not found</h2><Link className="text-link" href="/admin/students">← Back to students</Link></section>;
+    return <Card className="mb-4"><h2>Student not found</h2><Link className="text-link" href="/admin/students">← Back to students</Link></Card>;
   }
   const { student, guardians, enrollments } = profile;
   const canWrite = can(actor.role, "student:write");
@@ -27,7 +28,7 @@ export default async function StudentDetailPage(props: { params: Promise<{ stude
   return (
     <>
       <PageHeading title={`${student.firstName} ${student.lastName}`.trim()} description={`Student ID ${student.studentNumber} · ${student.status.toLowerCase()}`} />
-      <section className="panel">
+      <Card className="mb-4">
         <h2>Details</h2>
         <p className="small">Date of birth: {student.dateOfBirth ? new Date(student.dateOfBirth).toISOString().slice(0, 10) : "—"}</p>
         <p className="small">Current section: {student.sectionId ? sectionLabel.get(String(student.sectionId)) ?? "Previous year" : "Not enrolled"}</p>
@@ -40,10 +41,10 @@ export default async function StudentDetailPage(props: { params: Promise<{ stude
             </select></label>
           </ActionForm>
         ) : null}
-      </section>
+      </Card>
 
       {canWrite ? (
-        <section className="panel">
+        <Card className="mb-4">
           <h2>Edit student</h2>
           <ActionForm action={updateStudentAction} submitLabel="Save changes">
             <input type="hidden" name="studentId" value={String(student._id)} />
@@ -56,10 +57,10 @@ export default async function StudentDetailPage(props: { params: Promise<{ stude
             <input type="hidden" name="status" value={student.status === "ACTIVE" ? "WITHDRAWN" : "ACTIVE"} />
           </ActionForm>
           {student.status === "ACTIVE" ? <p className="form-hint">Withdrawing removes the student from class rosters. Records and history are kept.</p> : <p className="form-hint">Reactivating does not restore a class. Enroll the student again afterwards.</p>}
-        </section>
+        </Card>
       ) : null}
 
-      <section className="panel">
+      <Card className="mb-4">
         <h2>Guardians</h2>
         {guardians.length ? (
           <div className="table-scroll"><table><thead><tr><th>Name</th><th>Relationship</th><th>Mobile</th><th>SMS alerts</th></tr></thead><tbody>
@@ -86,15 +87,15 @@ export default async function StudentDetailPage(props: { params: Promise<{ stude
             <label>Relationship<input name="guardianRelationship" maxLength={30} placeholder="Mother" /></label>
           </ActionForm>
         ) : null}
-      </section>
+      </Card>
 
-      <section className="panel">
+      <Card className="mb-4">
         <h2>Enrollment history</h2>
         {enrollments.length ? (
           <ul className="plain-list">{enrollments.map((e) => <li key={String(e._id)}>{e.startsOn} — {sectionLabel.get(String(e.sectionId)) ?? "Earlier section"} ({e.status.toLowerCase()})</li>)}</ul>
         ) : <p className="muted small">No enrollments yet.</p>}
         <Link className="text-link" href="/admin/students">← Back to students</Link>
-      </section>
+      </Card>
     </>
   );
 }

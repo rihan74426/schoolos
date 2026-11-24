@@ -1,5 +1,5 @@
-import { PageHeading } from '@/components/admin/page-heading';
+import { ComingSoon } from "@/components/admin/coming-soon";
 
-export default function HostelPage() {
-  return <><PageHeading title="Hostel" description="Room capacity, student allocation, and residence operations." /><section className="panel"><h2>Hostel workspace</h2><p className="muted">Room assignment and capacity rules should be validated by <code>@schoolos/core</code>.</p></section></>;
+export default function Page() {
+  return <ComingSoon title="Hostel" description="Room capacity, student allocation, and residence operations." summary="Room assignment and capacity rules will come from each school's own policy." />;
 }

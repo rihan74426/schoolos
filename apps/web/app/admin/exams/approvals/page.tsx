@@ -1,3 +1,4 @@
+import { Card } from "@/components/ui/card";
 import Link from "next/link";
 import { can } from "@schoolos/core";
 import { connectDb } from "@schoolos/db";
@@ -14,7 +15,7 @@ export default async function ApprovalsPage() {
   const actor = await resolveActiveMembership();
   await connectDb();
   const heading = <PageHeading title="Approvals" description="Review submitted mark sheets and result corrections." />;
-  if (!can(actor.role, "exams:approve")) return <>{heading}<section className="panel"><p className="muted">Your role cannot approve marks.</p></section></>;
+  if (!can(actor.role, "exams:approve")) return <>{heading}<Card className="mb-4"><p className="muted">Your role cannot approve marks.</p></Card></>;
   const [queue, corrections] = await Promise.all([approvalQueue(actor.institutionId), listCorrections(actor)]);
   const canDecide = can(actor.role, "exams:publish");
   const val = (v: { status: string; marks?: number | null }) => (v.status === "PRESENT" ? String(v.marks) : v.status.toLowerCase());
@@ -22,7 +23,7 @@ export default async function ApprovalsPage() {
     <>
       {heading}
       <p><Link href="/admin/exams">← Exams</Link></p>
-      <section className="panel">
+      <Card className="mb-4">
         <h2>Mark sheets waiting</h2>
         {queue.length ? queue.map((q) => (
           <div key={q.assessmentId} className="list-row">
@@ -34,8 +35,8 @@ export default async function ApprovalsPage() {
             </ActionForm>
           </div>
         )) : <p className="empty-state">Nothing waiting.</p>}
-      </section>
-      <section className="panel">
+      </Card>
+      <Card className="mb-4">
         <h2>Corrections to published results</h2>
         {corrections.length ? corrections.map((c) => (
           <div key={c.id} className="list-row">
@@ -50,7 +51,7 @@ export default async function ApprovalsPage() {
             </>) : <p className="muted small">Leadership decides corrections.</p>}
           </div>
         )) : <p className="empty-state">No corrections waiting.</p>}
-      </section>
+      </Card>
     </>
   );
 }

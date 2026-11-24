@@ -1,3 +1,4 @@
+import { Card } from "@/components/ui/card";
 import Link from "next/link";
 import { can } from "@schoolos/core";
 import { connectDb } from "@schoolos/db";
@@ -11,14 +12,14 @@ export const dynamic = "force-dynamic";
 export default async function ImportPage() {
   const actor = await resolveActiveMembership();
   if (!can(actor.role, "student:write")) {
-    return <section className="panel"><p className="muted">Your role cannot import students.</p></section>;
+    return <Card className="mb-4"><p className="muted">Your role cannot import students.</p></Card>;
   }
   await connectDb();
   const sections = await listCurrentSections(actor);
   return (
     <>
       <PageHeading title="Import students" description="Upload a CSV, review problems, then import the valid rows." />
-      <section className="panel">
+      <Card className="mb-4">
         <p className="muted small">
           Columns: studentNumber, firstName, lastName (optional), dateOfBirth (YYYY-MM-DD), guardianName, guardianPhone, guardianRelationship, guardianEmail.
           Up to 500 rows. Students sharing a guardian phone number are linked to one guardian.{" "}
@@ -26,7 +27,7 @@ export default async function ImportPage() {
           <a className="text-link" href="/admin/students/import/template">Download template</a> · <Link className="text-link" href="/admin/students">Back to students</Link>
         </p>
         <ImportClient sections={sections} />
-      </section>
+      </Card>
     </>
   );
 }

@@ -1,3 +1,5 @@
+import plugin from "tailwindcss/plugin";
+
 /** @type {import('tailwindcss').Config} */
 const config = {
   // Colours are CSS variables (app/tokens.css), so light/dark switching needs no `dark:` variants.
@@ -30,7 +32,11 @@ const config = {
       minWidth: { tap: "44px" },
     },
   },
-  plugins: [],
+  plugins: [
+    // Preflight is off, so Tailwind's `border` utilities would only set a width and the browser default
+    // style is `none` (invisible). Re-add just the border part of preflight.
+    plugin(({ addBase }) => addBase({ "*, ::before, ::after": { borderWidth: "0", borderStyle: "solid", borderColor: "var(--border)" } })),
+  ],
 };
 
 export default config;

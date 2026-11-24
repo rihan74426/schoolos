@@ -3,15 +3,17 @@
 import type { ReactNode } from "react";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 type State = { ok: boolean; message: string } | null;
 
 function Submit({ label }: { label: string }) {
   const { pending } = useFormStatus();
   return (
-    <button className="button-link" type="submit" disabled={pending}>
+    <Button type="submit" disabled={pending} className="justify-self-start">
       {pending ? "Saving…" : label}
-    </button>
+    </Button>
   );
 }
 
@@ -32,7 +34,7 @@ export function ActionForm({
       {children}
       <Submit label={submitLabel} />
       {state ? (
-        <p role={state.ok ? "status" : "alert"} className={state.ok ? "form-ok" : "form-error"}>
+        <p role={state.ok ? "status" : "alert"} className={cn("m-0 rounded-[10px] px-3 py-2 text-sm", state.ok ? "bg-[color-mix(in_srgb,var(--ok)_12%,transparent)] text-ok" : "bg-[color-mix(in_srgb,var(--err)_12%,transparent)] text-err")}>
           {state.message}
         </p>
       ) : null}

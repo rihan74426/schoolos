@@ -89,6 +89,11 @@ export default async function SettingsPage() {
   return (
     <>
       <PageHeading title="Settings" description="Academic structure, teaching assignments, and your school's rules." />
+      <nav className="subnav" aria-label="Settings sections">
+        {[["years", "Years"], ["classes", "Classes"], ...(canInvite ? [["staff", "Staff"]] : []), ["subjects", "Subjects"], ["teaching", "Teaching"], ["rules", "Rules"], ["grading", "Grading"]].map(([id, label]) => (
+          <a key={id} href={`#${id}`}>{label}</a>
+        ))}
+      </nav>
 
       <section className="panel" id="years">
         <h2>Academic years</h2>

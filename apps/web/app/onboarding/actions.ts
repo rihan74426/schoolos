@@ -19,6 +19,7 @@ import {
   supportsTransactions,
   withOptionalTransaction,
 } from "@schoolos/db";
+import { isBootstrapAllowed } from "@/server/bootstrap";
 
 const INITIAL_BOOTSTRAP_KEY = "initial-owner";
 const supportedLocales = new Set(["en", "bn", "ar"]);
@@ -48,6 +49,9 @@ export async function createFirstInstitutionAction(
     active: true,
   }).lean();
   if (memberships.length > 0) redirect("/admin/dashboard");
+  if (!(await isBootstrapAllowed())) {
+    return { error: "This account is not allowed to set up the first school. Ask the owner for an invitation." };
+  }
   if (await Institution.exists({})) {
     return {
       error:

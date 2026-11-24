@@ -30,15 +30,15 @@ export default async function InvoicesPage(props: { searchParams: Promise<{ stat
       </section>
       <section className="panel">
         {list.rows.length ? (
-          <div className="table-scroll"><table>
+          <div className="table-scroll"><table className="table-cards">
             <thead><tr><th>Invoice</th><th>Student</th><th>Period</th><th>Due</th><th>Total</th><th>Balance</th><th>Status</th></tr></thead>
             <tbody>{list.rows.map((r) => (
               <tr key={r.id}>
-                <td><Link href={`/admin/finance/fees/invoices/${r.id}`}>{r.number}</Link></td>
-                <td>{r.student.name} <small className="muted">{r.student.number}</small></td>
-                <td>{r.period}</td><td>{r.dueDate}</td>
-                <td>{formatMinor(r.totalMinor, list.currency)}</td><td>{formatMinor(r.balanceMinor, list.currency)}</td>
-                <td><span className="badge">{r.overdue ? "OVERDUE" : r.status}</span></td>
+                <td data-label="Invoice"><Link href={`/admin/finance/fees/invoices/${r.id}`}>{r.number}</Link></td>
+                <td data-label="Student">{r.student.name} <small className="muted">{r.student.number}</small></td>
+                <td data-label="Period">{r.period}</td><td data-label="Due">{r.dueDate}</td>
+                <td data-label="Total">{formatMinor(r.totalMinor, list.currency)}</td><td data-label="Balance">{formatMinor(r.balanceMinor, list.currency)}</td>
+                <td data-label="Status"><span className="badge">{r.overdue ? "OVERDUE" : r.status}</span></td>
               </tr>
             ))}</tbody>
           </table></div>

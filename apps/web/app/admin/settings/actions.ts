@@ -3,7 +3,7 @@
 import { authFailure, requirePermission } from "@/server/auth";
 import { saveGradingScheme, updateInstitutionPolicy } from "@/server/policy";
 import { revalidatePath } from "next/cache";
-import { parseBandLines } from "@schoolos/core";
+import { parseBandLines, takaToMinor } from "@schoolos/core";
 import {
   assignTeacher,
   createAcademicYear,
@@ -109,11 +109,16 @@ export async function updateRulesAction(_: FormState, fd: FormData) {
     if (!current) return { ok: false as const, error: "Policy not found" };
     const base = current.policy as Record<string, any>;
     const lateMode = text(fd, "lateMode");
+    const amountText = text(fd, "lateAmount");
+    const flatMinor = lateMode === "FLAT" ? takaToMinor(amountText) : null;
+    if (lateMode === "FLAT" && flatMinor === null) return { ok: false as const, error: "Enter the flat late fee as an amount, e.g. 50 or 50.50" };
+    const percent = Number(amountText);
+    if (lateMode === "PERCENT_PER_DAY" && (!amountText || !Number.isFinite(percent) || percent <= 0)) return { ok: false as const, error: "Enter the daily late fee percent as a number above 0" };
     const lateFee =
       lateMode === "FLAT"
-        ? { mode: "FLAT", flatMinor: Math.round(num(fd, "lateAmount") * 100), graceDays: num(fd, "graceDays") || 0 }
+        ? { mode: "FLAT", flatMinor, graceDays: num(fd, "graceDays") || 0 }
         : lateMode === "PERCENT_PER_DAY"
-          ? { mode: "PERCENT_PER_DAY", percent: num(fd, "lateAmount"), graceDays: num(fd, "graceDays") || 0, capPercent: num(fd, "capPercent") || 100 }
+          ? { mode: "PERCENT_PER_DAY", percent, graceDays: num(fd, "graceDays") || 0, capPercent: num(fd, "capPercent") || 100 }
           : { mode: "NONE" };
     const next = {
       ...base,

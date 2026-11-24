@@ -1,0 +1,4 @@
+/* Imported last in app/layout.tsx so utilities win over the legacy hand-written CSS. */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

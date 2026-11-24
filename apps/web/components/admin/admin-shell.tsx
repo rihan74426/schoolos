@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import { Institution } from "@schoolos/db";
 import { can } from "@schoolos/core";
 import { locales } from "@schoolos/i18n";
+import { MobileNav } from "./mobile-nav";
 import { NavLink } from "./nav-link";
 import { getActiveMemberships } from "@/server/auth";
 import { setActiveSchoolAction, setThemeAction } from "@/app/admin/actions";
@@ -134,11 +135,7 @@ export async function AdminShell({ children }: { children: ReactNode }) {
         </header>
         <main className="page-content">{children}</main>
       </div>
-      <nav className="tabbar" aria-label="Quick navigation">
-        {visibleNav.slice(0, 5).map((item) => (
-          <NavLink key={item.href} {...item} variant="tab" />
-        ))}
-      </nav>
+      <MobileNav items={visibleNav} moreLabel="More" />
     </div>
   );
 }

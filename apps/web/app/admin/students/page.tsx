@@ -46,15 +46,15 @@ export default async function StudentsPage(props: { searchParams: Promise<{ q?: 
           </label>
           <button className="button-link" type="submit">Search</button>
         </form>
-        <div className="table-scroll"><table>
+        <div className="table-scroll"><table className="table-cards">
           <thead><tr><th>Student</th><th>ID</th><th>Class / section</th><th>Status</th></tr></thead>
           <tbody>
             {list.rows.length ? list.rows.map((s) => (
               <tr key={String(s._id)}>
-                <td><Link className="text-link" href={`/admin/students/${String(s._id)}`}>{`${s.firstName} ${s.lastName}`.trim()}</Link></td>
-                <td>{s.studentNumber}</td>
-                <td>{s.sectionId ? sectionLabel.get(String(s.sectionId)) ?? "—" : "Not enrolled"}</td>
-                <td>{s.status.toLowerCase()}</td>
+                <td data-label="Student"><Link className="text-link" href={`/admin/students/${String(s._id)}`}>{`${s.firstName} ${s.lastName}`.trim()}</Link></td>
+                <td data-label="ID">{s.studentNumber}</td>
+                <td data-label="Class / section">{s.sectionId ? sectionLabel.get(String(s.sectionId)) ?? "—" : "Not enrolled"}</td>
+                <td data-label="Status">{s.status.toLowerCase()}</td>
               </tr>
             )) : <tr><td colSpan={4} className="empty-state">{q || searchParams.section ? "No students match." : "No students yet. Add one or import a CSV."}</td></tr>}
           </tbody>

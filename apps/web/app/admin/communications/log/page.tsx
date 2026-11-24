@@ -22,13 +22,13 @@ export default async function DeliveryLogPage(props: { searchParams: Promise<{ p
       <PageHeading title="Delivery log" description="Every SMS the system queued, with its status. Failed messages show the provider's reason." />
       <section className="panel">
         {log.rows.length ? (
-          <div className="table-scroll"><table>
+          <div className="table-scroll"><table className="table-cards">
             <thead><tr><th>Time</th><th>Student</th><th>To</th><th>Status</th><th>Tries</th><th>Note</th></tr></thead>
             <tbody>{log.rows.map((r) => (
               <tr key={r.id}>
-                <td>{new Date(r.createdAt).toLocaleString("en-GB", { timeZone: "Asia/Dhaka" })}</td>
-                <td>{r.student}</td><td>{r.to}</td>
-                <td><span className="badge">{r.status}</span></td><td>{r.attempts}</td><td>{r.error || "—"}</td>
+                <td data-label="Time">{new Date(r.createdAt).toLocaleString("en-GB", { timeZone: "Asia/Dhaka" })}</td>
+                <td data-label="Student">{r.student}</td><td data-label="To">{r.to}</td>
+                <td data-label="Status"><span className="badge">{r.status}</span></td><td data-label="Tries">{r.attempts}</td><td data-label="Note">{r.error || "—"}</td>
               </tr>
             ))}</tbody>
           </table></div>

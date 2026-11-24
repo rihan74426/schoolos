@@ -32,6 +32,7 @@ Commands: `pnpm install`; `pnpm --filter @schoolos/core test|typecheck`; `pnpm -
 - Validate ids with `mongoose.isObjectIdOrHexString`, never `isValidObjectId`.
 - Never use `populate()` on tenant models (it queries without `institutionId` and the plugin rejects it); fetch related docs with a scoped query and join in code.
 - **Invites**: single-use, 7-day links at `/join/<token>`. Only the SHA-256 hash is stored (never log or audit the raw token). `Invitation` allows lookup by `tokenHash` alone (plugin option `allowTokenHashLookup`); acceptance claims atomically, never changes an existing member's role, and `invitableRoles(role)` limits who can invite whom. Invited staff must complete a `Staff` profile (`/admin/welcome`) before the dashboard.
+- **First-owner bootstrap**: `/onboarding` creates the first institution only for an account whose verified primary email is in env `BOOTSTRAP_EMAIL` (comma list; `server/bootstrap.ts`). In production it is REQUIRED (unset = nobody can bootstrap); outside production unset allows anyone.
 - Webhook: `/api/webhooks/clerk` uses `verifyWebhook`; env `CLERK_WEBHOOK_SIGNING_SECRET`. Middleware is `proxy.ts` (Next 16); `auth()` is async in Clerk v6.
 
 ## Data rules

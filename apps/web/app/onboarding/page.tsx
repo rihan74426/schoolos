@@ -2,6 +2,7 @@ import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { connectDb, Institution, Membership } from "@schoolos/db";
+import { isBootstrapAllowed } from "@/server/bootstrap";
 import { OnboardingForm } from "./onboarding-form";
 
 export default async function OnboardingPage() {
@@ -14,7 +15,7 @@ export default async function OnboardingPage() {
     active: true,
   }).lean();
   if (memberships.length > 0) redirect("/admin/dashboard");
-  const isBootstrapAvailable = !(await Institution.exists({}));
+  const isBootstrapAvailable = !(await Institution.exists({})) && (await isBootstrapAllowed());
 
   return (
     <main className="landing">

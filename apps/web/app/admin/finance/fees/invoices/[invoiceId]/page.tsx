@@ -1,3 +1,6 @@
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import Link from "next/link";
 import { can, formatMinor } from "@schoolos/core";
 import { connectDb } from "@schoolos/db";
@@ -53,10 +56,10 @@ export default async function InvoicePage(props: { params: Promise<{ invoiceId: 
           <h2>Record payment</h2>
           <ActionForm action={recordPaymentAction} submitLabel="Record payment">
             <input type="hidden" name="invoiceId" value={inv.id} />
-            <label>Amount (taka)<input name="amount" inputMode="decimal" required defaultValue={(s.balanceMinor / 100).toFixed(2)} /></label>
-            <label>Method<select name="method"><option value="CASH">Cash</option><option value="BKASH">bKash</option><option value="NAGAD">Nagad</option><option value="BANK">Bank</option><option value="OTHER">Other</option></select></label>
-            <label>Reference (transaction id, optional)<input name="reference" maxLength={60} /></label>
-            <label>Received on<input name="paidOn" type="date" required defaultValue={todayInDhaka()} max={todayInDhaka()} /></label>
+            <label>Amount (taka)<Input name="amount" inputMode="decimal" required defaultValue={(s.balanceMinor / 100).toFixed(2)} /></label>
+            <label>Method<Select name="method"><option value="CASH">Cash</option><option value="BKASH">bKash</option><option value="NAGAD">Nagad</option><option value="BANK">Bank</option><option value="OTHER">Other</option></Select></label>
+            <label>Reference (transaction id, optional)<Input name="reference" maxLength={60} /></label>
+            <label>Received on<Input name="paidOn" type="date" required defaultValue={todayInDhaka()} max={todayInDhaka()} /></label>
           </ActionForm>
         </Card>
       ) : null}
@@ -66,9 +69,9 @@ export default async function InvoicePage(props: { params: Promise<{ invoiceId: 
           <p className="muted">Discounts are capped at {d.scholarshipCapPercent}% of the invoice. A reason is required and recorded.</p>
           <ActionForm action={applyAdjustmentAction} submitLabel="Apply">
             <input type="hidden" name="invoiceId" value={inv.id} />
-            <label>Type<select name="kind"><option value="LATE_FEE_REMIT">Remit late fee</option><option value="DISCOUNT">Discount</option></select></label>
-            <label>Amount (taka)<input name="amount" inputMode="decimal" required /></label>
-            <label>Reason (10+ characters)<textarea name="reason" rows={2} required minLength={10} maxLength={300} /></label>
+            <label>Type<Select name="kind"><option value="LATE_FEE_REMIT">Remit late fee</option><option value="DISCOUNT">Discount</option></Select></label>
+            <label>Amount (taka)<Input name="amount" inputMode="decimal" required /></label>
+            <label>Reason (10+ characters)<Textarea name="reason" rows={2} required minLength={10} maxLength={300} /></label>
           </ActionForm>
         </Card>
       ) : null}
@@ -78,7 +81,7 @@ export default async function InvoicePage(props: { params: Promise<{ invoiceId: 
           <p className="muted">For an invoice issued by mistake. Nothing has been paid. A reason is required and recorded.</p>
           <ActionForm action={voidInvoiceAction} submitLabel="Void invoice">
             <input type="hidden" name="invoiceId" value={inv.id} />
-            <label>Reason (10+ characters)<textarea name="reason" rows={2} required minLength={10} maxLength={300} /></label>
+            <label>Reason (10+ characters)<Textarea name="reason" rows={2} required minLength={10} maxLength={300} /></label>
           </ActionForm>
         </Card>
       ) : null}
@@ -90,7 +93,7 @@ export default async function InvoicePage(props: { params: Promise<{ invoiceId: 
             {p.kind === "PAYMENT" && !p.reversed && inv.status !== "VOID" && can(actor.role, "fees:reverse") ? (
               <ActionForm action={reversePaymentAction} submitLabel="Reverse payment">
                 <input type="hidden" name="paymentId" value={p.id} />
-                <label>Reason (10+ characters)<textarea name="reason" rows={2} required minLength={10} maxLength={300} /></label>
+                <label>Reason (10+ characters)<Textarea name="reason" rows={2} required minLength={10} maxLength={300} /></label>
               </ActionForm>
             ) : null}
           </li>

@@ -1,3 +1,5 @@
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
 import Link from "next/link";
 import { can } from "@schoolos/core";
@@ -41,11 +43,11 @@ export default async function ExamsPage() {
           <h2>New exam</h2>
           <p className="muted small">Creates one paper for every section and subject of the class. Map subjects to the class in Settings first.</p>
           <ActionForm action={createExamAction} submitLabel="Create exam">
-            <label>Name<input name="name" required maxLength={60} placeholder="Half-yearly 2026" /></label>
-            <label>Term (optional)<input name="term" maxLength={40} placeholder="Term 2" /></label>
-            <label>Academic year<select name="academicYearId" required>{years.map((y) => <option key={y.id} value={y.id}>{y.name}</option>)}</select></label>
-            <label>Class<select name="gradeLevelId" required>{levels.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}</select></label>
-            <label>Pass rule<select name="passRule"><option value="ALL_SUBJECTS">Pass every subject (default)</option><option value="CORE_ONLY">Pass core subjects only</option></select></label>
+            <label>Name<Input name="name" required maxLength={60} placeholder="Half-yearly 2026" /></label>
+            <label>Term (optional)<Input name="term" maxLength={40} placeholder="Term 2" /></label>
+            <label>Academic year<Select name="academicYearId" required>{years.map((y) => <option key={y.id} value={y.id}>{y.name}</option>)}</Select></label>
+            <label>Class<Select name="gradeLevelId" required>{levels.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}</Select></label>
+            <label>Pass rule<Select name="passRule"><option value="ALL_SUBJECTS">Pass every subject (default)</option><option value="CORE_ONLY">Pass core subjects only</option></Select></label>
           </ActionForm>
         </Card>
       ) : null}

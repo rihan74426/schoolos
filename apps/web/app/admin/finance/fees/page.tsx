@@ -1,3 +1,5 @@
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import Link from "next/link";
 import { can, formatMinor } from "@schoolos/core";
 import { connectDb } from "@schoolos/db";
@@ -67,18 +69,18 @@ export default async function FeesPage() {
           <ActionForm action={updateFeeRulesAction} submitLabel="Save fee rules">
             <input type="hidden" name="version" value={doc.version} />
             <label>Late fee
-              <select name="lateMode" defaultValue={late.mode}>
+              <Select name="lateMode" defaultValue={late.mode}>
                 <option value="NONE">None</option>
                 <option value="FLAT">Flat amount</option>
                 <option value="PERCENT_PER_DAY">Percent per late day</option>
-              </select>
+              </Select>
             </label>
             <label>Amount (taka for flat, percent for per-day)
-              <input name="lateAmount" inputMode="decimal" defaultValue={late.mode === "FLAT" ? (late.flatMinor / 100).toFixed(2) : late.mode === "PERCENT_PER_DAY" ? String(late.percent) : ""} />
+              <Input name="lateAmount" inputMode="decimal" defaultValue={late.mode === "FLAT" ? (late.flatMinor / 100).toFixed(2) : late.mode === "PERCENT_PER_DAY" ? String(late.percent) : ""} />
             </label>
-            <label>Grace days<input name="graceDays" inputMode="numeric" defaultValue={late.mode === "NONE" ? 0 : late.graceDays} /></label>
-            <label>Cap percent (per-day only)<input name="capPercent" inputMode="numeric" defaultValue={late.mode === "PERCENT_PER_DAY" ? late.capPercent : 100} /></label>
-            <label>Scholarship cap percent<input name="scholarshipCapPercent" inputMode="numeric" defaultValue={fees.scholarshipCapPercent} /></label>
+            <label>Grace days<Input name="graceDays" inputMode="numeric" defaultValue={late.mode === "NONE" ? 0 : late.graceDays} /></label>
+            <label>Cap percent (per-day only)<Input name="capPercent" inputMode="numeric" defaultValue={late.mode === "PERCENT_PER_DAY" ? late.capPercent : 100} /></label>
+            <label>Scholarship cap percent<Input name="scholarshipCapPercent" inputMode="numeric" defaultValue={fees.scholarshipCapPercent} /></label>
             <p className="form-hint">Applies to invoices from now on. Changes are audited with before and after.</p>
           </ActionForm>
         ) : <p className="form-hint">Only the owner, administrator, principal or vice principal can change these rules.</p>}

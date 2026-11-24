@@ -1,4 +1,6 @@
 "use client";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 
 import { useState } from "react";
 import { useActionState } from "react";
@@ -34,18 +36,18 @@ export function InviteForm({
   return (
     <form action={formAction} className="form-grid">
       <label>Role
-        <select name="role" defaultValue="TEACHER">
+        <Select name="role" defaultValue="TEACHER">
           {roles.map((r) => <option key={r} value={r}>{r.replace(/_/g, " ").toLowerCase()}</option>)}
-        </select>
+        </Select>
       </label>
       <label>Who is it for? (optional note)
-        <input name="inviteeNote" maxLength={80} placeholder="e.g. Maulana Karim, Class 6" />
+        <Input name="inviteeNote" maxLength={80} placeholder="e.g. Maulana Karim, Class 6" />
       </label>
       <Submit />
       {state ? <p role={state.ok ? "status" : "alert"} className={state.ok ? "form-ok" : "form-error"}>{state.message}</p> : null}
       {state?.ok && state.link ? (
         <div className="wide invite-share">
-          <input readOnly value={state.link} aria-label="Invite link" onFocus={(e) => e.currentTarget.select()} />
+          <Input readOnly value={state.link} aria-label="Invite link" onFocus={(e) => e.currentTarget.select()} />
           <div className="invite-actions">
             <button type="button" className="button-link" onClick={copy}>{copied ? "Copied" : "Copy link"}</button>
             <a className="button-link" target="_blank" rel="noopener noreferrer" href={`https://wa.me/?text=${encodeURIComponent(state.shareText ?? state.link)}`}>WhatsApp</a>

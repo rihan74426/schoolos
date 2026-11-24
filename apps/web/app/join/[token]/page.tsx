@@ -19,7 +19,7 @@ export default async function JoinPage(props: { params: Promise<{ token: string 
 
   if (!preview) {
     return (
-      <main className="landing">
+      <main className="grid min-h-dvh place-items-center bg-bg p-4">
         <Card className="mx-auto grid w-full max-w-md gap-3 p-6">
           <h1>Invitation not valid</h1>
           <p className="muted">This link has expired, was already used, or was cancelled. Ask your school to send a new one.</p>
@@ -33,7 +33,7 @@ export default async function JoinPage(props: { params: Promise<{ token: string 
   const role = preview.role.replace(/_/g, " ").toLowerCase();
 
   return (
-    <main className="landing">
+    <main className="grid min-h-dvh place-items-center bg-bg p-4">
       <Card className="mx-auto grid w-full max-w-md gap-3 p-6">
         <p className="eyebrow">YOU ARE INVITED</p>
         <h1>Welcome to {preview.institutionName}</h1>

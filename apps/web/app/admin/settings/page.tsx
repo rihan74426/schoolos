@@ -1,3 +1,6 @@
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { clerkClient } from "@clerk/nextjs/server";
 import { can, gradingPresets, invitableRoles } from "@schoolos/core";
@@ -107,9 +110,9 @@ export default async function SettingsPage() {
         ) : <p className="empty-state">No academic year yet. Add one to start.</p>}
         {canStructure ? (
           <ActionForm action={createYearAction} submitLabel="Add year">
-            <label>Name<input name="name" required maxLength={40} placeholder="2026" /></label>
-            <label>Starts<input type="date" name="startsOn" required /></label>
-            <label>Ends<input type="date" name="endsOn" required /></label>
+            <label>Name<Input name="name" required maxLength={40} placeholder="2026" /></label>
+            <label>Starts<Input type="date" name="startsOn" required /></label>
+            <label>Ends<Input type="date" name="endsOn" required /></label>
             <label className="check"><input type="checkbox" name="makeCurrent" /> Make current</label>
           </ActionForm>
         ) : null}
@@ -121,14 +124,14 @@ export default async function SettingsPage() {
         {data.sections.length ? <ul className="plain-list">{data.sections.map((s) => <li key={String(s._id)}>{sectionLabel.get(String(s._id))}</li>)}</ul> : null}
         {canStructure ? (<>
           <ActionForm action={createGradeLevelAction} submitLabel="Add class">
-            <label>Class name<input name="name" required maxLength={60} placeholder="Class 6 / Hifz" /></label>
-            <label>Order<input type="number" name="sortOrder" min={0} defaultValue={data.gradeLevels.length + 1} /></label>
+            <label>Class name<Input name="name" required maxLength={60} placeholder="Class 6 / Hifz" /></label>
+            <label>Order<Input type="number" name="sortOrder" min={0} defaultValue={data.gradeLevels.length + 1} /></label>
           </ActionForm>
           {data.years.length && data.gradeLevels.length ? (
             <ActionForm action={createSectionAction} submitLabel="Add section">
-              <label>Year<select name="academicYearId" required>{data.years.map((y) => <option key={String(y._id)} value={String(y._id)}>{y.name}</option>)}</select></label>
-              <label>Class<select name="gradeLevelId" required>{data.gradeLevels.map((g) => <option key={String(g._id)} value={String(g._id)}>{g.name}</option>)}</select></label>
-              <label>Section<input name="name" required maxLength={40} placeholder="A" /></label>
+              <label>Year<Select name="academicYearId" required>{data.years.map((y) => <option key={String(y._id)} value={String(y._id)}>{y.name}</option>)}</Select></label>
+              <label>Class<Select name="gradeLevelId" required>{data.gradeLevels.map((g) => <option key={String(g._id)} value={String(g._id)}>{g.name}</option>)}</Select></label>
+              <label>Section<Input name="name" required maxLength={40} placeholder="A" /></label>
             </ActionForm>
           ) : <p className="form-hint">Add an academic year and a class to create sections.</p>}
         </>) : null}
@@ -161,8 +164,8 @@ export default async function SettingsPage() {
         ) : <p className="empty-state">No subjects yet.</p>}
         {canStructure ? (
           <ActionForm action={createSubjectAction} submitLabel="Add subject">
-            <label>Code<input name="code" required maxLength={12} placeholder="MATH" /></label>
-            <label>Name<input name="name" required maxLength={60} placeholder="Mathematics" /></label>
+            <label>Code<Input name="code" required maxLength={12} placeholder="MATH" /></label>
+            <label>Name<Input name="name" required maxLength={60} placeholder="Mathematics" /></label>
             <label className="check"><input type="checkbox" name="isCore" /> Core subject</label>
           </ActionForm>
         ) : null}
@@ -181,9 +184,9 @@ export default async function SettingsPage() {
         })}
         {canStructure && subjectData.levels.length && subjectData.subjects.length ? (
           <ActionForm action={mapSubjectAction} submitLabel="Add to class">
-            <label>Class<select name="gradeLevelId" required>{subjectData.levels.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}</select></label>
-            <label>Subject<select name="subjectId" required>{subjectData.subjects.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}</select></label>
-            <label>Full marks<input name="defaultMaxMarks" type="number" min={1} max={1000} defaultValue={100} /></label>
+            <label>Class<Select name="gradeLevelId" required>{subjectData.levels.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}</Select></label>
+            <label>Subject<Select name="subjectId" required>{subjectData.subjects.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}</Select></label>
+            <label>Full marks<Input name="defaultMaxMarks" type="number" min={1} max={1000} defaultValue={100} /></label>
           </ActionForm>
         ) : null}
       </Card>
@@ -201,9 +204,9 @@ export default async function SettingsPage() {
         {canAssign ? (
           data.teachers.length && data.sections.length ? (
             <ActionForm action={assignTeacherAction} submitLabel="Assign">
-              <label>Teacher<select name="membershipId" required>{data.teachers.map((t) => <option key={String(t._id)} value={String(t._id)}>{teacherLabel.get(String(t._id))}</option>)}</select></label>
-              <label>Section<select name="sectionId" required>{data.sections.map((s) => <option key={String(s._id)} value={String(s._id)}>{sectionLabel.get(String(s._id))}</option>)}</select></label>
-              <label>Subject<select name="subjectId"><option value="">Class teacher (attendance)</option>{subjectData.subjects.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}</select></label>
+              <label>Teacher<Select name="membershipId" required>{data.teachers.map((t) => <option key={String(t._id)} value={String(t._id)}>{teacherLabel.get(String(t._id))}</option>)}</Select></label>
+              <label>Section<Select name="sectionId" required>{data.sections.map((s) => <option key={String(s._id)} value={String(s._id)}>{sectionLabel.get(String(s._id))}</option>)}</Select></label>
+              <label>Subject<Select name="subjectId"><option value="">Class teacher (attendance)</option>{subjectData.subjects.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}</Select></label>
             </ActionForm>
           ) : <p className="form-hint">Needs at least one section and one staff member with the Teacher role.</p>
         ) : null}
@@ -215,15 +218,15 @@ export default async function SettingsPage() {
           canPolicy ? (
             <ActionForm action={updateRulesAction} submitLabel="Save rules">
               <input type="hidden" name="version" value={policyDoc.version} />
-              <label>Default grading scheme<select name="gradingSchemeKey" defaultValue={policy.gradingSchemeKey}>{schemes.map((s) => <option key={s.key} value={s.key}>{s.name}</option>)}</select></label>
-              <label>Minimum attendance %<input type="number" name="minimumAttendancePercent" min={0} max={100} step="any" defaultValue={policy.attendance.minimumAttendancePercent} required /></label>
-              <label>Flag at-risk below %<input type="number" name="flagBelowPercent" min={0} max={100} step="any" defaultValue={policy.attendance.flagBelowPercent} required /></label>
-              <label>Teacher correction window (hours)<input type="number" name="correctionWindowHours" min={0} max={8760} defaultValue={policy.attendance.correctionWindowHours ?? 48} required /></label>
+              <label>Default grading scheme<Select name="gradingSchemeKey" defaultValue={policy.gradingSchemeKey}>{schemes.map((s) => <option key={s.key} value={s.key}>{s.name}</option>)}</Select></label>
+              <label>Minimum attendance %<Input type="number" name="minimumAttendancePercent" min={0} max={100} step="any" defaultValue={policy.attendance.minimumAttendancePercent} required /></label>
+              <label>Flag at-risk below %<Input type="number" name="flagBelowPercent" min={0} max={100} step="any" defaultValue={policy.attendance.flagBelowPercent} required /></label>
+              <label>Teacher correction window (hours)<Input type="number" name="correctionWindowHours" min={0} max={8760} defaultValue={policy.attendance.correctionWindowHours ?? 48} required /></label>
               <label className="check"><input type="checkbox" name="requireFullRoster" defaultChecked={policy.attendance.requireFullRoster ?? true} /> Require every student to be marked</label>
-              <label>Late fee<select name="lateMode" defaultValue={late?.mode ?? "NONE"}><option value="NONE">None</option><option value="FLAT">Flat amount</option><option value="PERCENT_PER_DAY">Percent per late day</option></select></label>
-              <label>Amount (৳ for flat, % for per-day)<input type="number" name="lateAmount" min={0} step="any" defaultValue={late?.mode === "FLAT" ? (late.flatMinor ?? 0) / 100 : late?.percent ?? 0} /></label>
-              <label>Grace days<input type="number" name="graceDays" min={0} defaultValue={late?.graceDays ?? 0} /></label>
-              <label>Cap % (per-day only)<input type="number" name="capPercent" min={0} max={100} defaultValue={late?.capPercent ?? 100} /></label>
+              <label>Late fee<Select name="lateMode" defaultValue={late?.mode ?? "NONE"}><option value="NONE">None</option><option value="FLAT">Flat amount</option><option value="PERCENT_PER_DAY">Percent per late day</option></Select></label>
+              <label>Amount (৳ for flat, % for per-day)<Input type="number" name="lateAmount" min={0} step="any" defaultValue={late?.mode === "FLAT" ? (late.flatMinor ?? 0) / 100 : late?.percent ?? 0} /></label>
+              <label>Grace days<Input type="number" name="graceDays" min={0} defaultValue={late?.graceDays ?? 0} /></label>
+              <label>Cap % (per-day only)<Input type="number" name="capPercent" min={0} max={100} defaultValue={late?.capPercent ?? 100} /></label>
             </ActionForm>
           ) : <p className="muted">Only owners and admins can change rules.</p>
         ) : <p className="empty-state">No rules saved for this school yet.</p>}
@@ -234,10 +237,10 @@ export default async function SettingsPage() {
         <p className="muted small">{schemes.map((s) => s.name + (s.isDefault ? " (default)" : "")).join(" · ") || "None"}. Presets: {Object.values(gradingPresets).map((p) => p.name).join(", ")}.</p>
         {canPolicy ? (
           <ActionForm action={createGradingSchemeAction} submitLabel="Save scheme">
-            <label>Scheme name<input name="name" required maxLength={80} placeholder="Our Dakhil scale" /></label>
-            <label>Pass mark %<input type="number" name="passPercent" min={0} max={100} step="any" required defaultValue={33} /></label>
-            <label>Fail label<input name="failLabel" maxLength={20} defaultValue="F" /></label>
-            <label className="wide">Bands, one per line: label, minimum %, optional grade point<textarea name="bands" rows={6} required defaultValue={"A+ 80 5\nA 70 4\nB 60 3"} /></label>
+            <label>Scheme name<Input name="name" required maxLength={80} placeholder="Our Dakhil scale" /></label>
+            <label>Pass mark %<Input type="number" name="passPercent" min={0} max={100} step="any" required defaultValue={33} /></label>
+            <label>Fail label<Input name="failLabel" maxLength={20} defaultValue="F" /></label>
+            <label className="wide">Bands, one per line: label, minimum %, optional grade point<Textarea name="bands" rows={6} required defaultValue={"A+ 80 5\nA 70 4\nB 60 3"} /></label>
             <label className="check"><input type="checkbox" name="makeDefault" /> Make default</label>
           </ActionForm>
         ) : null}

@@ -1,3 +1,4 @@
+import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import Link from "next/link";
 import { can } from "@schoolos/core";
@@ -31,7 +32,7 @@ export default async function ApprovalsPage() {
             <ActionForm action={approveSheetAction} submitLabel="Approve"><input type="hidden" name="assessmentId" value={q.assessmentId} /></ActionForm>
             <ActionForm action={returnSheetAction} submitLabel="Send back">
               <input type="hidden" name="assessmentId" value={q.assessmentId} />
-              <label>Reason (10+ characters)<textarea name="reason" rows={2} required minLength={10} maxLength={300} /></label>
+              <label>Reason (10+ characters)<Textarea name="reason" rows={2} required minLength={10} maxLength={300} /></label>
             </ActionForm>
           </div>
         )) : <p className="empty-state">Nothing waiting.</p>}
@@ -46,7 +47,7 @@ export default async function ApprovalsPage() {
               <ActionForm action={decideCorrectionAction} submitLabel="Approve and publish new version"><input type="hidden" name="correctionId" value={c.id} /><input type="hidden" name="decision" value="approve" /></ActionForm>
               <ActionForm action={decideCorrectionAction} submitLabel="Reject">
                 <input type="hidden" name="correctionId" value={c.id} /><input type="hidden" name="decision" value="reject" />
-                <label>Reason for rejecting (10+ characters)<textarea name="note" rows={2} required minLength={10} maxLength={300} /></label>
+                <label>Reason for rejecting (10+ characters)<Textarea name="note" rows={2} required minLength={10} maxLength={300} /></label>
               </ActionForm>
             </>) : <p className="muted small">Leadership decides corrections.</p>}
           </div>

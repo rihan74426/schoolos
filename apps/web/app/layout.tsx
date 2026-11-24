@@ -1,6 +1,7 @@
 import "./tokens.css";
 import "./globals.css";
 import "./admin/admin.css";
+import "./tailwind.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import { cookies } from "next/headers";
 import type { ReactNode } from "react";

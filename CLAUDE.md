@@ -2,11 +2,11 @@
 
 Bangladesh-first, multi-tenant school/madrasa management SaaS. Goal: a pilot-ready MVP (one school can onboard, enroll students, take attendance, notify guardians) with **zero cross-school data leaks**. AI, hostel, ranking, and mobile are out of first-release scope.
 
-The user (NJ) is a Next.js/JavaScript developer who wants **short answers, low token use, and fixes that fit the current setup**. Always review your own output for errors. Any generic "Homy household SaaS" brief in older notes is stale — ignore it. The blueprint docx still says PostgreSQL/Prisma/Tailwind; the decision is MongoDB/Mongoose/plain CSS.
+The user (NJ) is a Next.js/JavaScript developer who wants **short answers, low token use, and fixes that fit the current setup**. Always review your own output for errors. Any generic "Homy household SaaS" brief in older notes is stale — ignore it. The blueprint docx still says PostgreSQL/Prisma/Tailwind; the decision is MongoDB/Mongoose/Tailwind 3.4 + shadcn-style UI.
 
 ## Stack and layout
 
-pnpm 9 + Turborepo monorepo. Next.js 16 App Router, React 19, Clerk v6 (`@clerk/nextjs`), MongoDB via Mongoose 8, zod, plain CSS (no Tailwind/shadcn). Core and db are plain JS (ESM); web is TypeScript.
+pnpm 9 + Turborepo monorepo. Next.js 16 App Router, React 19, Clerk v6 (`@clerk/nextjs`), MongoDB via Mongoose 8, zod, Tailwind 3.4 + shadcn-style primitives in `components/ui` (Radix; colours are CSS variables from `app/tokens.css`; preflight is OFF while legacy `globals.css`/`admin.css` shrink — new UI uses utilities, do not add new legacy classes). Core and db are plain JS (ESM); web is TypeScript.
 
 - `apps/web` — Next.js app. `server/` = server-only services (`import "server-only"`); `app/**/actions.ts` = thin server actions; `tests/` = service tests (vitest + mongodb-memory-server).
 - `packages/core` — DB-free domain rules, zod schemas, permission matrix. Vitest.
@@ -54,6 +54,6 @@ Later (not first release): leader design studio (posters/images/sheets/video) �
 
 ## Conventions
 
-- Mobile-first, plain CSS with logical properties (`margin-inline-start`, `text-align:start`) so Arabic RTL works. Fonts via `next/font` (options must be literals, no spreads).
+- Mobile-first, logical utilities (`ms-*`, `text-start`) or CSS logical properties so Arabic RTL works. Fonts via `next/font` (options must be literals, no spreads).
 - Keep secrets in local env files; never commit `.env.local` or `*.tsbuildinfo`.
 - Prefer editing existing files; small, tested changes; run typecheck + lint + tests before saying "done", and say plainly what could not be run.

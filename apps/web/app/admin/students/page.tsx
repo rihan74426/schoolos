@@ -76,7 +76,7 @@ export default async function StudentsPage(props: { searchParams: Promise<{ q?: 
       </Card>
 
       {canWrite ? (
-        <section className="panel">
+        <Card className="mb-4">
           <div className="panel-heading"><h2>Add a student</h2><Link className="text-link" href="/admin/students/import">Import CSV →</Link></div>
           <ActionForm action={createStudentAction} submitLabel="Add student">
             <label>Student ID<input name="studentNumber" required maxLength={30} /></label>
@@ -89,7 +89,7 @@ export default async function StudentsPage(props: { searchParams: Promise<{ q?: 
             <label>Relationship<input name="guardianRelationship" maxLength={30} placeholder="Father" /></label>
           </ActionForm>
           {sections.length === 0 ? <p className="form-hint">No current-year sections yet. Create them in Settings to enroll students.</p> : null}
-        </section>
+        </Card>
       ) : null}
     </>
   );

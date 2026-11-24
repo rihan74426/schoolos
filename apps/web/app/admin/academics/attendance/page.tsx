@@ -19,7 +19,7 @@ export default async function AttendancePage(props: { searchParams: Promise<{ se
   await connectDb();
   const heading = <PageHeading title="Attendance" description="Take daily attendance for your sections." />;
   if (!can(actor.role, "attendance:submit")) {
-    return <>{heading}<section className="panel"><p className="muted">Your role cannot take attendance.</p></section></>;
+    return <>{heading}<Card className="mb-4"><p className="muted">Your role cannot take attendance.</p></Card></>;
   }
 
   const today = todayInDhaka();

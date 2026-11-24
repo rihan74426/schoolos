@@ -1,3 +1,4 @@
+import { Card } from "@/components/ui/card";
 import { can, formatMinor } from "@schoolos/core";
 import { connectDb } from "@schoolos/db";
 import { resolveActiveMembership } from "@/server/auth";
@@ -10,9 +11,9 @@ export default async function ReceiptPage(props: { params: Promise<{ paymentId: 
   const params = await props.params;
   const actor = await resolveActiveMembership();
   await connectDb();
-  if (!can(actor.role, "fees:read")) return <section className="panel"><p className="muted">Your role cannot view fees.</p></section>;
+  if (!can(actor.role, "fees:read")) return <Card className="mb-4"><p className="muted">Your role cannot view fees.</p></Card>;
   const r = await getReceipt(actor, params.paymentId);
-  if (!r) return <section className="panel"><p className="form-error">Receipt not found.</p></section>;
+  if (!r) return <Card className="mb-4"><p className="form-error">Receipt not found.</p></Card>;
   const school = (await Institution.findOne({ _id: actor.institutionId }).select("name").lean()) as { name: string } | null;
   const money = (n: number) => formatMinor(n, r.currency);
   return (

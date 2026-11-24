@@ -1,3 +1,4 @@
+import { Card } from "@/components/ui/card";
 import { clerkClient } from "@clerk/nextjs/server";
 import { can, gradingPresets, invitableRoles } from "@schoolos/core";
 import { connectDb, GradingScheme, Staff } from "@schoolos/db";
@@ -56,7 +57,7 @@ export default async function SettingsPage() {
     return (
       <>
         <PageHeading title="Settings" description="School profile, academic configuration, and staff access." />
-        <section className="panel"><p className="muted">Your role cannot view settings.</p></section>
+        <Card className="mb-4"><p className="muted">Your role cannot view settings.</p></Card>
       </>
     );
   }
@@ -95,7 +96,7 @@ export default async function SettingsPage() {
         ))}
       </nav>
 
-      <section className="panel" id="years">
+      <Card className="mb-4" id="years">
         <h2>Academic years</h2>
         {data.years.length ? (
           <div className="table-scroll"><table><thead><tr><th>Name</th><th>Dates</th><th>Status</th>{canStructure ? <th /> : null}</tr></thead><tbody>
@@ -112,9 +113,9 @@ export default async function SettingsPage() {
             <label className="check"><input type="checkbox" name="makeCurrent" /> Make current</label>
           </ActionForm>
         ) : null}
-      </section>
+      </Card>
 
-      <section className="panel" id="classes">
+      <Card className="mb-4" id="classes">
         <h2>Classes and sections</h2>
         <p className="muted small">{data.gradeLevels.length ? data.gradeLevels.map((g) => g.name).join(" · ") : "No classes yet."}</p>
         {data.sections.length ? <ul className="plain-list">{data.sections.map((s) => <li key={String(s._id)}>{sectionLabel.get(String(s._id))}</li>)}</ul> : null}
@@ -131,10 +132,10 @@ export default async function SettingsPage() {
             </ActionForm>
           ) : <p className="form-hint">Add an academic year and a class to create sections.</p>}
         </>) : null}
-      </section>
+      </Card>
 
       {canInvite ? (
-        <section className="panel" id="staff">
+        <Card className="mb-4" id="staff">
           <h2>Invite staff</h2>
           <p className="muted small">Create a link and send it by WhatsApp, Messenger or any app. The person signs up, joins this school with the role you pick, then fills in their profile.</p>
           <InviteForm action={createInviteAction} roles={invitableRoles(actor.role)} />
@@ -145,10 +146,10 @@ export default async function SettingsPage() {
                   <td><ActionForm action={revokeInviteAction} submitLabel="Revoke" className="inline-form"><input type="hidden" name="invitationId" value={String(i._id)} /></ActionForm></td></tr>
               ))}</tbody></table></div>
           ) : null}
-        </section>
+        </Card>
       ) : null}
 
-      <section className="panel" id="subjects">
+      <Card className="mb-4" id="subjects">
         <h2>Subjects</h2>
         <p className="muted small">Core subjects decide pass or fail when an exam uses the core-subjects-only rule. By default a student must pass every subject.</p>
         {subjectData.subjects.length ? (
@@ -185,9 +186,9 @@ export default async function SettingsPage() {
             <label>Full marks<input name="defaultMaxMarks" type="number" min={1} max={1000} defaultValue={100} /></label>
           </ActionForm>
         ) : null}
-      </section>
+      </Card>
 
-      <section className="panel" id="teaching">
+      <Card className="mb-4" id="teaching">
         <h2>Teaching assignments</h2>
         <p className="muted small">Class teachers (no subject) take attendance. Subject teachers enter exam marks only for the subject and section they are assigned.</p>
         {data.assignments.length ? (
@@ -206,9 +207,9 @@ export default async function SettingsPage() {
             </ActionForm>
           ) : <p className="form-hint">Needs at least one section and one staff member with the Teacher role.</p>
         ) : null}
-      </section>
+      </Card>
 
-      <section className="panel" id="rules">
+      <Card className="mb-4" id="rules">
         <h2>School rules</h2>
         {policy && policyDoc ? (
           canPolicy ? (
@@ -226,9 +227,9 @@ export default async function SettingsPage() {
             </ActionForm>
           ) : <p className="muted">Only owners and admins can change rules.</p>
         ) : <p className="empty-state">No rules saved for this school yet.</p>}
-      </section>
+      </Card>
 
-      <section className="panel" id="grading">
+      <Card className="mb-4" id="grading">
         <h2>Grading schemes</h2>
         <p className="muted small">{schemes.map((s) => s.name + (s.isDefault ? " (default)" : "")).join(" · ") || "None"}. Presets: {Object.values(gradingPresets).map((p) => p.name).join(", ")}.</p>
         {canPolicy ? (
@@ -240,7 +241,7 @@ export default async function SettingsPage() {
             <label className="check"><input type="checkbox" name="makeDefault" /> Make default</label>
           </ActionForm>
         ) : null}
-      </section>
+      </Card>
     </>
   );
 }

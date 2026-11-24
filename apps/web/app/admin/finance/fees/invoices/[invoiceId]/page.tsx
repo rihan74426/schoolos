@@ -17,9 +17,9 @@ export default async function InvoicePage(props: { params: Promise<{ invoiceId: 
   const params = await props.params;
   const actor = await resolveActiveMembership();
   await connectDb();
-  if (!can(actor.role, "fees:read")) return <section className="panel"><p className="muted">Your role cannot view fees.</p></section>;
+  if (!can(actor.role, "fees:read")) return <Card className="mb-4"><p className="muted">Your role cannot view fees.</p></Card>;
   const d = await getInvoiceDetail(actor, params.invoiceId);
-  if (!d) return <><PageHeading title="Invoice" description="" /><section className="panel"><p className="form-error">Invoice not found.</p></section></>;
+  if (!d) return <><PageHeading title="Invoice" description="" /><Card className="mb-4"><p className="form-error">Invoice not found.</p></Card></>;
   const { invoice: inv, summary: s, currency: c } = d;
   const money = (n: number) => formatMinor(n, c);
   const open = inv.status === "OPEN";
@@ -49,7 +49,7 @@ export default async function InvoicePage(props: { params: Promise<{ invoiceId: 
         {inv.settledOn ? <p className="m-0 text-xs text-fg-muted">Settled on {inv.settledOn}.</p> : null}
       </Card>
       {open && can(actor.role, "fees:write") ? (
-        <section className="panel">
+        <Card className="mb-4">
           <h2>Record payment</h2>
           <ActionForm action={recordPaymentAction} submitLabel="Record payment">
             <input type="hidden" name="invoiceId" value={inv.id} />
@@ -58,10 +58,10 @@ export default async function InvoicePage(props: { params: Promise<{ invoiceId: 
             <label>Reference (transaction id, optional)<input name="reference" maxLength={60} /></label>
             <label>Received on<input name="paidOn" type="date" required defaultValue={todayInDhaka()} max={todayInDhaka()} /></label>
           </ActionForm>
-        </section>
+        </Card>
       ) : null}
       {open && can(actor.role, "fees:waive") ? (
-        <section className="panel">
+        <Card className="mb-4">
           <h2>Discount or remit late fee</h2>
           <p className="muted">Discounts are capped at {d.scholarshipCapPercent}% of the invoice. A reason is required and recorded.</p>
           <ActionForm action={applyAdjustmentAction} submitLabel="Apply">
@@ -70,19 +70,19 @@ export default async function InvoicePage(props: { params: Promise<{ invoiceId: 
             <label>Amount (taka)<input name="amount" inputMode="decimal" required /></label>
             <label>Reason (10+ characters)<textarea name="reason" rows={2} required minLength={10} maxLength={300} /></label>
           </ActionForm>
-        </section>
+        </Card>
       ) : null}
       {open && inv.paidMinor === 0 && can(actor.role, "fees:reverse") ? (
-        <section className="panel">
+        <Card className="mb-4">
           <h2>Void invoice</h2>
           <p className="muted">For an invoice issued by mistake. Nothing has been paid. A reason is required and recorded.</p>
           <ActionForm action={voidInvoiceAction} submitLabel="Void invoice">
             <input type="hidden" name="invoiceId" value={inv.id} />
             <label>Reason (10+ characters)<textarea name="reason" rows={2} required minLength={10} maxLength={300} /></label>
           </ActionForm>
-        </section>
+        </Card>
       ) : null}
-      <section className="panel">
+      <Card className="mb-4">
         <h2>Payments</h2>
         {d.payments.length ? <ul>{d.payments.map((p) => (
           <li key={p.id}>
@@ -96,7 +96,7 @@ export default async function InvoicePage(props: { params: Promise<{ invoiceId: 
           </li>
         ))}</ul> : <p className="muted">No payments yet.</p>}
         {inv.adjustments.length ? <><h3>Adjustments</h3><ul>{inv.adjustments.map((a, i) => <li key={i}>{a.kind === "DISCOUNT" ? "Discount" : "Late fee remitted"} {money(a.amountMinor)}: {a.reason}</li>)}</ul></> : null}
-      </section>
+      </Card>
     </>
   );
 }

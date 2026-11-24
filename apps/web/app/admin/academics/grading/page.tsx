@@ -1,5 +1,5 @@
-import { PageHeading } from '@/components/admin/page-heading';
+import { ComingSoon } from "@/components/admin/coming-soon";
 
-export default function GradingPage() {
-  return <><PageHeading title="Grading" description="Exam results, grading policies, and grade review." /><section className="panel"><h2>Grading workspace</h2><p className="muted">Configure grading scales and review results using the shared core grading rules.</p></section></>;
+export default function Page() {
+  return <ComingSoon title="Grading" description="Grading schemes and result review." summary="Grading schemes are set in Settings. Published results are under Exams." />;
 }

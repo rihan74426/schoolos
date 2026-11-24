@@ -19,7 +19,7 @@ export default async function InvoicesPage(props: { searchParams: Promise<{ stat
   const actor = await resolveActiveMembership();
   await connectDb();
   const heading = <PageHeading title="Invoices" description="Bills, payments and arrears." />;
-  if (!can(actor.role, "fees:read")) return <>{heading}<section className="panel"><p className="muted">Your role cannot view fees.</p></section></>;
+  if (!can(actor.role, "fees:read")) return <>{heading}<Card className="mb-4"><p className="muted">Your role cannot view fees.</p></Card></>;
   const page = Math.max(1, Number(searchParams.page) || 1);
   const status = ["OPEN", "PAID", "OVERDUE"].includes(searchParams.status ?? "") ? searchParams.status : "";
   const list = await listInvoices(actor, { status, q: searchParams.q, page });

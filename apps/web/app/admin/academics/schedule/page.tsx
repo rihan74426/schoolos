@@ -1,5 +1,5 @@
-import { PageHeading } from '@/components/admin/page-heading';
+import { ComingSoon } from "@/components/admin/coming-soon";
 
-export default function SchedulePage() {
-  return <><PageHeading title="Scheduling" description="Academic terms, class timetables, and exam schedules." /><section className="panel"><h2>Schedule workspace</h2><p className="muted">Manage calendar and timetable workflows. Keep scheduling rules in the shared core package.</p></section></>;
+export default function Page() {
+  return <ComingSoon title="Timetable" description="Academic terms, class timetables, and exam schedules." summary="Class timetables and exam schedules are planned next." />;
 }

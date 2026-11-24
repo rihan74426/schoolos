@@ -30,11 +30,11 @@ export default async function FeesPage() {
   await connectDb();
   const heading = <PageHeading title="Fees" description="Fee rules, plans, invoices, payments, and waivers." />;
   if (!can(actor.role, "fees:read")) {
-    return <>{heading}<section className="panel"><p className="muted">Your role cannot view fees.</p></section></>;
+    return <>{heading}<Card className="mb-4"><p className="muted">Your role cannot view fees.</p></Card></>;
   }
   const doc = await getInstitutionPolicy(actor.institutionId);
   const fees = (doc?.policy as { fees: { currency: string; lateFee: LateFee; scholarshipCapPercent: number } } | undefined)?.fees;
-  if (!doc || !fees) return <>{heading}<section className="panel"><p className="form-error">Policy not found. Finish setup first.</p></section></>;
+  if (!doc || !fees) return <>{heading}<Card className="mb-4"><p className="form-error">Policy not found. Finish setup first.</p></Card></>;
   const late = fees.lateFee;
   const canConfigure = can(actor.role, "fees:configure");
   const sum = await collectionSummary(actor);

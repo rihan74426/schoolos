@@ -1,3 +1,4 @@
+import { Card } from "@/components/ui/card";
 import Link from "next/link";
 import { can } from "@schoolos/core";
 import { connectDb } from "@schoolos/db";
@@ -22,7 +23,7 @@ export default async function CommunicationsPage() {
       <PageHeading title="Communications" description="Notices and guardian alerts. Each school connects its own SMS provider." />
       <p><Link className="button-link" href="/admin/communications/log">Delivery log</Link></p>
       {canConfigure ? (
-        <section className="panel" id="sms">
+        <Card className="mb-4" id="sms">
           <h2>SMS provider</h2>
           <p className="muted">
             {channel
@@ -53,9 +54,9 @@ export default async function CommunicationsPage() {
               <label>Your mobile number<input name="phone" inputMode="tel" placeholder="01XXXXXXXXX" required /></label>
             </ActionForm>
           ) : null}
-        </section>
+        </Card>
       ) : (
-        <section className="panel"><p className="muted">Ask the school owner or administrator to connect an SMS provider.</p></section>
+        <Card className="mb-4"><p className="muted">Ask the school owner or administrator to connect an SMS provider.</p></Card>
       )}
     </>
   );

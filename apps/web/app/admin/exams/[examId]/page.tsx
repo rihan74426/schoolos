@@ -1,3 +1,4 @@
+import { Card } from "@/components/ui/card";
 import Link from "next/link";
 import { can } from "@schoolos/core";
 import { connectDb } from "@schoolos/db";
@@ -14,9 +15,9 @@ export default async function ExamPage(props: { params: Promise<{ examId: string
   const params = await props.params;
   const actor = await resolveActiveMembership();
   await connectDb();
-  if (!can(actor.role, "exams:read")) return <section className="panel"><p className="muted">Your role cannot view exams.</p></section>;
+  if (!can(actor.role, "exams:read")) return <Card className="mb-4"><p className="muted">Your role cannot view exams.</p></Card>;
   const d = await getExamDetail(actor, params.examId);
-  if (!d) return <><PageHeading title="Exam" description="" /><section className="panel"><p className="form-error">Exam not found.</p></section></>;
+  if (!d) return <><PageHeading title="Exam" description="" /><Card className="mb-4"><p className="form-error">Exam not found.</p></Card></>;
   const { exam } = d;
   const draft = exam.status === "DRAFT";
   const published = exam.status === "PUBLISHED";
@@ -29,14 +30,14 @@ export default async function ExamPage(props: { params: Promise<{ examId: string
       <p><Link href="/admin/exams">← All exams</Link>{published ? <> · <Link href={`/admin/exams/${exam.id}/results`}>Results and report cards</Link></> : null}</p>
 
       {draft && canWrite ? (
-        <section className="panel">
+        <Card className="mb-4">
           <h2>Open for marks entry</h2>
           <p className="muted small">Check the papers below first. After opening, full marks cannot change and teachers can enter marks.</p>
           <ActionForm action={openExamAction} submitLabel="Open exam"><input type="hidden" name="examId" value={exam.id} /></ActionForm>
-        </section>
+        </Card>
       ) : null}
 
-      <section className="panel">
+      <Card className="mb-4">
         <h2>Papers</h2>
         {canWrite && !published ? (
           <>
@@ -61,10 +62,10 @@ export default async function ExamPage(props: { params: Promise<{ examId: string
           ))}
         </tbody></table></div>
         <p className="muted small">★ core subject</p>
-      </section>
+      </Card>
 
       {canPublish && !published ? (
-        <section className="panel">
+        <Card className="mb-4">
           <h2>Pass rule</h2>
           <p className="muted small">Default: a student who fails one subject fails the exam. The exam controller may choose core subjects only, or pass a named student below with a reason.</p>
           <ActionForm action={updateExamRulesAction} submitLabel="Save rule">
@@ -81,15 +82,15 @@ export default async function ExamPage(props: { params: Promise<{ examId: string
               <label>Reason (10+ characters)<textarea name="reason" rows={2} required minLength={10} maxLength={300} /></label>
             </ActionForm>
           </>) : null}
-        </section>
+        </Card>
       ) : null}
 
       {canPublish && exam.status === "APPROVED" ? (
-        <section className="panel">
+        <Card className="mb-4">
           <h2>Publish results</h2>
           <p className="muted small">Every sheet is approved. Publishing freezes the marks, grading scheme and results. Later changes need a reason and an approved correction.</p>
           <ActionForm action={publishExamAction} submitLabel="Publish results"><input type="hidden" name="examId" value={exam.id} /></ActionForm>
-        </section>
+        </Card>
       ) : null}
 
       {corrections.length ? <p className="form-hint">{corrections.length} correction(s) waiting. <Link href="/admin/exams/approvals">Review</Link></p> : null}

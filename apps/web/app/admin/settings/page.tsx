@@ -1,3 +1,4 @@
+import { Badge } from "@/components/ui/badge";
 import { inlineForm, plainList } from "@/lib/form-classes";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -105,7 +106,7 @@ export default async function SettingsPage() {
         {data.years.length ? (
           <div className="table-scroll"><table><thead><tr><th>Name</th><th>Dates</th><th>Status</th>{canStructure ? <th /> : null}</tr></thead><tbody>
             {data.years.map((y) => (
-              <tr key={String(y._id)}><td>{y.name}</td><td>{y.startsOn} → {y.endsOn}</td><td>{y.isCurrent ? <span className="badge">Current</span> : "—"}</td>
+              <tr key={String(y._id)}><td>{y.name}</td><td>{y.startsOn} → {y.endsOn}</td><td>{y.isCurrent ? <Badge>Current</Badge> : "—"}</td>
                 {canStructure ? <td>{y.isCurrent ? null : <ActionForm action={setCurrentYearAction} submitLabel="Make current" className={inlineForm}><input type="hidden" name="yearId" value={String(y._id)} /></ActionForm>}</td> : null}</tr>
             ))}</tbody></table></div>
         ) : <p className="empty-state">No academic year yet. Add one to start.</p>}

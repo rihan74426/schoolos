@@ -1,3 +1,6 @@
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import Link from "next/link";
 import { connectDb } from "@schoolos/db";
@@ -33,10 +36,10 @@ export default async function SheetPage(props: { params: Promise<{ assessmentId:
           <p className="muted small">Results are published. A change needs a reason and approval from leadership, and creates a new result version.</p>
           <ActionForm action={requestCorrectionAction} submitLabel="Send for approval">
             <input type="hidden" name="assessmentId" value={m.paper.id} />
-            <label>Student<select name="studentId" required>{m.students.map((s) => <option key={s.id} value={s.id}>{s.name} ({s.number}) · now {s.status === "PRESENT" ? s.marks : s.status?.toLowerCase() ?? "—"}</option>)}</select></label>
-            <label>New value<select name="status"><option value="PRESENT">Marks</option><option value="ABSENT">Absent</option><option value="EXEMPT">Exempt</option></select></label>
-            <label>Marks (if marks)<input name="marks" inputMode="decimal" /></label>
-            <label>Reason (10+ characters)<textarea name="reason" rows={2} required minLength={10} maxLength={300} /></label>
+            <label>Student<Select name="studentId" required>{m.students.map((s) => <option key={s.id} value={s.id}>{s.name} ({s.number}) · now {s.status === "PRESENT" ? s.marks : s.status?.toLowerCase() ?? "—"}</option>)}</Select></label>
+            <label>New value<Select name="status"><option value="PRESENT">Marks</option><option value="ABSENT">Absent</option><option value="EXEMPT">Exempt</option></Select></label>
+            <label>Marks (if marks)<Input name="marks" inputMode="decimal" /></label>
+            <label>Reason (10+ characters)<Textarea name="reason" rows={2} required minLength={10} maxLength={300} /></label>
           </ActionForm>
         </Card>
       ) : null}

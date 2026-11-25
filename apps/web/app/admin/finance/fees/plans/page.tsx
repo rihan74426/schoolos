@@ -1,3 +1,6 @@
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { can, formatMinor } from "@schoolos/core";
 import { connectDb } from "@schoolos/db";
@@ -33,10 +36,10 @@ export default async function PlansPage() {
         <Card className="mb-4">
           <h2>New plan</h2>
           <ActionForm action={createFeePlanAction} submitLabel="Create plan">
-            <label>Name<input name="name" required maxLength={60} placeholder="Class 6 monthly" /></label>
-            <label>Academic year<select name="academicYearId" required>{years.map((y) => <option key={y.id} value={y.id}>{y.name}</option>)}</select></label>
-            <label>Class<select name="gradeLevelId"><option value="">All classes</option>{levels.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}</select></label>
-            <label>Fee lines (one per line, like Title: taka)<textarea name="lines" rows={4} required placeholder={"Tuition: 1500\nExam fee: 250"} /></label>
+            <label>Name<Input name="name" required maxLength={60} placeholder="Class 6 monthly" /></label>
+            <label>Academic year<Select name="academicYearId" required>{years.map((y) => <option key={y.id} value={y.id}>{y.name}</option>)}</Select></label>
+            <label>Class<Select name="gradeLevelId"><option value="">All classes</option>{levels.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}</Select></label>
+            <label>Fee lines (one per line, like Title: taka)<Textarea name="lines" rows={4} required placeholder={"Tuition: 1500\nExam fee: 250"} /></label>
           </ActionForm>
         </Card>
       ) : null}
@@ -45,9 +48,9 @@ export default async function PlansPage() {
           <h2>Generate invoices</h2>
           <p className="muted">Creates one invoice per active student placed in the plan academic year (and class, if set). Running it again for the same month skips students who already have one.</p>
           <ActionForm action={generateInvoicesAction} submitLabel="Generate">
-            <label>Plan<select name="planId" required>{plans.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label>
-            <label>Billing month<input name="period" type="month" required /></label>
-            <label>Due date<input name="dueDate" type="date" required /></label>
+            <label>Plan<Select name="planId" required>{plans.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</Select></label>
+            <label>Billing month<Input name="period" type="month" required /></label>
+            <label>Due date<Input name="dueDate" type="date" required /></label>
           </ActionForm>
         </Card>
       ) : null}

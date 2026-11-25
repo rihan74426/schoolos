@@ -1,3 +1,6 @@
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import Link from "next/link";
 import { can } from "@schoolos/core";
@@ -52,8 +55,8 @@ export default async function ExamPage(props: { params: Promise<{ examId: string
               <td>{draft && canWrite ? (
                 <ActionForm action={updateAssessmentAction} submitLabel="Save" className="inline-form">
                   <input type="hidden" name="assessmentId" value={p.id} />
-                  <input name="maxMarks" type="number" min={1} max={1000} defaultValue={p.maxMarks} aria-label="Full marks" />
-                  <input name="date" type="date" defaultValue={p.date ?? ""} aria-label="Exam date" />
+                  <Input name="maxMarks" type="number" min={1} max={1000} defaultValue={p.maxMarks} aria-label="Full marks" />
+                  <Input name="date" type="date" defaultValue={p.date ?? ""} aria-label="Exam date" />
                 </ActionForm>) : p.maxMarks}</td>
               <td>{draft && canWrite ? "" : p.date ?? "—"}</td>
               <td>{p.sheetStatus ? `${p.sheetStatus.toLowerCase()} (${p.entered})` : "—"}</td>
@@ -70,7 +73,7 @@ export default async function ExamPage(props: { params: Promise<{ examId: string
           <p className="muted small">Default: a student who fails one subject fails the exam. The exam controller may choose core subjects only, or pass a named student below with a reason.</p>
           <ActionForm action={updateExamRulesAction} submitLabel="Save rule">
             <input type="hidden" name="examId" value={exam.id} />
-            <label>Rule<select name="passRule" defaultValue={exam.passRule}><option value="ALL_SUBJECTS">Pass every subject</option><option value="CORE_ONLY">Pass core subjects only</option></select></label>
+            <label>Rule<Select name="passRule" defaultValue={exam.passRule}><option value="ALL_SUBJECTS">Pass every subject</option><option value="CORE_ONLY">Pass core subjects only</option></Select></label>
           </ActionForm>
           {!draft ? (<>
             <h3>Pass a student by decision</h3>
@@ -78,8 +81,8 @@ export default async function ExamPage(props: { params: Promise<{ examId: string
               <ActionForm action={setPassOverrideAction} submitLabel="Remove" className="inline-form"><input type="hidden" name="examId" value={exam.id} /><input type="hidden" name="studentId" value={o.studentId} /><input type="hidden" name="remove" value="1" /><input type="hidden" name="reason" value="Removing the earlier decision" /></ActionForm></li>)}</ul> : null}
             <ActionForm action={setPassOverrideAction} submitLabel="Pass this student">
               <input type="hidden" name="examId" value={exam.id} />
-              <label>Student<select name="studentId" required>{d.students.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}</select></label>
-              <label>Reason (10+ characters)<textarea name="reason" rows={2} required minLength={10} maxLength={300} /></label>
+              <label>Student<Select name="studentId" required>{d.students.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}</Select></label>
+              <label>Reason (10+ characters)<Textarea name="reason" rows={2} required minLength={10} maxLength={300} /></label>
             </ActionForm>
           </>) : null}
         </Card>

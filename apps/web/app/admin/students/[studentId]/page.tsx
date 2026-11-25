@@ -1,3 +1,5 @@
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
 import Link from "next/link";
 import { can } from "@schoolos/core";
@@ -35,10 +37,10 @@ export default async function StudentDetailPage(props: { params: Promise<{ stude
         {canWrite && student.status === "ACTIVE" && sections.length ? (
           <ActionForm action={enrollStudentAction} submitLabel="Save section">
             <input type="hidden" name="studentId" value={String(student._id)} />
-            <label>Enroll / transfer to<select name="sectionId" required defaultValue={student.sectionId ? String(student.sectionId) : ""}>
+            <label>Enroll / transfer to<Select name="sectionId" required defaultValue={student.sectionId ? String(student.sectionId) : ""}>
               <option value="" disabled>Choose…</option>
               {sections.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
-            </select></label>
+            </Select></label>
           </ActionForm>
         ) : null}
       </Card>
@@ -48,9 +50,9 @@ export default async function StudentDetailPage(props: { params: Promise<{ stude
           <h2>Edit student</h2>
           <ActionForm action={updateStudentAction} submitLabel="Save changes">
             <input type="hidden" name="studentId" value={String(student._id)} />
-            <label>First name<input name="firstName" required maxLength={60} defaultValue={student.firstName} /></label>
-            <label>Family name (optional)<input name="lastName" maxLength={60} defaultValue={student.lastName} /></label>
-            <label>Date of birth<input type="date" name="dateOfBirth" defaultValue={student.dateOfBirth ? new Date(student.dateOfBirth).toISOString().slice(0, 10) : ""} /></label>
+            <label>First name<Input name="firstName" required maxLength={60} defaultValue={student.firstName} /></label>
+            <label>Family name (optional)<Input name="lastName" maxLength={60} defaultValue={student.lastName} /></label>
+            <label>Date of birth<Input type="date" name="dateOfBirth" defaultValue={student.dateOfBirth ? new Date(student.dateOfBirth).toISOString().slice(0, 10) : ""} /></label>
           </ActionForm>
           <ActionForm action={setStudentStatusAction} submitLabel={student.status === "ACTIVE" ? "Withdraw student" : "Reactivate student"} className="inline-form">
             <input type="hidden" name="studentId" value={String(student._id)} />
@@ -70,10 +72,10 @@ export default async function StudentDetailPage(props: { params: Promise<{ stude
                 <ActionForm action={setGuardianConsentAction} submitLabel={g.consent?.sms ? "Turn off" : "Guardian agreed: turn on"} className="inline-form">
                   <input type="hidden" name="studentId" value={String(student._id)} /><input type="hidden" name="guardianId" value={String(g._id)} /><input type="hidden" name="sms" value={g.consent?.sms ? "false" : "true"} />
                   {g.consent?.sms ? null : (
-                    <select name="source" required defaultValue="" aria-label="How the guardian agreed">
+                    <Select name="source" required defaultValue="" aria-label="How the guardian agreed">
                       <option value="" disabled>How did they agree?</option>
                       <option value="VERBAL">Verbally</option><option value="WRITTEN_FORM">Signed form</option><option value="SMS_REPLY">SMS reply</option><option value="OTHER">Other</option>
-                    </select>
+                    </Select>
                   )}
                 </ActionForm>) : null}</td></tr>;
             })}
@@ -82,9 +84,9 @@ export default async function StudentDetailPage(props: { params: Promise<{ stude
         {canWrite ? (
           <ActionForm action={addGuardianAction} submitLabel="Link guardian">
             <input type="hidden" name="studentId" value={String(student._id)} />
-            <label>Guardian name<input name="guardianName" required maxLength={100} /></label>
-            <label>Mobile<input name="guardianPhone" required inputMode="tel" placeholder="01XXXXXXXXX" /></label>
-            <label>Relationship<input name="guardianRelationship" maxLength={30} placeholder="Mother" /></label>
+            <label>Guardian name<Input name="guardianName" required maxLength={100} /></label>
+            <label>Mobile<Input name="guardianPhone" required inputMode="tel" placeholder="01XXXXXXXXX" /></label>
+            <label>Relationship<Input name="guardianRelationship" maxLength={30} placeholder="Mother" /></label>
           </ActionForm>
         ) : null}
       </Card>

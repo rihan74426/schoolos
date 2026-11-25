@@ -79,14 +79,14 @@ export default async function StudentsPage(props: { searchParams: Promise<{ q?: 
         <Card className="mb-4">
           <div className="panel-heading"><h2>Add a student</h2><Link className="text-link" href="/admin/students/import">Import CSV →</Link></div>
           <ActionForm action={createStudentAction} submitLabel="Add student">
-            <label>Student ID<input name="studentNumber" required maxLength={30} /></label>
-            <label>Class / section<select name="sectionId" defaultValue=""><option value="">Enroll later</option>{sections.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}</select></label>
-            <label>First name<input name="firstName" required maxLength={60} /></label>
-            <label>Family name (optional)<input name="lastName" maxLength={60} /></label>
-            <label>Date of birth<input type="date" name="dateOfBirth" /></label>
-            <label>Guardian name (optional)<input name="guardianName" maxLength={100} /></label>
-            <label>Guardian mobile<input name="guardianPhone" inputMode="tel" placeholder="01XXXXXXXXX" /></label>
-            <label>Relationship<input name="guardianRelationship" maxLength={30} placeholder="Father" /></label>
+            <label>Student ID<Input name="studentNumber" required maxLength={30} /></label>
+            <label>Class / section<Select name="sectionId" defaultValue=""><option value="">Enroll later</option>{sections.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}</Select></label>
+            <label>First name<Input name="firstName" required maxLength={60} /></label>
+            <label>Family name (optional)<Input name="lastName" maxLength={60} /></label>
+            <label>Date of birth<Input type="date" name="dateOfBirth" /></label>
+            <label>Guardian name (optional)<Input name="guardianName" maxLength={100} /></label>
+            <label>Guardian mobile<Input name="guardianPhone" inputMode="tel" placeholder="01XXXXXXXXX" /></label>
+            <label>Relationship<Input name="guardianRelationship" maxLength={30} placeholder="Father" /></label>
           </ActionForm>
           {sections.length === 0 ? <p className="form-hint">No current-year sections yet. Create them in Settings to enroll students.</p> : null}
         </Card>

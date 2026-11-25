@@ -1,3 +1,4 @@
+import { buttonVariants } from "@/components/ui/button";
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
@@ -18,17 +19,17 @@ export default async function OnboardingPage() {
   const isBootstrapAvailable = !(await Institution.exists({})) && (await isBootstrapAllowed());
 
   return (
-    <main className="landing">
-      <section className="landing-card onboarding-card">
-        <p className="eyebrow">SCHOOLOS SETUP</p>
-        <h1>
+    <main className="grid min-h-dvh place-items-center bg-bg p-4">
+      <section className="w-full max-w-lg rounded-[20px] border border-line bg-surface p-6 shadow-card sm:p-8">
+        <p className="m-0 mb-2 text-xs font-bold uppercase tracking-[0.12em] text-fg-muted">SchoolOS setup</p>
+        <h1 className="m-0 mb-3 text-2xl font-bold text-fg">
           {isBootstrapAvailable
             ? "Set up your school"
             : "You need an invitation"}
         </h1>
         {isBootstrapAvailable ? (
           <>
-            <p>
+            <p className="m-0 text-sm leading-relaxed text-fg-muted">
               Create the first institution. Your signed-in account will become
               its owner.
             </p>
@@ -36,11 +37,11 @@ export default async function OnboardingPage() {
           </>
         ) : (
           <>
-            <p>
+            <p className="m-0 text-sm leading-relaxed text-fg-muted">
               Initial setup has already been claimed. Ask an institution owner
               to invite your account.
             </p>
-            <Link className="button-link" href="/">
+            <Link className={buttonVariants({ className: "mt-5" })} href="/">
               Return home
             </Link>
           </>

@@ -1,3 +1,4 @@
+import { Input } from "@/components/ui/input";
 import { currentUser } from "@clerk/nextjs/server";
 import { connectDb, Institution } from "@schoolos/db";
 import { ActionForm } from "@/components/admin/action-form";
@@ -24,10 +25,10 @@ export default async function WelcomePage() {
       <h1>Welcome to {school?.name ?? "your school"}{user?.firstName ? `, ${user.firstName}` : ""}</h1>
       <p className="muted">You joined as <strong>{role}</strong>. Tell us a little about yourself so colleagues and guardians know who you are.</p>
       <ActionForm action={saveProfileAction} submitLabel="Save and continue">
-        <label>Full name<input name="fullName" required minLength={2} maxLength={100} defaultValue={suggestedName} autoComplete="name" /></label>
-        <label>Mobile number<input name="phone" required inputMode="tel" placeholder="01XXXXXXXXX" defaultValue={profile?.phone ?? ""} autoComplete="tel" /></label>
-        <label>Designation (optional)<input name="designation" maxLength={80} placeholder="Assistant teacher" defaultValue={profile?.designation ?? ""} /></label>
-        <label>Subjects you teach (optional)<input name="subjects" maxLength={200} placeholder="Quran, Arabic, Math" defaultValue={profile?.subjects ?? ""} /></label>
+        <label>Full name<Input name="fullName" required minLength={2} maxLength={100} defaultValue={suggestedName} autoComplete="name" /></label>
+        <label>Mobile number<Input name="phone" required inputMode="tel" placeholder="01XXXXXXXXX" defaultValue={profile?.phone ?? ""} autoComplete="tel" /></label>
+        <label>Designation (optional)<Input name="designation" maxLength={80} placeholder="Assistant teacher" defaultValue={profile?.designation ?? ""} /></label>
+        <label>Subjects you teach (optional)<Input name="subjects" maxLength={200} placeholder="Quran, Arabic, Math" defaultValue={profile?.subjects ?? ""} /></label>
       </ActionForm>
     </section>
   );

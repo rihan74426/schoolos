@@ -1,3 +1,5 @@
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
 import Link from "next/link";
 import { can } from "@schoolos/core";
@@ -35,23 +37,23 @@ export default async function CommunicationsPage() {
           ) : null}
           <ActionForm action={saveChannelAction} submitLabel="Save channel">
             <label>Provider
-              <select name="provider" defaultValue={channel?.provider ?? "SMS_NET_BD"}>
+              <Select name="provider" defaultValue={channel?.provider ?? "SMS_NET_BD"}>
                 <option value="SMS_NET_BD">sms.net.bd</option>
                 {showFake ? <option value="FAKE">Test provider (sends nothing)</option> : null}
-              </select>
+              </Select>
             </label>
-            <label>Sender ID (approved masking name, optional)<input name="senderId" defaultValue={channel?.senderId ?? ""} maxLength={20} autoComplete="off" /></label>
-            <label>API key<input name="apiKey" type="password" autoComplete="off" placeholder={channel?.keyHint ? "Leave blank to keep the saved key" : "Paste the key from your provider panel"} /></label>
+            <label>Sender ID (approved masking name, optional)<Input name="senderId" defaultValue={channel?.senderId ?? ""} maxLength={20} autoComplete="off" /></label>
+            <label>API key<Input name="apiKey" type="password" autoComplete="off" placeholder={channel?.keyHint ? "Leave blank to keep the saved key" : "Paste the key from your provider panel"} /></label>
             <p className="form-hint">The key is encrypted before it is stored and is never shown again.</p>
           </ActionForm>
           <ActionForm action={setAlertLocaleAction} submitLabel="Save language">
             <label>Alert language
-              <select name="locale" defaultValue={locale}><option value="en">English</option><option value="bn">বাংলা (Bangla, up to 70 characters per SMS segment)</option></select>
+              <Select name="locale" defaultValue={locale}><option value="en">English</option><option value="bn">বাংলা (Bangla, up to 70 characters per SMS segment)</option></Select>
             </label>
           </ActionForm>
           {channel ? (
             <ActionForm action={testChannelAction} submitLabel="Send test SMS">
-              <label>Your mobile number<input name="phone" inputMode="tel" placeholder="01XXXXXXXXX" required /></label>
+              <label>Your mobile number<Input name="phone" inputMode="tel" placeholder="01XXXXXXXXX" required /></label>
             </ActionForm>
           ) : null}
         </Card>

@@ -28,12 +28,12 @@ export default async function SelectSchoolPage() {
   );
 
   return (
-    <main className="landing">
-      <section className="landing-card onboarding-card">
-        <p className="eyebrow">SCHOOLOS</p>
-        <h1>Choose an institution</h1>
-        <p>Select the school workspace you want to open.</p>
-        <div className="school-picker-list">
+    <main className="grid min-h-dvh place-items-center bg-bg p-4">
+      <section className="w-full max-w-lg rounded-[20px] border border-line bg-surface p-6 shadow-card sm:p-8">
+        <p className="m-0 mb-2 text-xs font-bold uppercase tracking-[0.12em] text-fg-muted">SchoolOS</p>
+        <h1 className="m-0 mb-2 text-2xl font-bold text-fg">Choose an institution</h1>
+        <p className="m-0 text-sm text-fg-muted">Select the school workspace you want to open.</p>
+        <div className="mt-5 grid gap-2.5">
           {memberships.map((membership, index) => {
             const institution = institutions[index];
             if (!institution) return null;
@@ -47,9 +47,9 @@ export default async function SelectSchoolPage() {
                   name="institutionId"
                   value={String(membership.institutionId)}
                 />
-                <button className="school-picker-option" type="submit">
-                  {institution.name}
-                  <span>Open workspace →</span>
+                <button className="flex min-h-14 w-full items-center justify-between gap-4 rounded-card border border-line bg-surface p-4 text-start text-fg transition duration-150 ease-brand hover:border-brand focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand" type="submit">
+                  <strong>{institution.name}</strong>
+                  <span className="text-sm text-brand">Open workspace →</span>
                 </button>
               </form>
             );

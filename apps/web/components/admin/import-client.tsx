@@ -1,4 +1,5 @@
 "use client";
+import { Select } from "@/components/ui/select";
 
 import { useState, useTransition } from "react";
 import { importStudentsAction } from "@/app/admin/students/actions";
@@ -32,10 +33,10 @@ export function ImportClient({ sections }: { sections: Array<{ id: string; label
         <input type="file" accept=".csv,text/csv" onChange={(e) => onFile(e.target.files?.[0])} />
       </label>
       <label>Enroll everyone in
-        <select value={sectionId} onChange={(e) => { setSectionId(e.target.value); setResult(null); }}>
+        <Select value={sectionId} onChange={(e) => { setSectionId(e.target.value); setResult(null); }}>
           <option value="">Don&apos;t enroll yet</option>
           {sections.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
-        </select>
+        </Select>
       </label>
       <button className="button-link" type="button" disabled={!text || pending} onClick={() => run(false)}>
         {pending ? "Checking…" : "Preview"}

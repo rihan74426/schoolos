@@ -1,4 +1,5 @@
 "use client";
+import { formGrid } from "@/lib/form-classes";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 
@@ -29,7 +30,7 @@ export function ImportClient({ sections }: { sections: Array<{ id: string; label
   const report = result && result.ok ? result : null;
 
   return (
-    <div className="form-grid">
+    <div className={formGrid}>
       <label className="wide">CSV file
         <input type="file" accept=".csv,text/csv" onChange={(e) => onFile(e.target.files?.[0])} />
       </label>
@@ -43,7 +44,7 @@ export function ImportClient({ sections }: { sections: Array<{ id: string; label
         {pending ? "Checking…" : "Preview"}
       </Button>
 
-      {result && !result.ok ? <p role="alert" className="form-error wide">{result.error}</p> : null}
+      {result && !result.ok ? <p role="alert" className="form-error md:col-span-2">{result.error}</p> : null}
 
       {report ? (
         <div className="wide import-report">

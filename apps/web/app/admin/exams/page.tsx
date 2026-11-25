@@ -1,3 +1,4 @@
+import { plainList } from "@/lib/form-classes";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
@@ -26,7 +27,7 @@ export default async function ExamsPage() {
       {mine.length ? (
         <Card className="mb-4">
           <h2>Marks to enter</h2>
-          <ul className="plain-list">{mine.map((m) => <li key={m.assessmentId}><Link href={`/admin/exams/sheets/${m.assessmentId}`}>{m.exam} · {m.subject} · {m.section}</Link>{m.returnReason ? <span className="form-error"> Sent back: {m.returnReason}</span> : null} <span className="muted small">{m.entered} entered</span></li>)}</ul>
+          <ul className={plainList}>{mine.map((m) => <li key={m.assessmentId}><Link href={`/admin/exams/sheets/${m.assessmentId}`}>{m.exam} · {m.subject} · {m.section}</Link>{m.returnReason ? <span className="form-error"> Sent back: {m.returnReason}</span> : null} <span className="muted small">{m.entered} entered</span></li>)}</ul>
         </Card>
       ) : null}
       {can(actor.role, "exams:approve") ? <p><Link href="/admin/exams/approvals">Approval queue →</Link></p> : null}

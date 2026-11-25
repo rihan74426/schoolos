@@ -1,3 +1,4 @@
+import { inlineForm, plainList } from "@/lib/form-classes";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
@@ -53,7 +54,7 @@ export default async function ExamPage(props: { params: Promise<{ examId: string
             <tr key={p.id}>
               <td>{p.section}</td><td>{p.subject}{p.isCore ? " ★" : ""}</td>
               <td>{draft && canWrite ? (
-                <ActionForm action={updateAssessmentAction} submitLabel="Save" className="inline-form">
+                <ActionForm action={updateAssessmentAction} submitLabel="Save" className={inlineForm}>
                   <input type="hidden" name="assessmentId" value={p.id} />
                   <Input name="maxMarks" type="number" min={1} max={1000} defaultValue={p.maxMarks} aria-label="Full marks" />
                   <Input name="date" type="date" defaultValue={p.date ?? ""} aria-label="Exam date" />
@@ -77,8 +78,8 @@ export default async function ExamPage(props: { params: Promise<{ examId: string
           </ActionForm>
           {!draft ? (<>
             <h3>Pass a student by decision</h3>
-            {d.overrides.length ? <ul className="plain-list">{d.overrides.map((o) => <li key={o.studentId}>{o.student}: {o.reason}
-              <ActionForm action={setPassOverrideAction} submitLabel="Remove" className="inline-form"><input type="hidden" name="examId" value={exam.id} /><input type="hidden" name="studentId" value={o.studentId} /><input type="hidden" name="remove" value="1" /><input type="hidden" name="reason" value="Removing the earlier decision" /></ActionForm></li>)}</ul> : null}
+            {d.overrides.length ? <ul className={plainList}>{d.overrides.map((o) => <li key={o.studentId}>{o.student}: {o.reason}
+              <ActionForm action={setPassOverrideAction} submitLabel="Remove" className={inlineForm}><input type="hidden" name="examId" value={exam.id} /><input type="hidden" name="studentId" value={o.studentId} /><input type="hidden" name="remove" value="1" /><input type="hidden" name="reason" value="Removing the earlier decision" /></ActionForm></li>)}</ul> : null}
             <ActionForm action={setPassOverrideAction} submitLabel="Pass this student">
               <input type="hidden" name="examId" value={exam.id} />
               <label>Student<Select name="studentId" required>{d.students.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}</Select></label>

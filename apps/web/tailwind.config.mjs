@@ -3,7 +3,7 @@ import plugin from "tailwindcss/plugin";
 /** @type {import('tailwindcss').Config} */
 const config = {
   // Colours are CSS variables (app/tokens.css), so light/dark switching needs no `dark:` variants.
-  content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}"],
+  content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./lib/**/*.{ts,tsx}"],
   // Legacy hand-written CSS (globals.css, admin.css) still relies on browser defaults. Turn preflight on
   // only after the last legacy class is gone.
   corePlugins: { preflight: false },

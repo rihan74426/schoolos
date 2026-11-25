@@ -1,3 +1,4 @@
+import { inlineForm, plainList } from "@/lib/form-classes";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
@@ -54,7 +55,7 @@ export default async function StudentDetailPage(props: { params: Promise<{ stude
             <label>Family name (optional)<Input name="lastName" maxLength={60} defaultValue={student.lastName} /></label>
             <label>Date of birth<Input type="date" name="dateOfBirth" defaultValue={student.dateOfBirth ? new Date(student.dateOfBirth).toISOString().slice(0, 10) : ""} /></label>
           </ActionForm>
-          <ActionForm action={setStudentStatusAction} submitLabel={student.status === "ACTIVE" ? "Withdraw student" : "Reactivate student"} className="inline-form">
+          <ActionForm action={setStudentStatusAction} submitLabel={student.status === "ACTIVE" ? "Withdraw student" : "Reactivate student"} className={inlineForm}>
             <input type="hidden" name="studentId" value={String(student._id)} />
             <input type="hidden" name="status" value={student.status === "ACTIVE" ? "WITHDRAWN" : "ACTIVE"} />
           </ActionForm>
@@ -69,7 +70,7 @@ export default async function StudentDetailPage(props: { params: Promise<{ stude
             {guardians.map((g) => {
               const link = g.studentLinks.find((l) => String(l.studentId) === String(student._id));
               return <tr key={String(g._id)}><td>{g.fullName}{link?.isPrimary ? <span className="badge"> primary</span> : null}</td><td>{link?.relationship}</td><td>{g.phone ?? "—"}</td><td>{g.consent?.sms ? <span className="badge">on</span> : <span className="muted">off</span>}{canWrite && g.phone ? (
-                <ActionForm action={setGuardianConsentAction} submitLabel={g.consent?.sms ? "Turn off" : "Guardian agreed: turn on"} className="inline-form">
+                <ActionForm action={setGuardianConsentAction} submitLabel={g.consent?.sms ? "Turn off" : "Guardian agreed: turn on"} className={inlineForm}>
                   <input type="hidden" name="studentId" value={String(student._id)} /><input type="hidden" name="guardianId" value={String(g._id)} /><input type="hidden" name="sms" value={g.consent?.sms ? "false" : "true"} />
                   {g.consent?.sms ? null : (
                     <Select name="source" required defaultValue="" aria-label="How the guardian agreed">
@@ -94,7 +95,7 @@ export default async function StudentDetailPage(props: { params: Promise<{ stude
       <Card className="mb-4">
         <h2>Enrollment history</h2>
         {enrollments.length ? (
-          <ul className="plain-list">{enrollments.map((e) => <li key={String(e._id)}>{e.startsOn} — {sectionLabel.get(String(e.sectionId)) ?? "Earlier section"} ({e.status.toLowerCase()})</li>)}</ul>
+          <ul className={plainList}>{enrollments.map((e) => <li key={String(e._id)}>{e.startsOn} — {sectionLabel.get(String(e.sectionId)) ?? "Earlier section"} ({e.status.toLowerCase()})</li>)}</ul>
         ) : <p className="muted small">No enrollments yet.</p>}
         <Link className="text-link" href="/admin/students">← Back to students</Link>
       </Card>

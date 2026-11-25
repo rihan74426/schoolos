@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
+import { formGrid } from "@/lib/form-classes";
 import { cn } from "@/lib/utils";
 
 type State = { ok: boolean; message: string } | null;
@@ -21,7 +22,7 @@ export function ActionForm({
   action,
   submitLabel,
   children,
-  className = "form-grid",
+  className = formGrid,
 }: {
   action: (state: State, formData: FormData) => Promise<State>;
   submitLabel: string;

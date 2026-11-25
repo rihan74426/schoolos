@@ -1,3 +1,4 @@
+import { inlineForm, plainList } from "@/lib/form-classes";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
@@ -105,7 +106,7 @@ export default async function SettingsPage() {
           <div className="table-scroll"><table><thead><tr><th>Name</th><th>Dates</th><th>Status</th>{canStructure ? <th /> : null}</tr></thead><tbody>
             {data.years.map((y) => (
               <tr key={String(y._id)}><td>{y.name}</td><td>{y.startsOn} → {y.endsOn}</td><td>{y.isCurrent ? <span className="badge">Current</span> : "—"}</td>
-                {canStructure ? <td>{y.isCurrent ? null : <ActionForm action={setCurrentYearAction} submitLabel="Make current" className="inline-form"><input type="hidden" name="yearId" value={String(y._id)} /></ActionForm>}</td> : null}</tr>
+                {canStructure ? <td>{y.isCurrent ? null : <ActionForm action={setCurrentYearAction} submitLabel="Make current" className={inlineForm}><input type="hidden" name="yearId" value={String(y._id)} /></ActionForm>}</td> : null}</tr>
             ))}</tbody></table></div>
         ) : <p className="empty-state">No academic year yet. Add one to start.</p>}
         {canStructure ? (
@@ -121,7 +122,7 @@ export default async function SettingsPage() {
       <Card className="mb-4" id="classes">
         <h2>Classes and sections</h2>
         <p className="muted small">{data.gradeLevels.length ? data.gradeLevels.map((g) => g.name).join(" · ") : "No classes yet."}</p>
-        {data.sections.length ? <ul className="plain-list">{data.sections.map((s) => <li key={String(s._id)}>{sectionLabel.get(String(s._id))}</li>)}</ul> : null}
+        {data.sections.length ? <ul className={plainList}>{data.sections.map((s) => <li key={String(s._id)}>{sectionLabel.get(String(s._id))}</li>)}</ul> : null}
         {canStructure ? (<>
           <ActionForm action={createGradeLevelAction} submitLabel="Add class">
             <label>Class name<Input name="name" required maxLength={60} placeholder="Class 6 / Hifz" /></label>
@@ -146,7 +147,7 @@ export default async function SettingsPage() {
             <div className="table-scroll"><table><thead><tr><th>Role</th><th>Note</th><th>Expires</th><th /></tr></thead><tbody>
               {invites.map((i) => (
                 <tr key={String(i._id)}><td>{i.role.replace(/_/g, " ").toLowerCase()}</td><td>{i.inviteeNote ?? "—"}</td><td>{new Date(i.expiresAt).toISOString().slice(0, 10)}</td>
-                  <td><ActionForm action={revokeInviteAction} submitLabel="Revoke" className="inline-form"><input type="hidden" name="invitationId" value={String(i._id)} /></ActionForm></td></tr>
+                  <td><ActionForm action={revokeInviteAction} submitLabel="Revoke" className={inlineForm}><input type="hidden" name="invitationId" value={String(i._id)} /></ActionForm></td></tr>
               ))}</tbody></table></div>
           ) : null}
         </Card>
@@ -159,7 +160,7 @@ export default async function SettingsPage() {
           <div className="table-scroll"><table><thead><tr><th>Code</th><th>Subject</th><th>Core</th>{canStructure ? <th /> : null}</tr></thead><tbody>
             {subjectData.subjects.map((x) => (
               <tr key={x.id}><td>{x.code}</td><td>{x.name}</td><td>{x.isCore ? "Yes" : "No"}</td>
-                {canStructure ? <td><ActionForm action={setSubjectCoreAction} submitLabel={x.isCore ? "Make not core" : "Make core"} className="inline-form"><input type="hidden" name="subjectId" value={x.id} /><input type="hidden" name="isCore" value={x.isCore ? "0" : "1"} /></ActionForm></td> : null}</tr>
+                {canStructure ? <td><ActionForm action={setSubjectCoreAction} submitLabel={x.isCore ? "Make not core" : "Make core"} className={inlineForm}><input type="hidden" name="subjectId" value={x.id} /><input type="hidden" name="isCore" value={x.isCore ? "0" : "1"} /></ActionForm></td> : null}</tr>
             ))}</tbody></table></div>
         ) : <p className="empty-state">No subjects yet.</p>}
         {canStructure ? (
@@ -175,9 +176,9 @@ export default async function SettingsPage() {
           return (
             <div key={l.id}>
               <strong>{l.name}</strong>
-              {rows.length ? <ul className="plain-list">{rows.map((m) => (
+              {rows.length ? <ul className={plainList}>{rows.map((m) => (
                 <li key={m.id}>{subjectName.get(m.subjectId) ?? "?"} · full marks {m.defaultMaxMarks}
-                  {canStructure ? <ActionForm action={unmapSubjectAction} submitLabel="Remove" className="inline-form"><input type="hidden" name="gradeLevelId" value={l.id} /><input type="hidden" name="subjectId" value={m.subjectId} /></ActionForm> : null}</li>
+                  {canStructure ? <ActionForm action={unmapSubjectAction} submitLabel="Remove" className={inlineForm}><input type="hidden" name="gradeLevelId" value={l.id} /><input type="hidden" name="subjectId" value={m.subjectId} /></ActionForm> : null}</li>
               ))}</ul> : <p className="muted small">No subjects mapped.</p>}
             </div>
           );
@@ -198,7 +199,7 @@ export default async function SettingsPage() {
           <div className="table-scroll"><table><thead><tr><th>Teacher</th><th>Section</th><th>Subject</th>{canAssign ? <th /> : null}</tr></thead><tbody>
             {data.assignments.map((a) => (
               <tr key={String(a._id)}><td>{teacherLabel.get(String(a.membershipId)) ?? "Unknown"}</td><td>{sectionLabel.get(String(a.sectionId)) ?? "Unknown"}</td><td>{a.subjectId ? subjectName.get(String(a.subjectId)) ?? "Unknown" : "Class teacher"}</td>
-                {canAssign ? <td><ActionForm action={endAssignmentAction} submitLabel="End" className="inline-form"><input type="hidden" name="assignmentId" value={String(a._id)} /></ActionForm></td> : null}</tr>
+                {canAssign ? <td><ActionForm action={endAssignmentAction} submitLabel="End" className={inlineForm}><input type="hidden" name="assignmentId" value={String(a._id)} /></ActionForm></td> : null}</tr>
             ))}</tbody></table></div>
         ) : <p className="empty-state">No assignments yet.</p>}
         {canAssign ? (

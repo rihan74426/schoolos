@@ -1,4 +1,5 @@
 "use client";
+import { formGrid } from "@/lib/form-classes";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -35,7 +36,7 @@ export function InviteForm({
   }
 
   return (
-    <form action={formAction} className="form-grid">
+    <form action={formAction} className={formGrid}>
       <label>Role
         <Select name="role" defaultValue="TEACHER">
           {roles.map((r) => <option key={r} value={r}>{r.replace(/_/g, " ").toLowerCase()}</option>)}

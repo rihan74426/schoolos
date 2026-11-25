@@ -21,7 +21,7 @@ export function MobileNav({ items, moreLabel }: { items: Item[]; moreLabel: stri
   const tab = "grid min-h-14 min-w-0 justify-items-center gap-0.5 px-0.5 py-2 text-xs text-fg-muted";
 
   return (
-    <nav className="tabbar" aria-label="Quick navigation">
+    <nav aria-label="Quick navigation" className="fixed inset-x-0 bottom-0 z-20 grid auto-cols-fr grid-flow-col border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] md:hidden print:hidden">
       {primary.map((item) => (
         <Link key={item.href} href={item.href} className={cn(tab, isActive(pathname, item.href) && "font-semibold text-brand")} aria-current={isActive(pathname, item.href) ? "page" : undefined}>
           <span aria-hidden="true" className="text-lg leading-none">{item.icon}</span>

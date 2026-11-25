@@ -1,3 +1,4 @@
+import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
@@ -23,7 +24,7 @@ export default async function CommunicationsPage() {
   return (
     <>
       <PageHeading title="Communications" description="Notices and guardian alerts. Each school connects its own SMS provider." />
-      <p><Link className="button-link" href="/admin/communications/log">Delivery log</Link></p>
+      <p><Link className={buttonVariants({ variant: "secondary" })} href="/admin/communications/log">Delivery log</Link></p>
       {canConfigure ? (
         <Card className="mb-4" id="sms">
           <h2>SMS provider</h2>

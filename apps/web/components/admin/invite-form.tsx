@@ -1,4 +1,5 @@
 "use client";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 
@@ -9,7 +10,7 @@ import type { InviteState } from "@/app/admin/settings/actions";
 
 function Submit() {
   const { pending } = useFormStatus();
-  return <button className="button-link" type="submit" disabled={pending}>{pending ? "Creating…" : "Create invite link"}</button>;
+  return <Button type="submit" disabled={pending}>{pending ? "Creating…" : "Create invite link"}</Button>;
 }
 
 export function InviteForm({
@@ -49,12 +50,12 @@ export function InviteForm({
         <div className="wide invite-share">
           <Input readOnly value={state.link} aria-label="Invite link" onFocus={(e) => e.currentTarget.select()} />
           <div className="invite-actions">
-            <button type="button" className="button-link" onClick={copy}>{copied ? "Copied" : "Copy link"}</button>
-            <a className="button-link" target="_blank" rel="noopener noreferrer" href={`https://wa.me/?text=${encodeURIComponent(state.shareText ?? state.link)}`}>WhatsApp</a>
+            <Button type="button" onClick={copy}>{copied ? "Copied" : "Copy link"}</Button>
+            <a className={buttonVariants({ variant: "secondary" })} target="_blank" rel="noopener noreferrer" href={`https://wa.me/?text=${encodeURIComponent(state.shareText ?? state.link)}`}>WhatsApp</a>
             {canShare ? (
-              <button type="button" className="button-link" onClick={() => navigator.share({ text: state.shareText, url: state.link }).catch(() => null)}>
+              <Button type="button" onClick={() => navigator.share({ text: state.shareText, url: state.link }).catch(() => null)}>
                 Messenger / other apps
-              </button>
+              </Button>
             ) : null}
           </div>
         </div>

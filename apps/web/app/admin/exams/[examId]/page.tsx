@@ -1,3 +1,4 @@
+import { Notice } from "@/components/ui/notice";
 import { inlineForm, plainList } from "@/lib/form-classes";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -21,7 +22,7 @@ export default async function ExamPage(props: { params: Promise<{ examId: string
   await connectDb();
   if (!can(actor.role, "exams:read")) return <Card className="mb-4"><p className="muted">Your role cannot view exams.</p></Card>;
   const d = await getExamDetail(actor, params.examId);
-  if (!d) return <><PageHeading title="Exam" description="" /><Card className="mb-4"><p className="form-error">Exam not found.</p></Card></>;
+  if (!d) return <><PageHeading title="Exam" description="" /><Card className="mb-4"><Notice tone="error">Exam not found.</Notice></Card></>;
   const { exam } = d;
   const draft = exam.status === "DRAFT";
   const published = exam.status === "PUBLISHED";
@@ -97,7 +98,7 @@ export default async function ExamPage(props: { params: Promise<{ examId: string
         </Card>
       ) : null}
 
-      {corrections.length ? <p className="form-hint">{corrections.length} correction(s) waiting. <Link href="/admin/exams/approvals">Review</Link></p> : null}
+      {corrections.length ? <Notice tone="hint">{corrections.length} correction(s) waiting. <Link href="/admin/exams/approvals">Review</Link></Notice> : null}
     </>
   );
 }

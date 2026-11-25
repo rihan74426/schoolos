@@ -1,3 +1,4 @@
+import { Notice } from "@/components/ui/notice";
 import Link from "next/link";
 import { can } from "@schoolos/core";
 import { connectDb } from "@schoolos/db";
@@ -88,7 +89,7 @@ export default async function StudentsPage(props: { searchParams: Promise<{ q?: 
             <label>Guardian mobile<Input name="guardianPhone" inputMode="tel" placeholder="01XXXXXXXXX" /></label>
             <label>Relationship<Input name="guardianRelationship" maxLength={30} placeholder="Father" /></label>
           </ActionForm>
-          {sections.length === 0 ? <p className="form-hint">No current-year sections yet. Create them in Settings to enroll students.</p> : null}
+          {sections.length === 0 ? <Notice tone="hint">No current-year sections yet. Create them in Settings to enroll students.</Notice> : null}
         </Card>
       ) : null}
     </>

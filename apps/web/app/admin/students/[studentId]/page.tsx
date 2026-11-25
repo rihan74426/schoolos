@@ -1,3 +1,5 @@
+import { Notice } from "@/components/ui/notice";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { inlineForm, plainList } from "@/lib/form-classes";
 import { Input } from "@/components/ui/input";
@@ -60,7 +62,7 @@ export default async function StudentDetailPage(props: { params: Promise<{ stude
             <input type="hidden" name="studentId" value={String(student._id)} />
             <input type="hidden" name="status" value={student.status === "ACTIVE" ? "WITHDRAWN" : "ACTIVE"} />
           </ActionForm>
-          {student.status === "ACTIVE" ? <p className="form-hint">Withdrawing removes the student from class rosters. Records and history are kept.</p> : <p className="form-hint">Reactivating does not restore a class. Enroll the student again afterwards.</p>}
+          {student.status === "ACTIVE" ? <Notice tone="hint">Withdrawing removes the student from class rosters. Records and history are kept.</Notice> : <Notice tone="hint">Reactivating does not restore a class. Enroll the student again afterwards.</Notice>}
         </Card>
       ) : null}
 
@@ -82,7 +84,7 @@ export default async function StudentDetailPage(props: { params: Promise<{ stude
                 </ActionForm>) : null}</td></tr>;
             })}
           </tbody></table></div>
-        ) : <p className="empty-state">No guardian linked yet.</p>}
+        ) : <EmptyState title="No guardian linked yet." />}
         {canWrite ? (
           <ActionForm action={addGuardianAction} submitLabel="Link guardian">
             <input type="hidden" name="studentId" value={String(student._id)} />

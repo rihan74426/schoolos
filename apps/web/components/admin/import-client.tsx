@@ -1,4 +1,5 @@
 "use client";
+import { Notice } from "@/components/ui/notice";
 import { formGrid } from "@/lib/form-classes";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
@@ -44,11 +45,11 @@ export function ImportClient({ sections }: { sections: Array<{ id: string; label
         {pending ? "Checking…" : "Preview"}
       </Button>
 
-      {result && !result.ok ? <p role="alert" className="form-error md:col-span-2">{result.error}</p> : null}
+      {result && !result.ok ? <Notice tone="error" className="md:col-span-2">{result.error}</Notice> : null}
 
       {report ? (
         <div className="wide import-report">
-          <p role="status" className={report.committed ? "form-ok" : "muted"}>
+          <p role="status" className={report.committed ? "text-ok" : "text-fg-muted"}>
             {report.committed
               ? `Imported ${report.validCount} students.${report.errors.length ? ` ${report.errors.length} problem(s) were skipped.` : ""}`
               : `${fileName}: ${report.validCount} of ${report.total} rows are ready. Rows with problems are skipped.`}

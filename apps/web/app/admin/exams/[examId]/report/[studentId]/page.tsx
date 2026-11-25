@@ -1,3 +1,4 @@
+import { Notice } from "@/components/ui/notice";
 import { Card } from "@/components/ui/card";
 import Link from "next/link";
 import { can } from "@schoolos/core";
@@ -17,7 +18,7 @@ export default async function ReportCardPage(props: { params: Promise<{ examId: 
   await connectDb();
   if (!can(actor.role, "exams:read")) return <Card className="mb-4"><p className="muted">Your role cannot view results.</p></Card>;
   const c = await getReportCard(actor, params.examId, params.studentId);
-  if (!c) return <Card className="mb-4"><p className="form-error">Report card not found. Results may not be published yet.</p></Card>;
+  if (!c) return <Card className="mb-4"><Notice tone="error">Report card not found. Results may not be published yet.</Notice></Card>;
   const t = reportLabels(c.locale);
   const r = c.result;
   const rows = r.subjects as unknown as SubjectRow[];

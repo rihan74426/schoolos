@@ -1,3 +1,4 @@
+import { Badge } from "@/components/ui/badge";
 import { inlineForm, plainList } from "@/lib/form-classes";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -69,7 +70,7 @@ export default async function StudentDetailPage(props: { params: Promise<{ stude
           <div className="table-scroll"><table><thead><tr><th>Name</th><th>Relationship</th><th>Mobile</th><th>SMS alerts</th></tr></thead><tbody>
             {guardians.map((g) => {
               const link = g.studentLinks.find((l) => String(l.studentId) === String(student._id));
-              return <tr key={String(g._id)}><td>{g.fullName}{link?.isPrimary ? <span className="badge"> primary</span> : null}</td><td>{link?.relationship}</td><td>{g.phone ?? "—"}</td><td>{g.consent?.sms ? <span className="badge">on</span> : <span className="muted">off</span>}{canWrite && g.phone ? (
+              return <tr key={String(g._id)}><td>{g.fullName}{link?.isPrimary ? <Badge> primary</Badge> : null}</td><td>{link?.relationship}</td><td>{g.phone ?? "—"}</td><td>{g.consent?.sms ? <Badge>on</Badge> : <span className="muted">off</span>}{canWrite && g.phone ? (
                 <ActionForm action={setGuardianConsentAction} submitLabel={g.consent?.sms ? "Turn off" : "Guardian agreed: turn on"} className={inlineForm}>
                   <input type="hidden" name="studentId" value={String(student._id)} /><input type="hidden" name="guardianId" value={String(g._id)} /><input type="hidden" name="sms" value={g.consent?.sms ? "false" : "true"} />
                   {g.consent?.sms ? null : (

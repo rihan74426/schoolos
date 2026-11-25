@@ -1,3 +1,4 @@
+import { buttonVariants } from "@/components/ui/button";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { STAFF_PROFILE_ROLES } from "@schoolos/core";
@@ -52,7 +53,7 @@ export default async function DashboardPage() {
             <h2>Set up your institution</h2>
             <p className="muted">Next: {progress.next.title.toLowerCase()}.</p>
           </div>
-          <Link className="button-link" href={progress.next.href}>Continue setup</Link>
+          <Link className={buttonVariants()} href={progress.next.href}>Continue setup</Link>
         </section>
       ) : null}
       <section className="content-section">

@@ -1,4 +1,5 @@
 "use client";
+import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 
 import { useState, useTransition } from "react";
@@ -38,9 +39,9 @@ export function ImportClient({ sections }: { sections: Array<{ id: string; label
           {sections.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
         </Select>
       </label>
-      <button className="button-link" type="button" disabled={!text || pending} onClick={() => run(false)}>
+      <Button type="button" disabled={!text || pending} onClick={() => run(false)}>
         {pending ? "Checking…" : "Preview"}
-      </button>
+      </Button>
 
       {result && !result.ok ? <p role="alert" className="form-error wide">{result.error}</p> : null}
 
@@ -65,9 +66,9 @@ export function ImportClient({ sections }: { sections: Array<{ id: string; label
             </div>
           ) : null}
           {!report.committed && report.validCount > 0 ? (
-            <button className="button-link" type="button" disabled={pending} onClick={() => run(true)}>
+            <Button type="button" disabled={pending} onClick={() => run(true)}>
               {pending ? "Importing…" : `Import ${report.validCount} students`}
-            </button>
+            </Button>
           ) : null}
         </div>
       ) : null}

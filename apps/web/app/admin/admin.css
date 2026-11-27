@@ -42,11 +42,6 @@ td {
   text-align: start;
   border-bottom: 1px solid var(--border);
 }
-.empty-state {
-  padding: 28px;
-  text-align: center;
-  color: var(--text-2);
-}
 .panel-heading {
   display: flex;
   align-items: center;
@@ -61,18 +56,6 @@ td {
 }
 
 /* Settings forms (mobile-first) */
-.form-ok {
-  color: var(--ok);
-  font-size: 13px;
-}
-.form-error {
-  color: var(--err);
-  font-size: 13px;
-}
-.form-hint {
-  color: var(--text-2);
-  font-size: 12px;
-}
 .invite-share {
   display: grid;
   gap: 8px;
@@ -135,7 +118,6 @@ td {
 
 /* Premium polish: gradients, glass topbar, depth. Motion only when the user allows it. */
 .panel { transition: box-shadow 0.2s var(--ease); }
-.empty-state { border: 1px dashed var(--border-strong); border-radius: var(--radius); background: var(--surface-2); }
 
 /* Legacy form and panel polish (until pages move to ui components) */
 .panel { margin-block-end: 16px; }

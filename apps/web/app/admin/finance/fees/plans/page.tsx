@@ -1,3 +1,4 @@
+import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
@@ -30,7 +31,7 @@ export default async function PlansPage() {
             <strong>{p.name}</strong> <span className="muted">{p.year} · {p.level} · {formatMinor(p.totalMinor)}</span>
             <ul>{p.lines.map((l) => <li key={l.title}>{l.title}: {formatMinor(l.amountMinor)}</li>)}</ul>
           </div>
-        )) : <p className="empty-state">No fee plans yet.</p>}
+        )) : <EmptyState title="No fee plans yet." />}
       </Card>
       {canPlan ? (
         <Card className="mb-4">

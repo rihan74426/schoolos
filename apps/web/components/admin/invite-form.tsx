@@ -1,4 +1,5 @@
 "use client";
+import { Notice } from "@/components/ui/notice";
 import { formGrid } from "@/lib/form-classes";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,7 +47,7 @@ export function InviteForm({
         <Input name="inviteeNote" maxLength={80} placeholder="e.g. Maulana Karim, Class 6" />
       </label>
       <Submit />
-      {state ? <p role={state.ok ? "status" : "alert"} className={state.ok ? "form-ok" : "form-error"}>{state.message}</p> : null}
+      {state ? <Notice tone={state.ok ? "ok" : "error"}>{state.message}</Notice> : null}
       {state?.ok && state.link ? (
         <div className="wide invite-share">
           <Input readOnly value={state.link} aria-label="Invite link" onFocus={(e) => e.currentTarget.select()} />

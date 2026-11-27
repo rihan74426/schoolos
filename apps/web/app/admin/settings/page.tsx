@@ -1,3 +1,5 @@
+import { Notice } from "@/components/ui/notice";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { inlineForm, plainList } from "@/lib/form-classes";
 import { Input } from "@/components/ui/input";
@@ -109,7 +111,7 @@ export default async function SettingsPage() {
               <tr key={String(y._id)}><td>{y.name}</td><td>{y.startsOn} → {y.endsOn}</td><td>{y.isCurrent ? <Badge>Current</Badge> : "—"}</td>
                 {canStructure ? <td>{y.isCurrent ? null : <ActionForm action={setCurrentYearAction} submitLabel="Make current" className={inlineForm}><input type="hidden" name="yearId" value={String(y._id)} /></ActionForm>}</td> : null}</tr>
             ))}</tbody></table></div>
-        ) : <p className="empty-state">No academic year yet. Add one to start.</p>}
+        ) : <EmptyState title="No academic year yet. Add one to start." />}
         {canStructure ? (
           <ActionForm action={createYearAction} submitLabel="Add year">
             <label>Name<Input name="name" required maxLength={40} placeholder="2026" /></label>
@@ -135,7 +137,7 @@ export default async function SettingsPage() {
               <label>Class<Select name="gradeLevelId" required>{data.gradeLevels.map((g) => <option key={String(g._id)} value={String(g._id)}>{g.name}</option>)}</Select></label>
               <label>Section<Input name="name" required maxLength={40} placeholder="A" /></label>
             </ActionForm>
-          ) : <p className="form-hint">Add an academic year and a class to create sections.</p>}
+          ) : <Notice tone="hint">Add an academic year and a class to create sections.</Notice>}
         </>) : null}
       </Card>
 
@@ -163,7 +165,7 @@ export default async function SettingsPage() {
               <tr key={x.id}><td>{x.code}</td><td>{x.name}</td><td>{x.isCore ? "Yes" : "No"}</td>
                 {canStructure ? <td><ActionForm action={setSubjectCoreAction} submitLabel={x.isCore ? "Make not core" : "Make core"} className={inlineForm}><input type="hidden" name="subjectId" value={x.id} /><input type="hidden" name="isCore" value={x.isCore ? "0" : "1"} /></ActionForm></td> : null}</tr>
             ))}</tbody></table></div>
-        ) : <p className="empty-state">No subjects yet.</p>}
+        ) : <EmptyState title="No subjects yet." />}
         {canStructure ? (
           <ActionForm action={createSubjectAction} submitLabel="Add subject">
             <label>Code<Input name="code" required maxLength={12} placeholder="MATH" /></label>
@@ -202,7 +204,7 @@ export default async function SettingsPage() {
               <tr key={String(a._id)}><td>{teacherLabel.get(String(a.membershipId)) ?? "Unknown"}</td><td>{sectionLabel.get(String(a.sectionId)) ?? "Unknown"}</td><td>{a.subjectId ? subjectName.get(String(a.subjectId)) ?? "Unknown" : "Class teacher"}</td>
                 {canAssign ? <td><ActionForm action={endAssignmentAction} submitLabel="End" className={inlineForm}><input type="hidden" name="assignmentId" value={String(a._id)} /></ActionForm></td> : null}</tr>
             ))}</tbody></table></div>
-        ) : <p className="empty-state">No assignments yet.</p>}
+        ) : <EmptyState title="No assignments yet." />}
         {canAssign ? (
           data.teachers.length && data.sections.length ? (
             <ActionForm action={assignTeacherAction} submitLabel="Assign">
@@ -210,7 +212,7 @@ export default async function SettingsPage() {
               <label>Section<Select name="sectionId" required>{data.sections.map((s) => <option key={String(s._id)} value={String(s._id)}>{sectionLabel.get(String(s._id))}</option>)}</Select></label>
               <label>Subject<Select name="subjectId"><option value="">Class teacher (attendance)</option>{subjectData.subjects.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}</Select></label>
             </ActionForm>
-          ) : <p className="form-hint">Needs at least one section and one staff member with the Teacher role.</p>
+          ) : <Notice tone="hint">Needs at least one section and one staff member with the Teacher role.</Notice>
         ) : null}
       </Card>
 
@@ -231,7 +233,7 @@ export default async function SettingsPage() {
               <label>Cap % (per-day only)<Input type="number" name="capPercent" min={0} max={100} defaultValue={late?.capPercent ?? 100} /></label>
             </ActionForm>
           ) : <p className="muted">Only owners and admins can change rules.</p>
-        ) : <p className="empty-state">No rules saved for this school yet.</p>}
+        ) : <EmptyState title="No rules saved for this school yet." />}
       </Card>
 
       <Card className="mb-4" id="grading">

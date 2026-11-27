@@ -1,3 +1,4 @@
+import { Notice } from "@/components/ui/notice";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,7 +23,7 @@ export default async function InvoicePage(props: { params: Promise<{ invoiceId: 
   await connectDb();
   if (!can(actor.role, "fees:read")) return <Card className="mb-4"><p className="muted">Your role cannot view fees.</p></Card>;
   const d = await getInvoiceDetail(actor, params.invoiceId);
-  if (!d) return <><PageHeading title="Invoice" description="" /><Card className="mb-4"><p className="form-error">Invoice not found.</p></Card></>;
+  if (!d) return <><PageHeading title="Invoice" description="" /><Card className="mb-4"><Notice tone="error">Invoice not found.</Notice></Card></>;
   const { invoice: inv, summary: s, currency: c } = d;
   const money = (n: number) => formatMinor(n, c);
   const open = inv.status === "OPEN";

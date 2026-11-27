@@ -1,3 +1,4 @@
+import { Notice } from "@/components/ui/notice";
 import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -34,7 +35,7 @@ export default async function CommunicationsPage() {
               : "No provider yet. Create an account with a BTRC-listed provider, then paste its API key here."}
           </p>
           {channel?.lastTest ? (
-            <p className={channel.lastTest.ok ? "form-ok" : "form-error"}>Last test: {channel.lastTest.ok ? "passed" : "failed"}. {channel.lastTest.detail}</p>
+            <Notice tone={channel.lastTest.ok ? "ok" : "error"}>Last test: {channel.lastTest.ok ? "passed" : "failed"}. {channel.lastTest.detail}</Notice>
           ) : null}
           <ActionForm action={saveChannelAction} submitLabel="Save channel">
             <label>Provider
@@ -45,7 +46,7 @@ export default async function CommunicationsPage() {
             </label>
             <label>Sender ID (approved masking name, optional)<Input name="senderId" defaultValue={channel?.senderId ?? ""} maxLength={20} autoComplete="off" /></label>
             <label>API key<Input name="apiKey" type="password" autoComplete="off" placeholder={channel?.keyHint ? "Leave blank to keep the saved key" : "Paste the key from your provider panel"} /></label>
-            <p className="form-hint">The key is encrypted before it is stored and is never shown again.</p>
+            <Notice tone="hint">The key is encrypted before it is stored and is never shown again.</Notice>
           </ActionForm>
           <ActionForm action={setAlertLocaleAction} submitLabel="Save language">
             <label>Alert language

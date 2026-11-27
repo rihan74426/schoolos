@@ -21,7 +21,7 @@ const navigation = [
   { href: "/admin/finance/fees", label: "fees", icon: "$", permission: "fees:read" },
   { href: "/admin/exams", label: "exams", icon: "▤", permission: "exams:read" },
   { href: "/admin/communications", label: "notices", icon: "✉", permission: "notices:send" },
-  { href: "/admin/settings", label: "institutionSetup", icon: "⚙", permission: "policy:read" },
+  { href: "/admin/settings", label: "institutionSetup", icon: "⚙", permission: "structure:read" },
 ];
 
 export async function AdminShell({ children }: { children: ReactNode }) {

@@ -1,3 +1,4 @@
+import { Notice } from "@/components/ui/notice";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,12 +19,12 @@ export default async function SheetPage(props: { params: Promise<{ assessmentId:
   const actor = await resolveActiveMembership();
   await connectDb();
   const m = await getMarkSheet(actor, params.assessmentId);
-  if (!m) return <><PageHeading title="Marks" description="" /><Card className="mb-4"><p className="form-error">Sheet not found, or you are not assigned to this subject and section.</p></Card></>;
+  if (!m) return <><PageHeading title="Marks" description="" /><Card className="mb-4"><Notice tone="error">Sheet not found, or you are not assigned to this subject and section.</Notice></Card></>;
   return (
     <>
       <PageHeading title={`${m.paper.subject} · ${m.paper.section}`} description={`${m.exam.name} · full marks ${m.paper.maxMarks}${m.paper.date ? ` · ${m.paper.date}` : ""} · sheet ${m.sheet.status.toLowerCase()}`} />
       <p><Link href="/admin/exams">← Exams</Link></p>
-      {m.sheet.returnReason ? <p className="form-error" role="alert">Sent back: {m.sheet.returnReason}</p> : null}
+      {m.sheet.returnReason ? <Notice tone="error">Sent back: {m.sheet.returnReason}</Notice> : null}
       {m.exam.status === "DRAFT" ? <Card className="mb-4"><p className="muted">This exam is still a draft. Marks open when it is opened.</p></Card> : (
         <Card className="mb-4">
           <MarksEntry assessmentId={m.paper.id} maxMarks={m.paper.maxMarks} students={m.students.map((s) => ({ ...s, status: s.status as "PRESENT" | "ABSENT" | "EXEMPT" | null }))} canEdit={m.canEdit} />

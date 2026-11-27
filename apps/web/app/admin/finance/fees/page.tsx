@@ -1,3 +1,4 @@
+import { Notice } from "@/components/ui/notice";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import Link from "next/link";
@@ -36,7 +37,7 @@ export default async function FeesPage() {
   }
   const doc = await getInstitutionPolicy(actor.institutionId);
   const fees = (doc?.policy as { fees: { currency: string; lateFee: LateFee; scholarshipCapPercent: number } } | undefined)?.fees;
-  if (!doc || !fees) return <>{heading}<Card className="mb-4"><p className="form-error">Policy not found. Finish setup first.</p></Card></>;
+  if (!doc || !fees) return <>{heading}<Card className="mb-4"><Notice tone="error">Policy not found. Finish setup first.</Notice></Card></>;
   const late = fees.lateFee;
   const canConfigure = can(actor.role, "fees:configure");
   const sum = await collectionSummary(actor);
@@ -81,9 +82,9 @@ export default async function FeesPage() {
             <label>Grace days<Input name="graceDays" inputMode="numeric" defaultValue={late.mode === "NONE" ? 0 : late.graceDays} /></label>
             <label>Cap percent (per-day only)<Input name="capPercent" inputMode="numeric" defaultValue={late.mode === "PERCENT_PER_DAY" ? late.capPercent : 100} /></label>
             <label>Scholarship cap percent<Input name="scholarshipCapPercent" inputMode="numeric" defaultValue={fees.scholarshipCapPercent} /></label>
-            <p className="form-hint">Applies to invoices from now on. Changes are audited with before and after.</p>
+            <Notice tone="hint">Applies to invoices from now on. Changes are audited with before and after.</Notice>
           </ActionForm>
-        ) : <p className="form-hint">Only the owner, administrator, principal or vice principal can change these rules.</p>}
+        ) : <Notice tone="hint">Only the owner, administrator, principal or vice principal can change these rules.</Notice>}
       </Card>
     </>
   );

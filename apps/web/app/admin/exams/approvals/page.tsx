@@ -1,3 +1,4 @@
+import { EmptyState } from "@/components/ui/empty-state";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import Link from "next/link";
@@ -35,7 +36,7 @@ export default async function ApprovalsPage() {
               <label>Reason (10+ characters)<Textarea name="reason" rows={2} required minLength={10} maxLength={300} /></label>
             </ActionForm>
           </div>
-        )) : <p className="empty-state">Nothing waiting.</p>}
+        )) : <EmptyState title="Nothing waiting." />}
       </Card>
       <Card className="mb-4">
         <h2>Corrections to published results</h2>
@@ -51,7 +52,7 @@ export default async function ApprovalsPage() {
               </ActionForm>
             </>) : <p className="muted small">Leadership decides corrections.</p>}
           </div>
-        )) : <p className="empty-state">No corrections waiting.</p>}
+        )) : <EmptyState title="No corrections waiting." />}
       </Card>
     </>
   );

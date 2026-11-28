@@ -108,13 +108,6 @@ td {
   .table-cards td[colspan]::before { content: none; }
 }
 
-/* Settings sub-nav: sticky chips, horizontally scrollable on phones */
-.subnav { position: sticky; top: 0; z-index: 5; display: flex; gap: 8px; margin: 0 0 16px; padding: 8px 0; overflow-x: auto; background: var(--bg); scrollbar-width: none; }
-.subnav::-webkit-scrollbar { display: none; }
-.subnav a { flex: 0 0 auto; display: inline-flex; align-items: center; min-height: 40px; padding: 0 14px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--text); font-size: 13px; font-weight: 600; }
-.subnav a:hover { border-color: var(--brand); color: var(--brand); }
-.panel[id] { scroll-margin-top: 64px; }
-.panel[id] { margin-block-end: 16px; }
 
 /* Premium polish: gradients, glass topbar, depth. Motion only when the user allows it. */
 .panel { transition: box-shadow 0.2s var(--ease); }

@@ -1,7 +1,7 @@
 import { Notice } from "@/components/ui/notice";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
-import { inlineForm, plainList } from "@/lib/form-classes";
+import { dataTable, inlineForm, mutedSm, plainList, subNav, subNavLink, tableWrap } from "@/lib/form-classes";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
@@ -64,7 +64,7 @@ export default async function SettingsPage() {
     return (
       <>
         <PageHeading title="Settings" description="School profile, academic configuration, and staff access." />
-        <Card className="mb-4"><p className="muted">Your role cannot view settings.</p></Card>
+        <Card className="mb-4"><p className="m-0 text-sm text-fg-muted">Your role cannot view settings.</p></Card>
       </>
     );
   }
@@ -97,16 +97,16 @@ export default async function SettingsPage() {
   return (
     <>
       <PageHeading title="Settings" description="Academic structure, teaching assignments, and your school's rules." />
-      <nav className="subnav" aria-label="Settings sections">
+      <nav className={subNav} aria-label="Settings sections">
         {[["years", "Years"], ["classes", "Classes"], ...(canInvite ? [["staff", "Staff"]] : []), ["subjects", "Subjects"], ["teaching", "Teaching"], ["rules", "Rules"], ["grading", "Grading"]].map(([id, label]) => (
-          <a key={id} href={`#${id}`}>{label}</a>
+          <a key={id} href={`#${id}`} className={subNavLink}>{label}</a>
         ))}
       </nav>
 
-      <Card className="mb-4" id="years">
+      <Card className="mb-4 scroll-mt-16" id="years">
         <h2>Academic years</h2>
         {data.years.length ? (
-          <div className="table-scroll"><table><thead><tr><th>Name</th><th>Dates</th><th>Status</th>{canStructure ? <th /> : null}</tr></thead><tbody>
+          <div className={tableWrap}><table className={dataTable}><thead><tr><th>Name</th><th>Dates</th><th>Status</th>{canStructure ? <th /> : null}</tr></thead><tbody>
             {data.years.map((y) => (
               <tr key={String(y._id)}><td>{y.name}</td><td>{y.startsOn} → {y.endsOn}</td><td>{y.isCurrent ? <Badge>Current</Badge> : "—"}</td>
                 {canStructure ? <td>{y.isCurrent ? null : <ActionForm action={setCurrentYearAction} submitLabel="Make current" className={inlineForm}><input type="hidden" name="yearId" value={String(y._id)} /></ActionForm>}</td> : null}</tr>
@@ -122,9 +122,9 @@ export default async function SettingsPage() {
         ) : null}
       </Card>
 
-      <Card className="mb-4" id="classes">
+      <Card className="mb-4 scroll-mt-16" id="classes">
         <h2>Classes and sections</h2>
-        <p className="muted small">{data.gradeLevels.length ? data.gradeLevels.map((g) => g.name).join(" · ") : "No classes yet."}</p>
+        <p className={mutedSm}>{data.gradeLevels.length ? data.gradeLevels.map((g) => g.name).join(" · ") : "No classes yet."}</p>
         {data.sections.length ? <ul className={plainList}>{data.sections.map((s) => <li key={String(s._id)}>{sectionLabel.get(String(s._id))}</li>)}</ul> : null}
         {canStructure ? (<>
           <ActionForm action={createGradeLevelAction} submitLabel="Add class">
@@ -142,12 +142,12 @@ export default async function SettingsPage() {
       </Card>
 
       {canInvite ? (
-        <Card className="mb-4" id="staff">
+        <Card className="mb-4 scroll-mt-16" id="staff">
           <h2>Invite staff</h2>
-          <p className="muted small">Create a link and send it by WhatsApp, Messenger or any app. The person signs up, joins this school with the role you pick, then fills in their profile.</p>
+          <p className={mutedSm}>Create a link and send it by WhatsApp, Messenger or any app. The person signs up, joins this school with the role you pick, then fills in their profile.</p>
           <InviteForm action={createInviteAction} roles={invitableRoles(actor.role)} />
           {invites.length ? (
-            <div className="table-scroll"><table><thead><tr><th>Role</th><th>Note</th><th>Expires</th><th /></tr></thead><tbody>
+            <div className={tableWrap}><table className={dataTable}><thead><tr><th>Role</th><th>Note</th><th>Expires</th><th /></tr></thead><tbody>
               {invites.map((i) => (
                 <tr key={String(i._id)}><td>{i.role.replace(/_/g, " ").toLowerCase()}</td><td>{i.inviteeNote ?? "—"}</td><td>{new Date(i.expiresAt).toISOString().slice(0, 10)}</td>
                   <td><ActionForm action={revokeInviteAction} submitLabel="Revoke" className={inlineForm}><input type="hidden" name="invitationId" value={String(i._id)} /></ActionForm></td></tr>
@@ -156,11 +156,11 @@ export default async function SettingsPage() {
         </Card>
       ) : null}
 
-      <Card className="mb-4" id="subjects">
+      <Card className="mb-4 scroll-mt-16" id="subjects">
         <h2>Subjects</h2>
-        <p className="muted small">Core subjects decide pass or fail when an exam uses the core-subjects-only rule. By default a student must pass every subject.</p>
+        <p className={mutedSm}>Core subjects decide pass or fail when an exam uses the core-subjects-only rule. By default a student must pass every subject.</p>
         {subjectData.subjects.length ? (
-          <div className="table-scroll"><table><thead><tr><th>Code</th><th>Subject</th><th>Core</th>{canStructure ? <th /> : null}</tr></thead><tbody>
+          <div className={tableWrap}><table className={dataTable}><thead><tr><th>Code</th><th>Subject</th><th>Core</th>{canStructure ? <th /> : null}</tr></thead><tbody>
             {subjectData.subjects.map((x) => (
               <tr key={x.id}><td>{x.code}</td><td>{x.name}</td><td>{x.isCore ? "Yes" : "No"}</td>
                 {canStructure ? <td><ActionForm action={setSubjectCoreAction} submitLabel={x.isCore ? "Make not core" : "Make core"} className={inlineForm}><input type="hidden" name="subjectId" value={x.id} /><input type="hidden" name="isCore" value={x.isCore ? "0" : "1"} /></ActionForm></td> : null}</tr>
@@ -173,16 +173,16 @@ export default async function SettingsPage() {
             <label className="check"><input type="checkbox" name="isCore" /> Core subject</label>
           </ActionForm>
         ) : null}
-        <h3>Subjects per class</h3>
+        <h3 className="mb-2 mt-4 text-sm font-semibold">Subjects per class</h3>
         {subjectData.levels.map((l) => {
           const rows = subjectData.mappings.filter((m) => m.gradeLevelId === l.id);
           return (
             <div key={l.id}>
-              <strong>{l.name}</strong>
+              <strong className="mt-2 block text-sm">{l.name}</strong>
               {rows.length ? <ul className={plainList}>{rows.map((m) => (
                 <li key={m.id}>{subjectName.get(m.subjectId) ?? "?"} · full marks {m.defaultMaxMarks}
                   {canStructure ? <ActionForm action={unmapSubjectAction} submitLabel="Remove" className={inlineForm}><input type="hidden" name="gradeLevelId" value={l.id} /><input type="hidden" name="subjectId" value={m.subjectId} /></ActionForm> : null}</li>
-              ))}</ul> : <p className="muted small">No subjects mapped.</p>}
+              ))}</ul> : <p className={mutedSm}>No subjects mapped.</p>}
             </div>
           );
         })}
@@ -195,11 +195,11 @@ export default async function SettingsPage() {
         ) : null}
       </Card>
 
-      <Card className="mb-4" id="teaching">
+      <Card className="mb-4 scroll-mt-16" id="teaching">
         <h2>Teaching assignments</h2>
-        <p className="muted small">Class teachers (no subject) take attendance. Subject teachers enter exam marks only for the subject and section they are assigned.</p>
+        <p className={mutedSm}>Class teachers (no subject) take attendance. Subject teachers enter exam marks only for the subject and section they are assigned.</p>
         {data.assignments.length ? (
-          <div className="table-scroll"><table><thead><tr><th>Teacher</th><th>Section</th><th>Subject</th>{canAssign ? <th /> : null}</tr></thead><tbody>
+          <div className={tableWrap}><table className={dataTable}><thead><tr><th>Teacher</th><th>Section</th><th>Subject</th>{canAssign ? <th /> : null}</tr></thead><tbody>
             {data.assignments.map((a) => (
               <tr key={String(a._id)}><td>{teacherLabel.get(String(a.membershipId)) ?? "Unknown"}</td><td>{sectionLabel.get(String(a.sectionId)) ?? "Unknown"}</td><td>{a.subjectId ? subjectName.get(String(a.subjectId)) ?? "Unknown" : "Class teacher"}</td>
                 {canAssign ? <td><ActionForm action={endAssignmentAction} submitLabel="End" className={inlineForm}><input type="hidden" name="assignmentId" value={String(a._id)} /></ActionForm></td> : null}</tr>
@@ -216,7 +216,7 @@ export default async function SettingsPage() {
         ) : null}
       </Card>
 
-      <Card className="mb-4" id="rules">
+      <Card className="mb-4 scroll-mt-16" id="rules">
         <h2>School rules</h2>
         {policy && policyDoc ? (
           canPolicy ? (
@@ -232,13 +232,13 @@ export default async function SettingsPage() {
               <label>Grace days<Input type="number" name="graceDays" min={0} defaultValue={late?.graceDays ?? 0} /></label>
               <label>Cap % (per-day only)<Input type="number" name="capPercent" min={0} max={100} defaultValue={late?.capPercent ?? 100} /></label>
             </ActionForm>
-          ) : <p className="muted">Only owners and admins can change rules.</p>
+          ) : <p className="m-0 text-sm text-fg-muted">Only owners and admins can change rules.</p>
         ) : <EmptyState title="No rules saved for this school yet." />}
       </Card>
 
-      <Card className="mb-4" id="grading">
+      <Card className="mb-4 scroll-mt-16" id="grading">
         <h2>Grading schemes</h2>
-        <p className="muted small">{schemes.map((s) => s.name + (s.isDefault ? " (default)" : "")).join(" · ") || "None"}. Presets: {Object.values(gradingPresets).map((p) => p.name).join(", ")}.</p>
+        <p className={mutedSm}>{schemes.map((s) => s.name + (s.isDefault ? " (default)" : "")).join(" · ") || "None"}. Presets: {Object.values(gradingPresets).map((p) => p.name).join(", ")}.</p>
         {canPolicy ? (
           <ActionForm action={createGradingSchemeAction} submitLabel="Save scheme">
             <label>Scheme name<Input name="name" required maxLength={80} placeholder="Our Dakhil scale" /></label>

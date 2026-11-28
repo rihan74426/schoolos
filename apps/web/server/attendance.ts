@@ -317,11 +317,28 @@ export async function getRoster(actor: Actor, sectionId: string, date: string) {
   };
 }
 
+/** Sections the actor may take attendance for: all for any-section roles, else class-teacher rows only. */
+export async function attendanceSections(actor: Actor) {
+  const all = await listCurrentSections(actor);
+  if (can(actor.role, "attendance:any-section")) return all;
+  const own = new Set(
+    (
+      (await TeachingAssignment.find({
+        institutionId: actor.institutionId,
+        membershipId: actor.membershipId,
+        status: "ACTIVE",
+        subjectId: { $exists: false },
+      }).distinct("sectionId")) as unknown[]
+    ).map(String),
+  );
+  return all.filter((s) => own.has(s.id));
+}
+
 /** Sections the actor can mark that have students but no submitted attendance for `date`. */
 export async function sectionsMissingAttendance(actor: Actor, date: string) {
   if (!can(actor.role, "attendance:submit")) return [];
   const { institutionId } = actor;
-  const sections = await listCurrentSections(actor);
+  const sections = await attendanceSections(actor);
   if (!sections.length) return [];
   const ids = sections.map((s) => s.id);
   const [done, populated] = await Promise.all([

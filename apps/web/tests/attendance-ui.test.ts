@@ -113,4 +113,10 @@ describe("sectionsMissingAttendance", () => {
     expect((await sectionsMissingAttendance(as("ADMIN"), day)).map((s) => s.id)).toEqual([secB]);
     expect(await sectionsMissingAttendance(as("ACCOUNTS"), day)).toEqual([]);
   });
+
+  it("subject-only teacher gets no sections", async () => {
+    const subjectTeacher = oid();
+    await TeachingAssignment.create({ institutionId: schoolA, membershipId: subjectTeacher, sectionId: secB, academicYearId: yearId, subjectId: oid() });
+    expect(await sectionsMissingAttendance(as("TEACHER", subjectTeacher), "2026-01-05")).toEqual([]);
+  });
 });

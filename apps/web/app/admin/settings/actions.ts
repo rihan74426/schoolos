@@ -3,7 +3,7 @@
 import { authFailure, requirePermission } from "@/server/auth";
 import { saveGradingScheme, updateInstitutionPolicy } from "@/server/policy";
 import { revalidatePath } from "next/cache";
-import { parseBandLines, takaToMinor } from "@schoolos/core";
+import { feePolicySchema, parseBandLines, takaToMinor } from "@schoolos/core";
 import {
   assignTeacher,
   createAcademicYear,
@@ -120,6 +120,9 @@ export async function updateRulesAction(_: FormState, fd: FormData) {
         : lateMode === "PERCENT_PER_DAY"
           ? { mode: "PERCENT_PER_DAY", percent, graceDays: num(fd, "graceDays") || 0, capPercent: num(fd, "capPercent") || 100 }
           : { mode: "NONE" };
+    // Same schema as updateFeePolicy, so both entry points validate late-fee rules identically. Single write keeps one version bump + one audit.
+    const fees = feePolicySchema.safeParse({ ...base.fees, lateFee });
+    if (!fees.success) return { ok: false as const, error: fees.error.issues[0]?.message ?? "Invalid fee rules" };
     const next = {
       ...base,
       gradingSchemeKey: text(fd, "gradingSchemeKey") || base.gradingSchemeKey,
@@ -130,7 +133,7 @@ export async function updateRulesAction(_: FormState, fd: FormData) {
         correctionWindowHours: num(fd, "correctionWindowHours"),
         requireFullRoster: fd.get("requireFullRoster") === "on",
       },
-      fees: { ...base.fees, lateFee },
+      fees: fees.data,
     };
     return updateInstitutionPolicy(next, num(fd, "version"), actor);
   }, "Rules updated");

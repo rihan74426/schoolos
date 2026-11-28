@@ -7,9 +7,8 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { resolveActiveMembership } from "@/server/auth";
-import { getRoster } from "@/server/attendance";
+import { attendanceSections, getRoster } from "@/server/attendance";
 import { todayInDhaka } from "@/server/dates";
-import { listCurrentSections } from "@/server/students";
 
 export const dynamic = "force-dynamic";
 
@@ -24,7 +23,7 @@ export default async function AttendancePage(props: { searchParams: Promise<{ se
 
   const today = todayInDhaka();
   const date = searchParams.date && searchParams.date <= today ? searchParams.date : today;
-  const sections = await listCurrentSections(actor);
+  const sections = await attendanceSections(actor);
   const sectionId = searchParams.section ?? (sections.length === 1 ? sections[0].id : "");
   const roster = sectionId ? await getRoster(actor, sectionId, date) : null;
 

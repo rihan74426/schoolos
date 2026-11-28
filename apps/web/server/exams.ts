@@ -337,7 +337,8 @@ export async function getExamDetail(actor: Actor, examId: string) {
   const subj = new Map(subjects.map((s) => [String(s._id), s]));
   const sec = new Map(sections.map((s) => [String(s._id), s.name]));
   const sheetBy = new Map(sheets.map((s) => [String(s.assessmentId), s]));
-  const inReview = exam.status !== "DRAFT" && exam.status !== "PUBLISHED";
+  // Student marks only reach the approval UI; teachers never need them here.
+  const inReview = can(actor.role, "exams:publish") && exam.status !== "DRAFT" && exam.status !== "PUBLISHED";
   const entryIds = inReview ? [...new Set(sheets.flatMap((sh) => sh.entries.map((e) => String(e.studentId))))] : [];
   const entryStudents = entryIds.length ? ((await Student.find({ institutionId, _id: { $in: entryIds } }).sort({ studentNumber: 1 }).lean()) as unknown as Array<{ _id: unknown; studentNumber: string; firstName: string; lastName?: string }>) : [];
   const ovIds = exam.passOverrides.map((o) => o.studentId);
